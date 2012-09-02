@@ -30,9 +30,14 @@ func NewObjectIdFromBytes(bytes []byte) (id *ObjectId) {
     return
 }
 
-func NewObjectIdFromString(hex string) (id *ObjectId) {
-    // TODO
-    return nil
+func NewObjectIdFromString(hex string) (id *ObjectId, err error) {
+    bytes, err := computeBytes(hex)
+    if err != nil {
+        id = &ObjectId{
+            bytes: bytes,
+        }
+    }
+    return
 }
 
 func NewObjectIdFromHash(h hash.Hash) (id *ObjectId) {
@@ -47,17 +52,17 @@ func NewObjectIdFromHash(h hash.Hash) (id *ObjectId) {
 // the ObjectId bytes
 func (id *ObjectId) String() string {
     if id.repr == "" {
-        id.repr = computeRepr(id)
+        id.repr = computeRepr(id.bytes)
     }
     return id.repr
 }
 
 // computes the hex string representation of
 // the object id
-func computeRepr(id *ObjectId) (hex string){
+func computeRepr(bytes []byte) (hex string){
     const byte2hex = "0123456789abcdef"
     out := make([]byte, OID_HEXSZ)
-    for inx, b := range id.bytes {
+    for inx, b := range bytes {
         // the left and right halves of the byte (8 bits)
         out[2*inx] = byte2hex[int(b >> 4)]
         out[2*inx+1] = byte2hex[int(b & 0xf)]
@@ -71,7 +76,7 @@ func computeBytes(hex string) (bytes []byte, err error) {
         return 
     }
     bytes = make([]byte, OID_SZ)
-    for inx, _ := range bytes {
+    for inx, _ := range bytes[0:OID_SZ] {
         left, err := hex2byte(hex[2*inx])
         right, err := hex2byte(hex[2*inx+1])
         if err != nil {

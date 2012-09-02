@@ -35,6 +35,23 @@ func compareHexRepr(t *testing.T, bytes []byte, expected string) {
     }
 }
 
+func TestHex2Bytes(t *testing.T) {
+    testHex2Bytes(t, ZEROS)
+    testHex2Bytes(t, ONES)
+    testHex2Bytes(t, ALLSET)
+}
+
+func testHex2Bytes(t *testing.T, hex string) {
+    testBytes, err := computeBytes(hex)
+    if err != nil {
+        t.Error("failed with error: ", err)
+    }
+    converted := computeRepr(testBytes)
+    if converted != hex[0:OID_HEXSZ] {
+        t.Error("could not convert to bytes successfully: ", hex, " => ", converted) 
+    }
+}
+
 func TestNewObjectIdFromString(t *testing.T) {
     // TODO
 }
