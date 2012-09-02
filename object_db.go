@@ -1,6 +1,13 @@
 package ggit
 
+import (
+    "crypto/sha1"
+    "hash"
+)
+
 type ObjectType int
+
+var shaHash hash.Hash = sha1.New()
 
 // the types of objects
 const (
@@ -9,6 +16,22 @@ const (
     OBJECT_COMMIT
     OBJECT_TAG
 )
+
+func (t ObjectType) String() string {
+    switch t {
+    case OBJECT_BLOB:
+        return "blob"
+    case OBJECT_TREE:
+        return "tree"
+    case OBJECT_COMMIT:
+        return "commit"
+    case OBJECT_TAG:
+        return "tag"
+    default:
+        panic("unknown type")
+    }
+    return ""
+}
 
 type Object interface {
     // return the type of the object
@@ -25,4 +48,11 @@ type Object interface {
 
 type ObjectDatabase interface {
     
+}
+
+func digest(bytes []byte) (id *ObjectId) {
+    shaHash.Reset()
+    shaHash.Write(bytes)
+    id = NewObjectIdFromHash(shaHash)
+    return
 }

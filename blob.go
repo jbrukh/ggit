@@ -10,7 +10,7 @@ func (b *Blob) Type() ObjectType {
 }
 
 func (b *Blob) Bytes() (id *ObjectId, bytes []byte) {
-    
+    return nil, nil
 }
 
 
