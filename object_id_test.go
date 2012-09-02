@@ -8,6 +8,7 @@ const (
     ZEROS  = "0000000000000000000000000000000000000000"
     ONES   = "1111111111111111111111111111111111111111"
     ALLSET = "ffffffffffffffffffffffffffffffffffffffff"
+    CRAZY  = "abcdef1234567890000000000000000000000000"
 )
 
 func TestObjectIdString(t *testing.T) {
@@ -25,6 +26,17 @@ func TestObjectIdString(t *testing.T) {
         allset[inx] |= 0xff
     }
     compareHexRepr(t, allset, ALLSET)
+
+    crazy := make([]byte, OID_SZ)
+    crazy[0] = 0xAB
+    crazy[1] = 0xCD
+    crazy[2] = 0xEF
+    crazy[3] = 0x12
+    crazy[4] = 0x34
+    crazy[5] = 0x56
+    crazy[6] = 0x78
+    crazy[7] = 0x90
+    compareHexRepr(t, crazy, CRAZY)
 }
 
 func compareHexRepr(t *testing.T, bytes []byte, expected string) {
