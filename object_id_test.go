@@ -1,6 +1,7 @@
 package ggit
 
 import (
+    "crypto/sha1"
     "testing"
 )
 
@@ -65,14 +66,21 @@ func testHex2Bytes(t *testing.T, hex string) {
 }
 
 func TestNewObjectIdFromString(t *testing.T) {
-    id := NewObjectIdFromString(CRAZY)
-    if id.bytes == nil {
+    id, err := NewObjectIdFromString(CRAZY)
+    if err != nil || id == nil || id.bytes == nil {
         t.Error("did not initialize bytes properly")
     }
 }
 
 func TestNewObjectIdFromHash(t *testing.T) {
-    // TODO
+    h := sha1.New()
+    id := NewObjectIdFromHash(h)
+    if id.bytes == nil {
+        t.Error("did not initialize bytes properly")
+    }
+    if id.String() != ZEROS {
+        t.Error("representation should be 0's")
+    }
 }
 
 func TestNewObjectIdFromBytes(t *testing.T) {
