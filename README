@@ -1,0 +1,58 @@
+From: Jake Brukhman <jbrukh@gmail.com>
+Mime-Version: 1.0 (1.0)
+Date: Sun, 2 Sep 2012 11:09:20 -0400
+Delivered-To: jbrukh@gmail.com
+Message-ID: <-544627136265528436@unknownmsgid>
+Subject: git implementation
+To: Michael Bosworth <michaelabosworth@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+
+It's amazing how much more terse Golang code is going to be versus
+C... when you and I implement git in Go.
+
+Well, the core of git is fairly straightforward (and ingenious!); if
+we could write object storage this would be a very good inspiration to
+internet contributors to come in and write the diffing algos, which,
+frankly, are beyond me (or so it seems)
+
+Because there is no official architecture docs, I had to resort to
+these project resources to figure out how the internals work, in order
+of usefulness: libgit2, git source, jgit source. The latter is Java
+which makes it harder to map to Golang in one's mind.
+
+So here would be the roadmap for object storage:
+
+1. ObjectType. Keeps track of git object types -- for the moment:
+blobs, trees, commits, tags.
+
+2. ObjectId. A 20-byte value that can be  easily and efficiently
+translated back and forth from text. You should also be able to
+initialize it from a golang hash.Hash object.
+
+3. Blob. A blob is a blob of bytes. In C this is implemented as a
+pointer to raw memory, which necessitates constantly keeping track of
+its length. In Go, it can be just []byte, which is awesome.
+
+4. Tree. A tree is a recursive struct that stores blobs and trees. Not
+sure yet what operations are required, but it will become obvious.
+Also, the tree stores file perms somehow, we will find out.
+
+5. Commit. A commit is basically a tree together with author/time
+metadata as well as pointers to its parents.
+
+6. Tags. Follow easily from above implementation -- I believe they are
+just pointers to an ObjectId.
+
+7. A way to generate a hash for an object in memory (it digests all
+the data!). This is easy because Go supports SHA1 out of the box.
+
+8. A way to prepare an object for storage together with SHA as a []byte.
+
+9. An object database. I am hand waving -- an abstraction layer for
+storage; then, a few implementations that use cloud, db, and of course
+the file system.
+
+10. Repository. Ways to manipulate a git repo on the file system.
+
+What do you think?
+
