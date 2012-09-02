@@ -2,6 +2,7 @@ package ggit
 
 import (
     "crypto/sha1"
+    "io"
     "testing"
 )
 
@@ -80,6 +81,17 @@ func TestNewObjectIdFromHash(t *testing.T) {
     }
     if id.String() != ZEROS {
         t.Error("representation should be 0's")
+    }
+
+    // now we will test a real hash
+    io.WriteString(h, "I have always known that one day I would take this road, but yesterday I did not know it would be today.")
+    hashBytes := make([]byte, 20)
+    h.Sum(hashBytes)
+    id = NewObjectIdFromHash(h)
+
+    expected, actual := computeRepr(hashBytes), id.String()
+    if actual != expected {
+        t.Error("bad hash initialization: ", expected, " but got ", actual)
     }
 }
 
