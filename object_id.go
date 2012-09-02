@@ -10,6 +10,11 @@ const (
     OID_HEXSZ  = OID_SZ*2     // maximum length of hex string we can translate
 )
 
+// get the first OID_SZ of the hash
+func getHash(h hash.Hash) []byte {
+    return h.Sum(nil)[0:OID_SZ]
+}
+
 type ObjectId struct {
     bytes []byte
     repr string
@@ -42,9 +47,8 @@ func NewObjectIdFromString(hex string) (id *ObjectId, err error) {
 
 func NewObjectIdFromHash(h hash.Hash) (id *ObjectId) {
     id = &ObjectId{
-        bytes: make([]byte, 20),
+        bytes: getHash(h),
     }
-    h.Sum(id.bytes)
     return
 }
 

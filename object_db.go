@@ -3,6 +3,7 @@ package ggit
 import (
     "crypto/sha1"
     "hash"
+    "io"
 )
 
 type ObjectType int
@@ -38,21 +39,14 @@ type Object interface {
     // TODO: ascertain whether this is actually needed
     Type() ObjectType
 
-    // return a representatin of this object as
+    // writes a representatin of this object as
     // a sequence of bytes that are ready to be
-    // stored in the object database, as well as
+    // stored in the object database to an io.Writer, and
     // the cryptographic id that is associated
-    // with this representation
-    Bytes() (id *ObjectId, bytes []byte)
+    // with this representation is returned
+    WriteTo(w io.Writer) (id *ObjectId, err error)
 }
 
 type ObjectDatabase interface {
     
-}
-
-func digest(bytes []byte) (id *ObjectId) {
-    shaHash.Reset()
-    shaHash.Write(bytes)
-    id = NewObjectIdFromHash(shaHash)
-    return
 }
