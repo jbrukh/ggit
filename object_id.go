@@ -1,6 +1,7 @@
 package ggit
 
 import (
+    "errors"
     "hash"
 )
 
@@ -8,7 +9,6 @@ const (
     OID_SZ     = 20           // bytes
     OID_HEXSZ  = OID_SZ*2     // maximum length of hex string we can translate
 )
-
 
 type ObjectId struct {
     bytes []byte
@@ -52,6 +52,8 @@ func (id *ObjectId) String() string {
     return id.repr
 }
 
+// computes the hex string representation of
+// the object id
 func computeRepr(id *ObjectId) (hex string){
     const toHex = "0123456789abcdef"
     out := make([]byte, OID_HEXSZ)
@@ -61,4 +63,61 @@ func computeRepr(id *ObjectId) (hex string){
         out[2*inx+1] = toHex[int(b & 0xf)]
     }
     return string(out)
+}
+
+func computeBytes(hex string) (bytes []byte, err error) {
+    if len(hex) < OID_HEXSZ {
+        err = errors.New("hex is too short")
+        return 
+    }
+    bytes = make([]byte, OID_SZ)
+    for inx, _ := range bytes {
+        left, err := hex2byte(hex[2*inx])
+        right, err := hex2byte(hex[2*inx+1])
+        if err != nil {
+            return nil, err
+        }
+        bytes[inx] = left<<4 | right
+    }
+    return
+}
+
+func hex2byte(ch byte) (byte, error) {
+    // TODO: find out if go map is faster (almost certainly not);
+    // testing should be done on a high level, though
+    switch ch {
+    case '0':
+        return 0x0, nil
+    case '1':
+        return 0x1, nil
+    case '2':
+        return 0x2, nil
+    case '3':
+        return 0x3, nil
+    case '4':
+        return 0x4, nil
+    case '5':
+        return 0x5, nil
+    case '6':
+        return 0x6, nil
+    case '7':
+        return 0x7, nil
+    case '8':
+        return 0x8, nil
+    case '9':
+        return 0x9, nil
+    case 'a', 'A':
+        return 0xA, nil
+    case 'b', 'B':
+        return 0xB, nil
+    case 'c', 'C':
+        return 0xC, nil
+    case 'd', 'D':
+        return 0xD, nil
+    case 'e', 'E':
+        return 0xE, nil
+    case 'f', 'F':
+        return 0xF, nil
+    }
+    return 0x0, errors.New("unknown char")
 }

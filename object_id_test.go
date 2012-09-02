@@ -11,16 +11,16 @@ const (
 )
 
 func TestObjectIdString(t *testing.T) {
-    zeros := make([]byte, 20)
+    zeros := make([]byte, OID_SZ)
     compareHexRepr(t, zeros, ZEROS)
 
-    ones := make([]byte, 20)
+    ones := make([]byte, OID_SZ)
     for inx, _ := range ones {
        ones[inx] |= 0x11 
     }
     compareHexRepr(t, ones, ONES)
 
-    allset := make([]byte, 20)
+    allset := make([]byte, OID_SZ)
     for inx, _ := range allset {
         allset[inx] |= 0xff
     }
@@ -44,7 +44,7 @@ func TestNewObjectIdFromHash(t *testing.T) {
 }
 
 func TestNewObjectIdFromBytes(t *testing.T) {
-    bytes := make([]byte, 20)
+    bytes := make([]byte, OID_SZ)
     id := NewObjectIdFromBytes(bytes)
     if id.bytes == nil {
         t.Error("did not initialize bytes properly")
@@ -56,4 +56,16 @@ func TestNewObjectIdFromBytes(t *testing.T) {
     if id.repr == "" {
         t.Error("lazy init of string repr didn't work")
     }
+}
+
+func TestHex2Byte(t *testing.T) {
+    tester := func(hex byte, b byte) {
+        v, e := hex2byte(hex)
+        if e != nil || v != b {
+            t.Error("didn't get the right result for ", hex)
+        }
+    }
+    tester('a', 0xA)
+    tester('B', 0xB)
+    tester('7', 0x7)
 }
