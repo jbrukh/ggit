@@ -9,9 +9,6 @@ const (
     OID_HEXSZ  = OID_SZ*2     // maximum length of hex string we can translate
 )
 
-const (
-    toHex = "0123456789abcdef"
-)
 
 type ObjectId struct {
     bytes []byte
@@ -26,7 +23,7 @@ func NewObjectIdFromBytes(bytes []byte) (id *ObjectId) {
     if len(bytes) < OID_SZ {
         // TODO: decide if error
     }
-    id := &ObjectId{
+    id = &ObjectId{
         bytes: make([]byte, OID_SZ),
     }
     copy(id.bytes, bytes)
@@ -39,8 +36,8 @@ func NewObjectIdFromString(hex string) (id *ObjectId) {
 }
 
 func NewObjectIdFromHash(h hash.Hash) (id *ObjectId) {
-    id := &ObjectId{
-        bytes: make([]byte, 20)
+    id = &ObjectId{
+        bytes: make([]byte, 20),
     }
     h.Sum(id.bytes)
     return
@@ -56,6 +53,7 @@ func (id *ObjectId) String() string {
 }
 
 func computeRepr(id *ObjectId) (hex string){
+    const toHex = "0123456789abcdef"
     out := make([]byte, OID_HEXSZ)
     for inx, b := range id.bytes {
         // the left and right halves of the byte (8 bits)
