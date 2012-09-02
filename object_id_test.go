@@ -4,21 +4,27 @@ import (
     "testing"
 )
 
+const (
+    ZEROS  = "0000000000000000000000000000000000000000"
+    ONES   = "1111111111111111111111111111111111111111"
+    ALLSET = "ffffffffffffffffffffffffffffffffffffffff"
+)
+
 func TestObjectIdString(t *testing.T) {
     zeros := make([]byte, 20)
-    compareHexRepr(t, zeros, "0000000000000000000000000000000000000000")
+    compareHexRepr(t, zeros, ZEROS)
 
     ones := make([]byte, 20)
     for inx, _ := range ones {
        ones[inx] |= 0x11 
     }
-    compareHexRepr(t, ones, "1111111111111111111111111111111111111111")
+    compareHexRepr(t, ones, ONES)
 
     allset := make([]byte, 20)
     for inx, _ := range allset {
         allset[inx] |= 0xff
     }
-    compareHexRepr(t, allset, "ffffffffffffffffffffffffffffffffffffffff")
+    compareHexRepr(t, allset, ALLSET)
 }
 
 func compareHexRepr(t *testing.T, bytes []byte, expected string) {

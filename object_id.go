@@ -22,7 +22,7 @@ type ObjectId struct {
 // in from left to right, with no regard for the number
 // of bytes in the input. Extra bytes are discarded and
 // missing bytes are padded with zeros.
-func NewObjectIdFromBytes(bytes []byte) *ObjectId {
+func NewObjectIdFromBytes(bytes []byte) (id *ObjectId) {
     if len(bytes) < OID_SZ {
         // TODO: decide if error
     }
@@ -30,17 +30,20 @@ func NewObjectIdFromBytes(bytes []byte) *ObjectId {
         bytes: make([]byte, OID_SZ),
     }
     copy(id.bytes, bytes)
-    return id;
+    return
 }
 
-func NewObjectIdFromString(hex string) *ObjectId {
+func NewObjectIdFromString(hex string) (id *ObjectId) {
     // TODO
     return nil
 }
 
-func NewObjectIdFromHash(h hash.Hash) *ObjectId {
-    // TODO
-    return nil
+func NewObjectIdFromHash(h hash.Hash) (id *ObjectId) {
+    id := &ObjectId{
+        bytes: make([]byte, 20)
+    }
+    h.Sum(id.bytes)
+    return
 }
 
 // String returns the hex string that represents
