@@ -55,12 +55,12 @@ func (id *ObjectId) String() string {
 // computes the hex string representation of
 // the object id
 func computeRepr(id *ObjectId) (hex string){
-    const toHex = "0123456789abcdef"
+    const byte2hex = "0123456789abcdef"
     out := make([]byte, OID_HEXSZ)
     for inx, b := range id.bytes {
         // the left and right halves of the byte (8 bits)
-        out[2*inx] = toHex[int(b >> 4)]
-        out[2*inx+1] = toHex[int(b & 0xf)]
+        out[2*inx] = byte2hex[int(b >> 4)]
+        out[2*inx+1] = byte2hex[int(b & 0xf)]
     }
     return string(out)
 }
