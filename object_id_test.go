@@ -65,7 +65,10 @@ func testHex2Bytes(t *testing.T, hex string) {
 }
 
 func TestNewObjectIdFromString(t *testing.T) {
-    // TODO
+    id := NewObjectIdFromString(CRAZY)
+    if id.bytes == nil {
+        t.Error("did not initialize bytes properly")
+    }
 }
 
 func TestNewObjectIdFromHash(t *testing.T) {
