@@ -5,6 +5,7 @@ import (
     "fmt"
     "io"
     "compress/zlib"
+    "os"
 )
 
 type Blob struct {
@@ -16,6 +17,28 @@ func NewBlob(input string) (b *Blob) {
     return &Blob{
         bytes: []byte(input),
     }
+}
+
+func NewBlobFromFile(path string) (b *Blob, err error) {
+    var file *os.File
+    if file, err = os.Open(path); err != nil {
+        return nil, err
+    }
+    defer file.Close()
+
+    // decompress
+    r, err := zlib.NewReader(file)
+    defer r.Close()
+    if err != nil {
+        return nil, err
+    }
+    buf := new(bytes.Buffer)
+    _, err = io.Copy(buf, r)
+    if err == nil {
+        // TODO: remove header (!!!)
+        b = &Blob{bytes: buf.Bytes()}
+    }
+    return
 }
 
 func (b *Blob) Type() ObjectType {
@@ -39,4 +62,6 @@ func (b *Blob) WriteTo(w io.Writer) (id *ObjectId, err error) {
     return
 }
 
-
+func (b *Blob) String() string {
+    return string(b.bytes)
+}
