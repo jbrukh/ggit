@@ -4,6 +4,7 @@ import (
     "bytes"
     "fmt"
     "io"
+    "compress/zlib"
 )
 
 type Blob struct {
@@ -28,7 +29,9 @@ func (b *Blob) WriteTo(w io.Writer) (id *ObjectId, err error) {
     buf.Write(b.bytes)
 
     shaHash.Reset()
-    mw := io.MultiWriter(w, shaHash)
+    zw := zlib.NewWriter(w) // will write compressed
+    defer zw.Close()
+    mw := io.MultiWriter(zw, shaHash)
     _, err = buf.WriteTo(mw)
     if err == nil {
         id = NewObjectIdFromHash(shaHash)

@@ -1,12 +1,14 @@
 package ggit
 
+import (
+    "io"
+)
+
 type Tree struct {
-    parent Tree
-    object interface{} // either a tree or a blob
-    children []TreeEntry
+    // TODO
 }
 
-type (t *Tree) Type() ObjectType {
+func (t *Tree) Type() ObjectType {
     return OBJECT_TREE
 }
 
