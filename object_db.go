@@ -48,5 +48,12 @@ type Object interface {
 }
 
 type ObjectDatabase interface {
-    
+	// read an object by id
+    ReadObject(ObjectId) Object
+
+	// write an object into the database
+	WriteObject(Object) ObjectId
+	
+	// return the number of objects in the databse
+	Size() int
 }

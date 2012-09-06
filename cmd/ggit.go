@@ -16,6 +16,7 @@ type handler func([]string) error
 var handlers map[string]handler = map[string]handler {
 	"hash-object": hashObject,
     "cat-file": catFile,
+	"read-blob": readBlob,
 }
 
 func main() {
@@ -51,4 +52,18 @@ func catFile(args []string) (err error) {
         fmt.Println("error: ", err)
     }
     return
+}
+
+func readBlob(args []string) (err error) {
+	if len(args) < 2 {
+		return errors.New("provide a hash")
+	}
+	oid, err := ggit.NewObjectIdFromString(args[1])
+	repo, _ := ggit.OpenRepository(".git")
+	b, err := repo.ReadBlob(oid)
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
+	fmt.Println(b)
+	return
 }
