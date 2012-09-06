@@ -12,13 +12,3 @@ func TestObjectPath(t *testing.T) {
 		t.Error("Wrong path:", path)
 	}
 }
-
-func TestBuffer(t *testing.T) {
-	buf := new(bytes.Buffer)
-	buf.Write([]byte("aaa\000bbb"))
-	
-	first, _ := buf.ReadString('\000')
-	second := string(buf.Bytes())
-	println("first: ", len(first), " ", first)
-	println("second: ", len(second), " ", second)
-}

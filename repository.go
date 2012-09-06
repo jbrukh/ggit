@@ -11,18 +11,30 @@ import (
 	"compress/zlib"
 )
 
+// a representation of a git repository
 type Repository struct {
 	path string
+    wdir string
 }
 
-func OpenRepository(path string) (r *Repository, err error) {
+// open a repository that is located at the given path
+func Open(path string) (r *Repository, err error) {
 	// check that repo is valid
-	r = &Repository{
+    if !validateRepo(path) {
+        return nil, errors.New("not a valid repo")
+    }
+    r = &Repository{
 		path: path,
+        wdir: path, // TODO: this can be generalized
 	}
 	return
 }
 
+// closing operations for a repository
+func (r *Repository) Close() {
+}
+
+/*
 func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
 	var file *os.File
 	filePath := path.Join(r.path, objectPath(oid))
@@ -61,8 +73,16 @@ func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
 	}
 	return
 }
+*/
 
+// turn an oid into a path relative to the
+// git directory of a repository
 func objectPath(oid *ObjectId) string {
 	hex := oid.String()
 	return path.Join("objects", hex[0:2], hex[2:])
+}
+
+// validate a repository path to make sure it has
+// the right format and that it exists
+func validateRepo(path string) bool {
 }
