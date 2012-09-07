@@ -15,7 +15,6 @@ func usage() {
 type handler func([]string) error
 var handlers map[string]handler = map[string]handler {
 	"hash-object": hashObject,
-    "cat-file": catFile,
 	"read-blob": readBlob,
 }
 
@@ -40,20 +39,6 @@ func hashObject(args []string) error {
     return nil
 }
 
-func catFile(args []string) (err error) {
-    if len(args) < 2 {
-        return errors.New("provide a file to cat-file")
-    }
-    file := args[1]
-    b, err := ggit.NewBlobFromFile(file)
-    if err == nil {
-        fmt.Println(b.String())
-    } else {
-        fmt.Println("error: ", err)
-    }
-    return
-}
-
 func readBlob(args []string) (err error) {
 	if len(args) < 2 {
 		return errors.New("provide a hash")
@@ -64,6 +49,6 @@ func readBlob(args []string) (err error) {
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
-	fmt.Println(b)
+    fmt.Println("bytes: ", string(b.Bytes()))
 	return
 }

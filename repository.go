@@ -56,6 +56,14 @@ func (r *Repository) ReadRawObject(oid *ObjectId) (o *RawObject, err error) {
     return
 }
 
+func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
+    var o *RawObject
+    if o, err = r.ReadRawObject(oid); err != nil {
+        return
+    }
+    return &Blob{*o}, nil
+}
+
 
 // turn an oid into a path relative to the
 // git directory of a repository

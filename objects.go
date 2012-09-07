@@ -25,36 +25,61 @@ type RawObject struct {
     bytes []byte
 }
 
+type ObjectHeader struct {
+    Type ObjectType
+    Size int
+}
+
+func toObjectType(typeStr string) (otype ObjectType, err error) {
+    switch(typeStr) {
+    case "blob": 
+        return OBJECT_BLOB, nil
+    case "tree":
+        return OBJECT_TREE, nil
+    case "tag":
+        return OBJECT_TAG, nil
+    case "commit":
+        return OBJECT_COMMIT, nil
+    }
+    return 0, errors.New("unknown object type")
+}
+
+func toObjectHeader(header string) (h *ObjectHeader, err error) {
+    var (
+        toks []string
+        otype ObjectType
+    )
+    if toks := strings.Split(header, " "); len(toks) < 2 {
+        return nil, errors.New("bad object header")
+    }
+
+    typeStr, sizeStr := toks[0], toks[1]
+    if otype, err = toObjectType(typeStr); err != nil {
+        return
+    }
+
+    osize, err := strconv.Atoi(sizeStr)
+    if err != nil {
+        return nil, errors.New("bad object size")
+    }
+
+    return &ObjectHeader{otype, osize}, nil 
+}
+
 // interface for hashable objects
 type Hashable interface {
     Bytes() []byte
 }
 
 // parses the header from the raw data
-// TODO: reconsider the return values here
-func (o *RawObject) Header() (header string, size int, err error) {
+func (o *RawObject) Header() (h *ObjectHeader, err error) {
     buf := bytes.NewBuffer(o.bytes)
-    header, err = buf.ReadString('\000')
-    if err != nil {
-        err = errors.New("can't find end of header")
-        return
+    var header string
+    if header, err = buf.ReadString('\000'); err != nil {
+        return nil, errors.New("can't find end of header")
     }
-    toks := strings.Split(header, " ")
-    // TODO: fix this garbage
-    if len(toks) > 1 {
-        if size, err = strconv.Atoi(toks[1]); err != nil {
-            return "", 0, errors.New("malformed size in header")
-        }
-        if size != len(buf.Bytes()) {
-            err = errors.New("header size doesn't match payload size")
-        }
-        otype := toks[1]
-        if otype != "blob" && otype != "tree" && otype != "commit" {
-            err = errors.New("unknown otype in header")
-        }
-    } else {
-        err = errors.New("missing size in header")
-    }
+
+    h, err = toObjectHeader(header)
     return
 }
 
