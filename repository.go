@@ -3,18 +3,20 @@ package ggit
 import (
 	"path"
 	"errors"
-	/*"os"
+    "os"
 	"io"
-	"bytes"
-	"strings"
-	"strconv"
-	"compress/zlib"*/
+	"compress/zlib"
 )
 
 // a representation of a git repository
 type Repository struct {
 	path string
     wdir string
+}
+
+type ObjectDatabase interface {
+    ReadRawObject(oid *ObjectId) (o *RawObject, err error)
+    ReadBlob(oid *ObjectId) (b *Blob, err error)
 }
 
 // open a repository that is located at the given path
@@ -34,46 +36,26 @@ func Open(path string) (r *Repository, err error) {
 func (r *Repository) Close() {
 }
 
-/*
-func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
-	var file *os.File
-	filePath := path.Join(r.path, objectPath(oid))
+func (r *Repository) ReadRawObject(oid *ObjectId) (o *RawObject, err error) {
+    var file *os.File
+    path := path.Join(r.path, objectPath(oid))
 
-	file, err = os.Open(filePath)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-	
-	buf := new(bytes.Buffer)
-	zr, err := zlib.NewReader(file)
-	defer zr.Close()
-	
-	if _, err = io.Copy(buf, zr); err != nil {
-		return
-	}
-	header, err := buf.ReadString('\000')
-	
-	// remove last character
-	header = header[:len(header)-1]
-	splt := strings.Split(header, " ")
-	var l int
-	l, err = strconv.Atoi(splt[1])
-	if splt[0] != "blob" || err != nil {
-		return nil, errors.New("Not a blob")
-	}
-	
-	bts := buf.Bytes()
-	if len(bts) != l {
-		return nil, errors.New("Size mismatch")
-	}
-	
-	b = &Blob{
-		bytes: bts,
-	}
-	return
+    if file, err = os.Open(path); err != nil {
+        return
+    }
+    defer file.Close()
+
+    var zr io.ReadCloser
+    if zr, err = zlib.NewReader(file); err != nil {
+        return
+    }
+    defer zr.Close()
+
+    o = new(RawObject)
+    _, err = io.Copy(o, zr)
+    return
 }
-*/
+
 
 // turn an oid into a path relative to the
 // git directory of a repository

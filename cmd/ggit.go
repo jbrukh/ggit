@@ -59,7 +59,7 @@ func readBlob(args []string) (err error) {
 		return errors.New("provide a hash")
 	}
 	oid, err := ggit.NewObjectIdFromString(args[1])
-	repo, _ := ggit.OpenRepository(".git")
+	repo, _ := ggit.Open(".git")
 	b, err := repo.ReadBlob(oid)
 	if err != nil {
 		fmt.Println("Error: ", err)
