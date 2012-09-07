@@ -2,13 +2,13 @@ package ggit
 
 import (
 	"path"
-	"os"
+	"errors"
+	/*"os"
 	"io"
 	"bytes"
 	"strings"
-	"errors"
 	"strconv"
-	"compress/zlib"
+	"compress/zlib"*/
 )
 
 // a representation of a git repository
@@ -85,4 +85,5 @@ func objectPath(oid *ObjectId) string {
 // validate a repository path to make sure it has
 // the right format and that it exists
 func validateRepo(path string) bool {
+    return true
 }

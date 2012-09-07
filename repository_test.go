@@ -2,7 +2,6 @@ package ggit
 
 import (
 	"testing"
-	"bytes"
 )
 
 func TestObjectPath(t *testing.T) {
