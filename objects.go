@@ -121,7 +121,3 @@ func Hash(h Hashable) (o *ObjectId) {
 type Blob struct {
         RawObject
 }
-
-type Commit struct {
-        RawObject
-}
