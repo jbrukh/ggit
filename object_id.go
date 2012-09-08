@@ -68,8 +68,9 @@ func computeRepr(bytes []byte) (hex string) {
         out := make([]byte, OID_HEXSZ)
         for inx, b := range bytes {
                 // the left and right halves of the byte (8 bits)
-                out[2*inx] = byte2hex[int(b>>4)]
-                out[2*inx+1] = byte2hex[int(b&0xf)]
+				i := 2*inx
+                out[i] = byte2hex[int(b>>4)]
+                out[i+1] = byte2hex[int(b&0xf)]
         }
         return string(out)
 }
@@ -81,8 +82,9 @@ func computeBytes(hex string) (bytes []byte, err error) {
         }
         bytes = make([]byte, OID_SZ)
         for inx, _ := range bytes[0:OID_SZ] {
-                left, err := hex2byte(hex[2*inx])
-                right, err := hex2byte(hex[2*inx+1])
+				i := 2*inx
+                left, err := hex2byte(hex[i])
+                right, err := hex2byte(hex[i+1])
                 if err != nil {
                         return nil, err
                 }
