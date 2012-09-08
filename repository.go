@@ -1,10 +1,8 @@
 package ggit
 
 import (
-    "bytes"
     "compress/zlib"
     "errors"
-    "fmt"
     "io"
     "os"
     "path"
@@ -70,40 +68,26 @@ func (r *Repository) ReadRawObject(oid *ObjectId) (o *RawObject, err error) {
 
 // ReadBlob obtains a Blob object 
 func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
-    var o *RawObject
-    if o, err = r.ReadRawObject(oid); err != nil {
+    o, err := r.ReadRawObject(oid)
+    if err != nil {
         return
     }
-    b = &Blob{o}
-    // TODO: check validity!
-    return b, nil
+	
+    b = &Blob{
+		rawObject: o, 
+		parent: r,
+	}
+    return
 }
 
 // TODO: this is currently broken
-func (r *Repository) ReadTree(oid *ObjectId) error {
-    o, err := r.ReadRawObject(oid)
+func (r *Repository) ReadTree(oid *ObjectId) (t *Tree, err error) {
+    rawObj, err := r.ReadRawObject(oid)
     if err != nil {
-        return err
+        return
     }
-    payload, err := o.Payload()
-    if err != nil {
-        return err
-    }
-    b := bytes.NewBuffer(payload)
-    for {
-        modeName, err := b.ReadString('\000')
-        if err != nil {
-            break
-        }
-        fmt.Printf("%v\n", modeName)
-        bts := b.Next(20)
-        hsh := NewObjectIdFromBytes(bts)
-        fmt.Printf("sha: %s\n", hsh.String())
-        if err != nil {
-            break
-        }
-    }
-    return nil
+	rawTree := newRawTree(rawObj)
+	return rawTree.ParseTree()
 }
 
 // turn an oid into a path relative to the

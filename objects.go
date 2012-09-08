@@ -22,7 +22,7 @@ const (
 // git object that contains the header;
 type RawObject struct {
     bytes []byte
-    pInx  int64 // start of payload bytes 
+    pInx  uint // start of payload bytes 
 }
 
 type ObjectHeader struct {
@@ -94,9 +94,9 @@ func (o *RawObject) Header() (h *ObjectHeader, err error) {
     return &ObjectHeader{otype, osize}, nil
 }
 
-func parseHeader(b []byte) (typeStr, sizeStr string, pInx int64) {
+func parseHeader(b []byte) (typeStr, sizeStr string, pInx uint) {
     const MAX_HEADER_SZ = 32
-    var i, j int64
+    var i, j uint
     for i = 0; i < MAX_HEADER_SZ; i++ {
         if b[i] == ' ' {
             typeStr = string(b[:i])
@@ -127,7 +127,15 @@ func (o *RawObject) Parse() (h *ObjectHeader, payload []byte, err error) {
     if h, err = o.Header(); err != nil {
         return
     }
-    payload, err = o.Payload()
+    
+	if payload, err = o.Payload(); err != nil {
+		return
+	}
+	
+	// check size!
+	if h.Size != len(payload) {
+		err = errors.New("object corrupted (checksize is wrong)")
+	}
     return
 }
 
@@ -158,5 +166,6 @@ func Hash(h Hashable) (o *ObjectId) {
 }
 
 type Blob struct {
-    *RawObject
+    rawObject *RawObject
+	parent *Repository
 }
