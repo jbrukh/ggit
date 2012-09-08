@@ -10,21 +10,21 @@ const (
 )
 
 type rawTree struct {
-	rawObj *RawObject
+    rawObj *RawObject
 }
 
 func (rt *rawTree) Parse() (err error) {
-	return
+    return
 }
 
 func (rt *rawTree) ParseTree() (t *Tree, err error) {
-	return nil, nil
+    return nil, nil
 }
 
 func newRawTree(rawObj *RawObject) (rt *rawTree) {
-	return &rawTree{
-		rawObj,
-	}
+    return &rawTree{
+        rawObj,
+    }
 }
 
 /*func parseModeAndName(b []byte) (modeStr, nameStr string, hInx uint) {
@@ -44,25 +44,25 @@ func newRawTree(rawObj *RawObject) (rt *rawTree) {
     }
     return
 }*/
-	
-	/*b := bytes.NewBuffer(p)
-    for {
-        modeName, err := b.ReadString('\000')
-        if err != nil {
-            break
-        }
-        fmt.Printf("%v\n", modeName)
-        bts := b.Next(20)
-        hsh := NewObjectIdFromBytes(bts)
-        fmt.Printf("sha: %s\n", hsh.String())
-        if err != nil {
-            break
-        }
-    }*/
+
+/*b := bytes.NewBuffer(p)
+  for {
+      modeName, err := b.ReadString('\000')
+      if err != nil {
+          break
+      }
+      fmt.Printf("%v\n", modeName)
+      bts := b.Next(20)
+      hsh := NewObjectIdFromBytes(bts)
+      fmt.Printf("sha: %s\n", hsh.String())
+      if err != nil {
+          break
+      }
+  }*/
 
 type Tree struct {
     entries []TreeEntry
-	parent *Repository
+    parent  *Repository
 }
 
 type TreeEntry struct {

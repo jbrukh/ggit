@@ -1,8 +1,8 @@
 package ggit
 
 import (
-	"hash"
-	"crypto/sha1"
+    "crypto/sha1"
+    "hash"
 )
 
 // the hash object used to build
@@ -23,8 +23,8 @@ func Hash(h Hashable) (o *ObjectId) {
 }
 
 func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+    if a < b {
+        return a
+    }
+    return b
 }

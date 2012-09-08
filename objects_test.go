@@ -2,8 +2,8 @@ package ggit
 
 import (
     "fmt"
+    "strings"
     "testing"
-	"strings"
 )
 
 func Test_toObjectType(t *testing.T) {
@@ -29,27 +29,27 @@ func Test_Parse(t *testing.T) {
     const F5 = ""
 
     testOk := func(data string, otype ObjectType) {
-		fmt.Println("testing: ", data)
+        fmt.Println("testing: ", data)
         rawObj := RawObject{
-			bytes:[]byte(data),
-		}
-		_, p, err := rawObj.Parse()
+            bytes: []byte(data),
+        }
+        _, p, err := rawObj.Parse()
         if err != nil {
             t.Error("gave error: ", err)
         }
-		toks := strings.Split(data, "\000")
-		pld := toks[1]
-    	if pld != string(p) {
-			t.Error("parsed wrong payload: ", p)
-		}
-	}
+        toks := strings.Split(data, "\000")
+        pld := toks[1]
+        if pld != string(p) {
+            t.Error("parsed wrong payload: ", p)
+        }
+    }
     testFail := func(data string) {
-	   fmt.Println("testing: ", data)
-       rawObj := RawObject{
-	       bytes:[]byte(data),
-	   }
-	   _, _, err := rawObj.Parse()
-       if err == nil {
+        fmt.Println("testing: ", data)
+        rawObj := RawObject{
+            bytes: []byte(data),
+        }
+        _, _, err := rawObj.Parse()
+        if err == nil {
             t.Error("should have failed")
         }
     }

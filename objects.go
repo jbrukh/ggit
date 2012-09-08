@@ -96,15 +96,15 @@ func (o *RawObject) Parse() (h *ObjectHeader, payload []byte, err error) {
     if h, err = o.Header(); err != nil {
         return
     }
-    
-	if payload, err = o.Payload(); err != nil {
-		return
-	}
-	
-	// check size!
-	if h.Size != len(payload) {
-		err = errors.New("object corrupted (checksize is wrong)")
-	}
+
+    if payload, err = o.Payload(); err != nil {
+        return
+    }
+
+    // check size!
+    if h.Size != len(payload) {
+        err = errors.New("object corrupted (checksize is wrong)")
+    }
     return
 }
 
@@ -124,5 +124,5 @@ func (o *RawObject) Bytes() []byte {
 
 type Blob struct {
     rawObject *RawObject
-	parent *Repository
+    parent    *Repository
 }
