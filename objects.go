@@ -1,7 +1,6 @@
 package ggit
 
 import (
-        "bytes"
         "crypto/sha1"
         "errors"
         "hash"
@@ -23,6 +22,7 @@ const (
 // git object that contains the header;
 type RawObject struct {
         bytes []byte
+        pInx int64 // start of payload bytes 
 }
 
 type ObjectHeader struct {
@@ -75,14 +75,49 @@ type Hashable interface {
 
 // parses the header from the raw data
 func (o *RawObject) Header() (h *ObjectHeader, err error) {
-        buf := bytes.NewBuffer(o.bytes)
-        var header string
-		// TODO: this is going to be problematic when the
-		// header is malformed and long
-        if header, err = buf.ReadString('\000'); err != nil {
-                return nil, errors.New("can't find end of header")
-        } 
-        return toObjectHeader(header)
+	if len(o.bytes) < 1 {
+		return nil, errors.New("no data bytes")
+	}
+	var typeStr, sizeStr string
+	typeStr, sizeStr, o.pInx = parseHeader(o.bytes)
+	if o.pInx <= 0 {
+			return nil, errors.New("bad header")
+	}
+	otype, err := toObjectType(typeStr)
+	if err != nil {
+		return
+	}
+	osize, err := strconv.Atoi(sizeStr)
+	if err != nil {
+	    return nil, errors.New("bad object size")
+	}
+    return &ObjectHeader{otype, osize}, nil
+}
+
+func parseHeader(b []byte) (typeStr, sizeStr string, pInx int64) {
+	const MAX_HEADER_SZ = 32
+	var i, j int64
+	for i = 0; i < MAX_HEADER_SZ; i++ {
+		if b[i] == ' ' {
+			typeStr = string(b[:i])
+			for j = i; j < MAX_HEADER_SZ; j++ {
+				if b[j] == '\000' {
+					pInx = j
+					sizeStr = string(b[i+1:j])
+					return
+				}
+			}
+		}
+	}
+	return
+}
+
+// returns the headerless payload of the object
+func (o *RawObject) Payload() (bts []byte, err error) {
+	if o.pInx <= 0 {
+		return nil, errors.New("bad header")
+	}
+	return o.bytes[o.pInx+1:], nil
 }
 
 func (o *RawObject) Write(b []byte) (n int, err error) {
@@ -99,14 +134,6 @@ func (o *RawObject) Bytes() []byte {
         return o.bytes
 }
 
-// returns the headerless payload of the object
-func (o *RawObject) Payload() (bts []byte, err error) {
-        buf := bytes.NewBuffer(o.bytes)
-        if _, err = buf.ReadString('\000'); err != nil {
-                return
-        }
-        return buf.Bytes(), nil
-}
 
 // the hash object used to build
 // hashes of our objects
