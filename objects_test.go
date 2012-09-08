@@ -1,8 +1,8 @@
 package ggit
 
 import (
+    "fmt"
     "testing"
-	"fmt"
 )
 
 func Test_toObjectType(t *testing.T) {
@@ -13,7 +13,7 @@ func Test_toObjectType(t *testing.T) {
     }
     test("blob", OBJECT_BLOB)
     test("tree", OBJECT_TREE)
-    test("tag",  OBJECT_TAG)
+    test("tag", OBJECT_TAG)
     test("commit", OBJECT_COMMIT)
 }
 
@@ -25,7 +25,7 @@ func Test_toObjectHeader(t *testing.T) {
     const F2 = "\000"
     const F3 = "   "
     const F4 = "hedgehog 11\000"
-	const F5 = ""
+    const F5 = ""
 
     testOk := func(header string, otype ObjectType, osize int) {
         h, err := toObjectHeader(header)
@@ -53,27 +53,40 @@ func Test_toObjectHeader(t *testing.T) {
 }
 
 func Test_Payload(t *testing.T) {
-	const P1 = "blob 17\00012345678901234567"
-	testOk := func(payload string) {
-		bts := fmt.Sprintf("blob %d\000%s", len(payload), payload)
-		r := RawObject {
-			bytes: []byte(bts),
-		}
-		h, err := r.Header()
-		if err != nil {
-			t.Error("could not parse: ", err)
-		}
-		if h.Type != OBJECT_BLOB || h.Size != len(payload) {
-			t.Error("wrong type or size")
-		}
-		p, err := r.Payload()
-		if string(p) != payload {
-			t.Errorf("wrong payload; got: '%s'", string(p))
-		}
-	}
-	testOk("haha")
-	testOk("")
-	testOk(" ")
-	testOk("          ")
-	testOk("13123241324342342341242341234123421")
+    testOk := func(payload string) {
+        bts := fmt.Sprintf("blob %d\000%s", len(payload), payload)
+        r := RawObject{
+            bytes: []byte(bts),
+        }
+        h, err := r.Header()
+        if err != nil {
+            t.Error("could not parse: ", err)
+        }
+        if h.Type != OBJECT_BLOB || h.Size != len(payload) {
+            t.Error("wrong type or size")
+        }
+        p, err := r.Payload()
+        if string(p) != payload {
+            t.Errorf("wrong payload; got: '%s'", string(p))
+        }
+    }
+    testOk("haha")
+    testOk("")
+    testOk(" ")
+    testOk("          ")
+    testOk("13123241324342342341242341234123421")
+}
+
+func Test_PayloadFirst(t *testing.T) {
+    const P1 = "blob 17\00012345678901234567"
+    r := RawObject{
+        bytes: []byte(P1),
+    }
+    p, err := r.Payload()
+    if err != nil {
+        t.Error("error: ", err)
+    }
+    if string(p) != "12345678901234567" {
+        t.Error("wrong payload")
+    }
 }
