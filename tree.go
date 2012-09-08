@@ -13,6 +13,18 @@ type rawTree struct {
     rawObj *RawObject
 }
 
+type Tree struct {
+    entries []TreeEntry
+    parent  *Repository
+}
+
+type TreeEntry struct {
+    mode  FileMode
+    otype ObjectType
+    name  string
+    oid   *ObjectId
+}
+
 func (rt *rawTree) Parse() (err error) {
     return
 }
@@ -60,14 +72,3 @@ func newRawTree(rawObj *RawObject) (rt *rawTree) {
       }
   }*/
 
-type Tree struct {
-    entries []TreeEntry
-    parent  *Repository
-}
-
-type TreeEntry struct {
-    mode  FileMode
-    otype ObjectType
-    name  string
-    oid   *ObjectId
-}

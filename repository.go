@@ -68,13 +68,13 @@ func (r *Repository) ReadRawObject(oid *ObjectId) (o *RawObject, err error) {
 
 // ReadBlob obtains a Blob object 
 func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
-    o, err := r.ReadRawObject(oid)
+    rawObj, err := r.ReadRawObject(oid)
     if err != nil {
         return
     }
 
     b = &Blob{
-        rawObject: o,
+        rawObject: rawObj,
         parent:    r,
     }
     return

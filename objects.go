@@ -121,8 +121,3 @@ func (o *RawObject) Write(b []byte) (n int, err error) {
 func (o *RawObject) Bytes() []byte {
     return o.bytes
 }
-
-type Blob struct {
-    rawObject *RawObject
-    parent    *Repository
-}

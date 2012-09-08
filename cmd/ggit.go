@@ -51,7 +51,7 @@ func readBlob(args []string) (err error) {
     if err != nil {
         fmt.Println("Error: ", err)
     }
-    fmt.Println("bytes: ", string(b.Bytes()))
+    fmt.Println("contents: ", b)
     return
 }
 
@@ -61,9 +61,10 @@ func readTree(args []string) (err error) {
     }
     oid, err := ggit.NewObjectIdFromString(args[1])
     repo, _ := ggit.Open(".git")
-    err = repo.ReadTree(oid)
+    t, err := repo.ReadTree(oid)
     if err != nil {
         fmt.Println("Error: ", err)
     }
+	fmt.Println("contents: ", t)
     return
 }
