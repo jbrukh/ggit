@@ -10,15 +10,20 @@ import (
         "path"
 )
 
+type Backend interface {
+        // ReadRawObject reads a raw object from the backend
+        ReadRawObject(oid *ObjectId) (o *RawObject, err error)
+
+        // ReadBlob returns a Blob object representing the
+        // blob in question. If there is no such blob (or the
+        // id does not refer to a blob), an error is returned.
+        ReadBlob(oid *ObjectId) (b *Blob, err error)
+        ReadTree(oid *ObjectId) (t *Tree, err error)
+}
+
 // a representation of a git repository
 type Repository struct {
         path    string
-        wdir    string
-}
-
-type ObjectDatabase interface {
-        ReadRawObject(oid *ObjectId) (o *RawObject, err error)
-        ReadBlob(oid *ObjectId) (b *Blob, err error)
 }
 
 // open a repository that is located at the given path
@@ -29,7 +34,6 @@ func Open(path string) (r *Repository, err error) {
         }
         r = &Repository{
                 path:   path,
-                wdir:   path,   // TODO: this can be generalized
         }
         return
 }
@@ -80,15 +84,16 @@ func (r *Repository) ReadTree(oid *ObjectId) error {
         b := bytes.NewBuffer(payload)
         for {
                 modeName, err := b.ReadString('\000')
-                bts := b.Bytes()
-                fmt.Printf("got %s", bts, len(bts))
-                hsh := NewObjectIdFromBytes(b.Bytes()[:40])
+				if err != nil {
+					break
+				}
+				fmt.Printf("%v\n", modeName)
+                bts := b.Next(20)
+                hsh := NewObjectIdFromBytes(bts)
+                fmt.Printf("sha: %s\n", hsh.String())
                 if err != nil {
-                        return err
-                } else {
-                        fmt.Printf("%s (%d)\n\n", modeName, hsh)
+                        break
                 }
-
         }
         return nil
 }

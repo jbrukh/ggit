@@ -44,17 +44,19 @@ func toObjectType(typeStr string) (otype ObjectType, err error) {
         return 0, errors.New("unknown object type")
 }
 
+// TODO: this function probably shouldn't even exist; we just
+// need a good header parser below
 func toObjectHeader(header string) (h *ObjectHeader, err error) {
-        var (
-                toks    []string
-                otype   ObjectType
-        )
-        if toks := strings.Split(header, " "); len(toks) < 2 {
+		// TODO: this needs to be all sorts of fixed; what if there
+		// is leading whitespace?
+		header = strings.Trim(header, "\000")
+        toks := strings.Split(header, " ")
+        if len(toks) != 2 {
                 return nil, errors.New("bad object header")
         }
-
         typeStr, sizeStr := toks[0], toks[1]
-        if otype, err = toObjectType(typeStr); err != nil {
+        otype, err := toObjectType(typeStr)
+        if err != nil {
                 return
         }
 
@@ -75,12 +77,12 @@ type Hashable interface {
 func (o *RawObject) Header() (h *ObjectHeader, err error) {
         buf := bytes.NewBuffer(o.bytes)
         var header string
+		// TODO: this is going to be problematic when the
+		// header is malformed and long
         if header, err = buf.ReadString('\000'); err != nil {
                 return nil, errors.New("can't find end of header")
-        }
-
-        h, err = toObjectHeader(header)
-        return
+        } 
+        return toObjectHeader(header)
 }
 
 func (o *RawObject) Write(b []byte) (n int, err error) {
