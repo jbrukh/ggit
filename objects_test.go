@@ -3,6 +3,7 @@ package ggit
 import (
     "fmt"
     "testing"
+	"strings"
 )
 
 func Test_toObjectType(t *testing.T) {
@@ -17,34 +18,44 @@ func Test_toObjectType(t *testing.T) {
     test("commit", OBJECT_COMMIT)
 }
 
-func Test_toObjectHeader(t *testing.T) {
-    const P1 = "blob 11"
-    const P2 = "commit 10323"
-    const P3 = "tree 19\000"
+func Test_Parse(t *testing.T) {
+    const P1 = "blob 11\000  2 dfow aj"
+    const P2 = "commit 10\000 1 2 3 4 0"
+    const P3 = "tree 19\000hello world!!!!!!!!"
     const F1 = "commit"
     const F2 = "\000"
     const F3 = "   "
     const F4 = "hedgehog 11\000"
     const F5 = ""
 
-    testOk := func(header string, otype ObjectType, osize int) {
-        h, err := toObjectHeader(header)
+    testOk := func(data string, otype ObjectType) {
+		fmt.Println("testing: ", data)
+        rawObj := RawObject{
+			bytes:[]byte(data),
+		}
+		_, p, err := rawObj.Parse()
         if err != nil {
             t.Error("gave error: ", err)
         }
-        if h.Type != otype || h.Size != osize {
-            t.Error("mismatch, expecting ", otype, " ", osize)
+		toks := strings.Split(data, "\000")
+		pld := toks[1]
+    	if pld != string(p) {
+			t.Error("parsed wrong payload: ", p)
+		}
+	}
+    testFail := func(data string) {
+	   fmt.Println("testing: ", data)
+       rawObj := RawObject{
+	       bytes:[]byte(data),
+	   }
+	   _, _, err := rawObj.Parse()
+       if err == nil {
+            t.Error("should have failed")
         }
     }
-    testFail := func(header string) {
-        h, err := toObjectHeader(header)
-        if err == nil || h != nil {
-            t.Error("should have failed on: ", header)
-        }
-    }
-    testOk(P1, OBJECT_BLOB, 11)
-    testOk(P2, OBJECT_COMMIT, 10323)
-    testOk(P3, OBJECT_TREE, 19)
+    testOk(P1, OBJECT_BLOB)
+    testOk(P2, OBJECT_COMMIT)
+    testOk(P3, OBJECT_TREE)
     testFail(F1)
     testFail(F2)
     testFail(F3)

@@ -1,11 +1,8 @@
 package ggit
 
 import (
-    "crypto/sha1"
     "errors"
-    "hash"
     "strconv"
-    "strings"
 )
 
 type ObjectType int
@@ -44,35 +41,6 @@ func toObjectType(typeStr string) (otype ObjectType, err error) {
     return 0, errors.New("unknown object type")
 }
 
-// TODO: this function probably shouldn't even exist; we just
-// need a good header parser below
-func toObjectHeader(header string) (h *ObjectHeader, err error) {
-    // TODO: this needs to be all sorts of fixed; what if there
-    // is leading whitespace?
-    header = strings.Trim(header, "\000")
-    toks := strings.Split(header, " ")
-    if len(toks) != 2 {
-        return nil, errors.New("bad object header")
-    }
-    typeStr, sizeStr := toks[0], toks[1]
-    otype, err := toObjectType(typeStr)
-    if err != nil {
-        return
-    }
-
-    osize, err := strconv.Atoi(sizeStr)
-    if err != nil {
-        return nil, errors.New("bad object size")
-    }
-
-    return &ObjectHeader{otype, osize}, nil
-}
-
-// interface for hashable objects
-type Hashable interface {
-    Bytes() []byte
-}
-
 // parses the header from the raw data
 func (o *RawObject) Header() (h *ObjectHeader, err error) {
     if len(o.bytes) < 1 {
@@ -95,12 +63,13 @@ func (o *RawObject) Header() (h *ObjectHeader, err error) {
 }
 
 func parseHeader(b []byte) (typeStr, sizeStr string, pInx uint) {
-    const MAX_HEADER_SZ = 32
+    const MAX_SZ = 32
     var i, j uint
-    for i = 0; i < MAX_HEADER_SZ; i++ {
+    l := uint(min(MAX_SZ, len(b)))
+    for i = 0; i < l; i++ {
         if b[i] == ' ' {
             typeStr = string(b[:i])
-            for j = i; j < MAX_HEADER_SZ; j++ {
+            for j = i; j < l; j++ {
                 if b[j] == '\000' {
                     pInx = j
                     sizeStr = string(b[i+1 : j])
@@ -151,18 +120,6 @@ func (o *RawObject) Write(b []byte) (n int, err error) {
 // the object
 func (o *RawObject) Bytes() []byte {
     return o.bytes
-}
-
-// the hash object used to build
-// hashes of our objects
-var sha hash.Hash = sha1.New()
-
-// produce a hash for any object that
-// can be construed as a bunch of bytes
-func Hash(h Hashable) (o *ObjectId) {
-    sha.Reset()
-    sha.Write(h.Bytes())
-    return NewObjectIdFromHash(sha)
 }
 
 type Blob struct {
