@@ -1,23 +1,23 @@
 package ggit
 
 import (
-	"io"
+    "io"
 )
 
 type Blob struct {
     RawObject
-    parent    *Repository
+    parent *Repository
 }
 
 func (b *Blob) String() string {
-	p, _ := b.Payload()
-	return string(p)
+    p, _ := b.Payload()
+    return string(p)
 }
 
 func (b *Blob) Type() ObjectType {
-	return OBJECT_BLOB
+    return OBJECT_BLOB
 }
 
 func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
-	return io.WriteString(w, string(b.String()))
+    return io.WriteString(w, string(b.String()))
 }

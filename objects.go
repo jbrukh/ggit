@@ -2,8 +2,8 @@ package ggit
 
 import (
     "errors"
+    "io"
     "strconv"
-	"io"
 )
 
 type ObjectType int
@@ -16,12 +16,12 @@ const (
     OBJECT_TAG
 )
 
-type Object interface {	
-	// Type returns the type of the object
-	Type() ObjectType
-	
-	// write the string representation to the writer
-	WriteTo(w io.Writer) (n int, err error)
+type Object interface {
+    // Type returns the type of the object
+    Type() ObjectType
+
+    // write the string representation to the writer
+    WriteTo(w io.Writer) (n int, err error)
 }
 
 // raw (but uncompressed) data for a
@@ -51,17 +51,17 @@ func toObjectType(typeStr string) (otype ObjectType, err error) {
 }
 
 func (otype ObjectType) String() string {
-	switch otype {
-		case OBJECT_BLOB:
-			return "blob"
-		case OBJECT_TREE:
-			return "tree"
-		case OBJECT_COMMIT:
-			return "commit"
-		case OBJECT_TAG:
-			return "tag"
-	}
-	panic("unknown type")
+    switch otype {
+    case OBJECT_BLOB:
+        return "blob"
+    case OBJECT_TREE:
+        return "tree"
+    case OBJECT_COMMIT:
+        return "commit"
+    case OBJECT_TAG:
+        return "tag"
+    }
+    panic("unknown type")
 }
 
 // parses the header from the raw data
