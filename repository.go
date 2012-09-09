@@ -8,6 +8,8 @@ import (
     "path"
 )
 
+const DEFAULT_GIT_DIR = ".git"
+
 // A Backend supports storage of arbitrary Git
 // objects without particular regard of the technical
 // specifics. The backend can deliver a RawObject
@@ -56,14 +58,21 @@ func (r *Repository) ReadRawObject(oid *ObjectId) (o *RawObject, err error) {
     defer file.Close()
 
     var zr io.ReadCloser
-    if zr, err = zlib.NewReader(file); err != nil {
-        return
+    if zr, err = zlib.NewReader(file); err == nil {
+       defer zr.Close()
+	    o = new(RawObject)
+	    _, err = io.Copy(o, zr)
     }
-    defer zr.Close()
-
-    o = new(RawObject)
-    _, err = io.Copy(o, zr)
     return
+}
+
+// ReadRawObjectHeader reads the header information of an object in the repository
+func (r *Repository) ReadRawObjectHeader(oid *ObjectId) (h *ObjectHeader, err error) {
+	// TODO: could do special parsing to get header info only
+	if obj, err := r.ReadRawObject(oid); err == nil {
+		h, err = obj.Header()
+	}
+	return
 }
 
 func (r *Repository) ReadObject(oid *ObjectId) (obj Object, err error) {
