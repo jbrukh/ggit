@@ -17,6 +17,7 @@ type handler func([]string) error
 var handlers map[string]handler = map[string]handler{
     "read-blob":   readBlob,
     "read-tree":   readTree,
+	"cat-file": catFile,
 }
 
 func main() {
@@ -60,8 +61,6 @@ func readTree(args []string) (err error) {
     if err != nil {
         fmt.Println("Error: ", err)
     }
-	for _, e := range t.Entries() {
-		fmt.Println(e)		
-	}
+	t.WriteTo(os.Stdout)
     return
 }

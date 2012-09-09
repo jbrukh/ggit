@@ -3,6 +3,7 @@ package ggit
 import (
     "errors"
     "strconv"
+	"io"
 )
 
 type ObjectType int
@@ -14,6 +15,14 @@ const (
     OBJECT_COMMIT
     OBJECT_TAG
 )
+
+type Object interface {	
+	// Type returns the type of the object
+	Type() ObjectType
+	
+	// write the string representation to the writer
+	WriteTo(w io.Writer) (n int, err error)
+}
 
 // raw (but uncompressed) data for a
 // git object that contains the header;

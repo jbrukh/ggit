@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"io"
 )
 type FileMode uint16
 
@@ -34,9 +35,27 @@ type Tree struct {
     parent  *Repository
 }
 
+// TODO: is this necessary?
 func (t *Tree) Entries() []*TreeEntry {
 	return t.entries
 }
+
+func (t *Tree) Type() ObjectType {
+	return OBJECT_TREE
+}
+
+func (t *Tree) WriteTo(w io.Writer) (n int, err error) {
+	for _, e := range t.entries {
+		s := fmt.Sprintf("%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)
+		N, err := io.WriteString(w, s)
+		if err != nil {
+			break
+		}
+		n += N
+	}
+	return
+}
+
 type TreeEntry struct {
     mode  FileMode
     otype ObjectType
