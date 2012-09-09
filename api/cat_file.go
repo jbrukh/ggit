@@ -1,11 +1,11 @@
 package api
 
 import (
-	"errors"
-	"flag"
-	"os"
-	"fmt"
-	. "github.com/jbrukh/ggit"
+    "errors"
+    "flag"
+    "fmt"
+    . "github.com/jbrukh/ggit"
+    "os"
 )
 
 //
@@ -15,15 +15,15 @@ import (
 var catFileFlags *flag.FlagSet = flag.NewFlagSet("cat-file", flag.ExitOnError)
 
 var (
-	isType *bool 
-	isPrint *bool 
-	isSize *bool
+    isType  *bool
+    isPrint *bool
+    isSize  *bool
 )
 
 func init() {
-	isType = catFileFlags.Bool("t", false, "show object type")
-	isPrint = catFileFlags.Bool("p", false, "pretty-print object's contents")
-	isSize = catFileFlags.Bool("s", false, "show object size")
+    isType = catFileFlags.Bool("t", false, "show object type")
+    isPrint = catFileFlags.Bool("p", false, "pretty-print object's contents")
+    isSize = catFileFlags.Bool("s", false, "show object size")
 }
 
 func CatFile(args []string) (err error) {
@@ -52,27 +52,37 @@ func CatFile(args []string) (err error) {
     }
     defer repo.Close()
 
-    if *isPrint {
-        obj, e := repo.ReadObject(oid)
-        if e != nil {
-            return errors.New("could not find object: " + oid.String()) // TODO
-        }
-        obj.WriteTo(os.Stdout)
-    } else if *isType {
-        h, e := repo.ReadRawObjectHeader(oid)
-        if e != nil {
-            return e
-        }
-        fmt.Println(h.Type)
-    } else if *isSize {
-        h, e := repo.ReadRawObjectHeader(oid)
-        if e != nil {
-            return e
-        }
-        fmt.Println(h.Size)
-    } else {
-        catFileFlags.PrintDefaults()
-    }
-
+	switch {
+		case *isPrint:
+			return doPrint(repo, oid)
+		case *isType:
+			return doType(repo, oid)
+		case *isSize:
+			return doSize(repo, oid)
+	    default:
+			return errors.New("unknown command")
+	}
     return
+}
+
+func doPrint(repo *Repository, oid *ObjectId) (err error) {
+	if obj, err := repo.ReadObject(oid); err == nil {
+        obj.WriteTo(os.Stdout)
+		return err
+    }
+    return errors.New("could not find object: " + oid.String()) // TODO
+}
+
+func doType(repo *Repository, oid *ObjectId) (err error) {
+	if h, err := repo.ReadRawObjectHeader(oid); err == nil {
+    	fmt.Println(h.Type)
+ 	}
+	return	
+}
+
+func doSize(repo *Repository, oid *ObjectId) (err error) {
+	if h, err := repo.ReadRawObjectHeader(oid); err == nil {
+		fmt.Println(h.Size)
+    }
+	return
 }
