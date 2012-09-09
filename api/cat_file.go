@@ -52,37 +52,37 @@ func CatFile(args []string) (err error) {
     }
     defer repo.Close()
 
-	switch {
-		case *isPrint:
-			return doPrint(repo, oid)
-		case *isType:
-			return doType(repo, oid)
-		case *isSize:
-			return doSize(repo, oid)
-	    default:
-			return errors.New("unknown command")
-	}
+    switch {
+    case *isPrint:
+        return doPrint(repo, oid)
+    case *isType:
+        return doType(repo, oid)
+    case *isSize:
+        return doSize(repo, oid)
+    default:
+        return errors.New("unknown command")
+    }
     return
 }
 
 func doPrint(repo *Repository, oid *ObjectId) (err error) {
-	if obj, err := repo.ReadObject(oid); err == nil {
+    if obj, err := repo.ReadObject(oid); err == nil {
         obj.WriteTo(os.Stdout)
-		return err
+        return err
     }
     return errors.New("could not find object: " + oid.String()) // TODO
 }
 
 func doType(repo *Repository, oid *ObjectId) (err error) {
-	if h, err := repo.ReadRawObjectHeader(oid); err == nil {
-    	fmt.Println(h.Type)
- 	}
-	return	
+    if h, err := repo.ReadRawObjectHeader(oid); err == nil {
+        fmt.Println(h.Type)
+    }
+    return
 }
 
 func doSize(repo *Repository, oid *ObjectId) (err error) {
-	if h, err := repo.ReadRawObjectHeader(oid); err == nil {
-		fmt.Println(h.Size)
+    if h, err := repo.ReadRawObjectHeader(oid); err == nil {
+        fmt.Println(h.Size)
     }
-	return
+    return
 }
