@@ -16,6 +16,13 @@ const (
     OBJECT_TAG
 )
 
+const (
+    OBJECT_BLOB_STR   = "blob"
+    OBJECT_TREE_STR   = "tree"
+    OBJECT_COMMIT_STR = "commit"
+    OBJECT_TAG_STR    = "tag"
+)
+
 type Object interface {
     // Type returns the type of the object
     Type() ObjectType
@@ -28,9 +35,12 @@ type Object interface {
 // git object that contains the header;
 type RawObject struct {
     bytes []byte
-    pInx  uint // start of payload bytes 
+    pInx  uint // start of payload bytes
+    h     *ObjectHeader
 }
 
+// ObjectHeader is the deserialized (and more efficiently stored)
+// version of a git object header
 type ObjectHeader struct {
     Type ObjectType
     Size int
@@ -38,13 +48,13 @@ type ObjectHeader struct {
 
 func toObjectType(typeStr string) (otype ObjectType, err error) {
     switch typeStr {
-    case "blob":
+    case OBJECT_BLOB_STR:
         return OBJECT_BLOB, nil
-    case "tree":
+    case OBJECT_TREE_STR:
         return OBJECT_TREE, nil
-    case "tag":
+    case OBJECT_TAG_STR:
         return OBJECT_TAG, nil
-    case "commit":
+    case OBJECT_COMMIT_STR:
         return OBJECT_COMMIT, nil
     }
     return 0, errors.New("unknown object type")
@@ -53,25 +63,33 @@ func toObjectType(typeStr string) (otype ObjectType, err error) {
 func (otype ObjectType) String() string {
     switch otype {
     case OBJECT_BLOB:
-        return "blob"
+        return OBJECT_BLOB_STR
     case OBJECT_TREE:
-        return "tree"
+        return OBJECT_TREE_STR
     case OBJECT_COMMIT:
-        return "commit"
+        return OBJECT_COMMIT_STR
     case OBJECT_TAG:
-        return "tag"
+        return OBJECT_TAG_STR
     }
     panic("unknown type")
 }
 
 // parses the header from the raw data
-func (o *RawObject) Header() (h *ObjectHeader, err error) {
-    if len(o.bytes) < 1 {
+func (obj *RawObject) Header() (h *ObjectHeader, err error) {
+    if obj.h == nil {
+        obj.h, err = obj.parse()
+        return obj.h, err
+    }
+    return obj.h, nil
+}
+
+func (obj *RawObject) parse() (h *ObjectHeader, err error) {
+    if len(obj.bytes) < 1 {
         return nil, errors.New("no data bytes")
     }
     var typeStr, sizeStr string
-    typeStr, sizeStr, o.pInx = parseHeader(o.bytes)
-    if o.pInx <= 0 {
+    typeStr, sizeStr, obj.pInx = parseHeader(obj.bytes)
+    if obj.pInx <= 0 {
         return nil, errors.New("bad header")
     }
     otype, err := toObjectType(typeStr)

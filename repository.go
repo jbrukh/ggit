@@ -25,6 +25,7 @@ type ObjectReader interface {
     // id does not refer to a blob), an error is returned.
     ReadBlob(oid *ObjectId) (b *Blob, err error)
     ReadTree(oid *ObjectId) (t *Tree, err error)
+    ReadCommit(oid *ObjectId) (c *Commit, err error)
 }
 
 // a representation of a git repository
@@ -92,6 +93,8 @@ func (r *Repository) ReadObject(oid *ObjectId) (obj Object, err error) {
         return r.ReadBlob(oid)
     case OBJECT_TREE:
         return r.ReadTree(oid)
+    case OBJECT_COMMIT:
+        return r.ReadCommit(oid)
     default:
         panic("unsupported type")
     }
@@ -126,6 +129,26 @@ func (r *Repository) ReadTree(oid *ObjectId) (t *Tree, err error) {
     // associate
     t.parent = r
     return
+}
+
+func (r *Repository) ReadCommit(oid *ObjectId) (c *Commit, err error) {
+    rawObj, err := r.ReadRawObject(oid)
+    if err != nil {
+        return
+    }
+    rc := newRawCommit(rawObj)
+    c, err = rc.ParseCommit()
+    if err != nil {
+        return
+    }
+    // associate
+    c.repo = r
+    return
+}
+
+func (r *Repository) resolveOid(shortOid string) (oid *ObjectId, err error) {
+    // TODO: make this resolve short strings
+    return NewObjectIdFromString(shortOid)
 }
 
 // turn an oid into a path relative to the

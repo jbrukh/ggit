@@ -10,26 +10,13 @@ import (
 type FileMode uint16
 
 const (
+    // TODO: there are more modes
     MODE_DLTD FileMode = 0000000
     MODE_FILE FileMode = 0100644
     MODE_EXEC FileMode = 0100755
     MODE_TREE FileMode = 0040000
     MODE_LINK FileMode = 0120000
 )
-
-func deduceObjectType(mode FileMode) ObjectType {
-    switch mode {
-    case MODE_DLTD, MODE_FILE, MODE_EXEC:
-        return OBJECT_BLOB
-    case MODE_TREE:
-        return OBJECT_TREE
-    }
-    panic("unknown mode")
-}
-
-type rawTree struct {
-    RawObject
-}
 
 type Tree struct {
     entries []*TreeEntry
@@ -67,6 +54,10 @@ type TreeEntry struct {
 func (e *TreeEntry) String() (s string) {
     s = fmt.Sprintf("%.6o %s %-43s %s", e.mode, e.otype, e.oid, e.name)
     return
+}
+
+type rawTree struct {
+    RawObject
 }
 
 func newRawTree(rawObj *RawObject) (rt *rawTree) {

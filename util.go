@@ -28,3 +28,15 @@ func min(a, b int) int {
     }
     return b
 }
+
+// The file mode of a tree entry implies an object type.
+func deduceObjectType(mode FileMode) ObjectType {
+    switch mode {
+    case MODE_DLTD, MODE_FILE, MODE_EXEC:
+        return OBJECT_BLOB
+    case MODE_TREE:
+        return OBJECT_TREE
+    }
+    // TODO
+    panic("unknown mode")
+}
