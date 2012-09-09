@@ -66,6 +66,29 @@ func (r *Repository) ReadRawObject(oid *ObjectId) (o *RawObject, err error) {
     return
 }
 
+func (r *Repository) ReadObject(oid *ObjectId) (obj Object, err error) {
+ 	rawObj, err := r.ReadRawObject(oid)
+    if err != nil {
+        return
+    }
+	
+	h, err := rawObj.Header()
+	if err != nil {
+		return
+	}
+	
+	// TODO: fix the double lookup
+	switch h.Type {
+		case OBJECT_BLOB:
+			return r.ReadBlob(oid)
+		case OBJECT_TREE:
+			return r.ReadTree(oid)
+		default:
+			panic("unsupported type")
+	}
+	return
+}
+
 // ReadBlob obtains a Blob object 
 func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
     rawObj, err := r.ReadRawObject(oid)

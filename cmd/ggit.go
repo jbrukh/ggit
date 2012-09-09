@@ -15,8 +15,6 @@ func usage() {
 type handler func([]string) error
 
 var handlers map[string]handler = map[string]handler{
-    "read-blob": readBlob,
-    "read-tree": readTree,
     "cat-file":  catFile,
 }
 
@@ -33,34 +31,60 @@ func main() {
         os.Exit(2)
     }
     if err := h(args); err != nil {
-        fmt.Println(err)
+        fmt.Println("error: ", err)
+		os.Exit(-1)
     }
+	os.Exit(0)
 }
 
-func readBlob(args []string) (err error) {
-    if len(args) < 2 {
-        return errors.New("provide a hash")
-    }
-    oid, err := ggit.NewObjectIdFromString(args[1])
-    repo, _ := ggit.Open(".git")
-    b, err := repo.ReadBlob(oid)
-    if err != nil {
-        fmt.Println("Error: ", err)
-    }
-    fmt.Println("contents: ", b)
-    return
+func catFile(args []string) (err error) {
+	fs := flag.NewFlagSet("cat-file", flag.ExitOnError)
+	oidForType := fs.String("t", "", "show object type")
+	oidForPrint := fs.String("p", "", "pretty-print object's contents")
+	fs.Parse(args[1:])
+	
+	if *oidForPrint != "" {
+		repo, e := ggit.Open(".git")
+		if e != nil {
+			return e
+		}
+		defer repo.Close()
+		oid, e := ggit.NewObjectIdFromString(*oidForPrint)
+		if e != nil {
+			return e
+		}
+		
+		obj, e := repo.ReadObject(oid)
+		if e != nil {
+			return errors.New("could not find object: " + oid.String()) // TODO
+		}
+		
+		obj.WriteTo(os.Stdout)
+	} else if *oidForType != "" {
+		repo, e := ggit.Open(".git")
+		if e != nil {
+			return e
+		}
+		defer repo.Close()
+		oid, e := ggit.NewObjectIdFromString(*oidForType)
+		if e != nil {
+			return e
+		}
+		
+		obj, e := repo.ReadRawObject(oid)
+		if e != nil {
+			return errors.New("could not find object: " + oid.String()) // TODO
+		}
+		
+		h, e := obj.Header()
+		if e != nil {
+			return e
+		}
+
+		fmt.Println(h.Type)
+	} else {
+		fs.PrintDefaults()
+	}
+	return
 }
 
-func readTree(args []string) (err error) {
-    if len(args) < 2 {
-        return errors.New("provide a hash")
-    }
-    oid, err := ggit.NewObjectIdFromString(args[1])
-    repo, _ := ggit.Open(".git")
-    t, err := repo.ReadTree(oid)
-    if err != nil {
-        fmt.Println("Error: ", err)
-    }
-    t.WriteTo(os.Stdout)
-    return
-}
