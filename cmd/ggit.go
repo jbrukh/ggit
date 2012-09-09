@@ -15,7 +15,6 @@ func usage() {
 type handler func([]string) error
 
 var handlers map[string]handler = map[string]handler{
-    "hash-object": hashObject,
     "read-blob":   readBlob,
     "read-tree":   readTree,
 }
@@ -35,10 +34,6 @@ func main() {
     if err := h(args); err != nil {
         fmt.Println(err)
     }
-}
-
-func hashObject(args []string) error {
-    return nil
 }
 
 func readBlob(args []string) (err error) {
@@ -65,6 +60,8 @@ func readTree(args []string) (err error) {
     if err != nil {
         fmt.Println("Error: ", err)
     }
-	fmt.Println("contents: ", t)
+	for _, e := range t.Entries() {
+		fmt.Println(e)		
+	}
     return
 }

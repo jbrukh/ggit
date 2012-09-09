@@ -1,23 +1,42 @@
 package ggit
 
+import (
+	"errors"
+	"fmt"
+	"strconv"
+)
 type FileMode uint16
 
 const (
+	MODE_DLTD FileMode = 0000000
     MODE_FILE FileMode = 0100644
     MODE_EXEC FileMode = 0100755
     MODE_TREE FileMode = 0040000
     MODE_LINK FileMode = 0120000
 )
 
+func deduceObjectType(mode FileMode) ObjectType {
+	switch mode {
+		case MODE_DLTD, MODE_FILE, MODE_EXEC:
+			return OBJECT_BLOB
+		case MODE_TREE:
+			return OBJECT_TREE
+	}
+	panic("unknown mode")
+}
+
 type rawTree struct {
-    rawObj *RawObject
+    RawObject
 }
 
 type Tree struct {
-    entries []TreeEntry
+    entries []*TreeEntry
     parent  *Repository
 }
 
+func (t *Tree) Entries() []*TreeEntry {
+	return t.entries
+}
 type TreeEntry struct {
     mode  FileMode
     otype ObjectType
@@ -25,50 +44,81 @@ type TreeEntry struct {
     oid   *ObjectId
 }
 
-func (rt *rawTree) Parse() (err error) {
-    return
-}
-
-func (rt *rawTree) ParseTree() (t *Tree, err error) {
-    return nil, nil
+func (e *TreeEntry) String() (s string){
+	s = fmt.Sprintf("%.6o %s %-43s %s", e.mode, e.otype, e.oid, e.name)
+	return
 }
 
 func newRawTree(rawObj *RawObject) (rt *rawTree) {
+	// TODO: decide if object check should be done here
     return &rawTree{
-        rawObj,
+        RawObject: *rawObj,
     }
 }
 
-/*func parseModeAndName(b []byte) (modeStr, nameStr string, hInx uint) {
-    const MAX_SZ = 32
-    var i, j uint
-    for i = 0; i < MAX_SZ; i++ {
-        if b[i] == ' ' {
-            typeStr = string(b[:i])
-            for j = i; j < MAX_SZ; j++ {
-                if b[j] == '\000' {
-                    pInx = j
-                    sizeStr = string(b[i+1 : j])
-                    return
-                }
-            }
-        }
-    }
-    return
-}*/
+func (rt *rawTree) ParseTree() (t *Tree, err error) {
+	p, err := rt.Payload()
+	if err != nil {
+		return
+	}
+	entries := make([]*TreeEntry, 0, 10)
+	for len(p) > 0 {
+		e, size, err := parseEntry(p)
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, e)
+		p = p[size:]
+	}
+	t = &Tree{
+		entries,
+		nil,
+	}
+	return
+}
 
-/*b := bytes.NewBuffer(p)
-  for {
-      modeName, err := b.ReadString('\000')
-      if err != nil {
-          break
-      }
-      fmt.Printf("%v\n", modeName)
-      bts := b.Next(20)
-      hsh := NewObjectIdFromBytes(bts)
-      fmt.Printf("sha: %s\n", hsh.String())
-      if err != nil {
-          break
-      }
-  }*/
+func parseEntry(p []byte) (e *TreeEntry, size int, err error) {
+	const MAX_SZ = 64
+	l := min(MAX_SZ, len(p))
+	size = 0
+	for i := 0; i < l; i++ {
+		if p[i] == ' ' {
+			modeStr := string(p[:i])
+			// fmt.Printf("modeStr:\t%s\n", modeStr)
+			for j := i; j < l; j++ {
+				if p[j] == '\000' {
+					fileName := string(p[i+1:j])
+					// fmt.Printf("fileName:\t%s\n", fileName)
+					j++ // skip the null
+					size = j+OID_SZ
+					if size > l {
+						err = errors.New("not enough bytes for hash")
+						return
+					}
+					hsh := p[j:size]
+					// fmt.Printf("hash:\t%s\n", NewObjectIdFromBytes(hsh))
+					e, err = getTreeEntry(modeStr, fileName, hsh)
+					return
+				}
+			}
+		}
+	}
+	err = errors.New("malformed object")
+	return
+}
+
+func getTreeEntry(modeStr, fileName string, hsh []byte) (e *TreeEntry, err error) {
+	mode, err := strconv.ParseInt(modeStr, 8, 32)
+	if err != nil {
+		return
+	}
+	m := FileMode(mode)
+	e = &TreeEntry {
+		mode: m,
+		otype: deduceObjectType(m), // TODO: fix this
+		name: fileName,
+		oid: NewObjectIdFromBytes(hsh),
+	}
+	return
+}
 

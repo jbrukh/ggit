@@ -74,9 +74,9 @@ func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
     }
 
     b = &Blob{
-        rawObject: rawObj,
-        parent:    r,
-    }
+		RawObject: *rawObj,
+		parent: r,
+	}
     return
 }
 
@@ -87,7 +87,13 @@ func (r *Repository) ReadTree(oid *ObjectId) (t *Tree, err error) {
         return
     }
     rawTree := newRawTree(rawObj)
-    return rawTree.ParseTree()
+    t, err = rawTree.ParseTree()
+	if err != nil {
+		return
+	}
+	// associate
+	t.parent = r
+	return
 }
 
 // turn an oid into a path relative to the

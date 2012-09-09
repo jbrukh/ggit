@@ -41,6 +41,20 @@ func toObjectType(typeStr string) (otype ObjectType, err error) {
     return 0, errors.New("unknown object type")
 }
 
+func (otype ObjectType) String() string {
+	switch otype {
+		case OBJECT_BLOB:
+			return "blob"
+		case OBJECT_TREE:
+			return "tree"
+		case OBJECT_COMMIT:
+			return "commit"
+		case OBJECT_TAG:
+			return "tag"
+	}
+	panic("unknown type")
+}
+
 // parses the header from the raw data
 func (o *RawObject) Header() (h *ObjectHeader, err error) {
     if len(o.bytes) < 1 {
