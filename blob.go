@@ -6,7 +6,7 @@ import (
 
 type Blob struct {
     RawObject
-    parent *Repository
+    repo *Repository
 }
 
 func (b *Blob) String() string {

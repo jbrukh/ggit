@@ -20,7 +20,7 @@ const (
 
 type Tree struct {
     entries []*TreeEntry
-    parent  *Repository
+    repo    *Repository
 }
 
 // TODO: is this necessary?

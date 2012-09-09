@@ -110,7 +110,7 @@ func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
 
     b = &Blob{
         RawObject: *rawObj,
-        parent:    r,
+        repo:      r,
     }
     return
 }
@@ -127,7 +127,7 @@ func (r *Repository) ReadTree(oid *ObjectId) (t *Tree, err error) {
         return
     }
     // associate
-    t.parent = r
+    t.repo = r
     return
 }
 
