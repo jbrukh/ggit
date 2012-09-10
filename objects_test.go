@@ -22,6 +22,7 @@ func Test_Parse(t *testing.T) {
     const P1 = "blob 11\000  2 dfow aj"
     const P2 = "commit 10\000 1 2 3 4 0"
     const P3 = "tree 19\000hello world!!!!!!!!"
+    const P4 = "blob 0\000"
     const F1 = "commit"
     const F2 = "\000"
     const F3 = "   "
@@ -56,6 +57,7 @@ func Test_Parse(t *testing.T) {
     testOk(P1, OBJECT_BLOB)
     testOk(P2, OBJECT_COMMIT)
     testOk(P3, OBJECT_TREE)
+    testOk(P4, OBJECT_BLOB)
     testFail(F1)
     testFail(F2)
     testFail(F3)

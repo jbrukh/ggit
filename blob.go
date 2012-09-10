@@ -5,6 +5,10 @@ import (
 )
 
 type Blob struct {
+    /*
+    	Unlike trees and commits, the Blob object does not have a rawBlob
+    	object intermediately because there is nothing to parse.
+    */
     RawObject
     repo *Repository
 }

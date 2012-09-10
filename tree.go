@@ -126,7 +126,7 @@ func getTreeEntry(modeStr, fileName string, hsh []byte) (e *TreeEntry, err error
     m := FileMode(mode)
     e = &TreeEntry{
         mode:  m,
-        otype: deduceObjectType(m), // TODO: fix this
+        otype: deduceObjectType(m),
         name:  fileName,
         oid:   NewObjectIdFromBytes(hsh),
     }

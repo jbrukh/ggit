@@ -6,9 +6,9 @@ import (
     "strconv"
 )
 
+// the types of Git objects
 type ObjectType int
 
-// the types of objects
 const (
     OBJECT_BLOB ObjectType = iota
     OBJECT_TREE
@@ -16,6 +16,7 @@ const (
     OBJECT_TAG
 )
 
+// string representations of Git objects
 const (
     OBJECT_BLOB_STR   = "blob"
     OBJECT_TREE_STR   = "tree"
@@ -24,19 +25,11 @@ const (
 )
 
 type Object interface {
-    // Type returns the type of the object
     Type() ObjectType
 
-    // write the string representation to the writer
+    // write the string representation of 
+    // this object to the writer
     WriteTo(w io.Writer) (n int, err error)
-}
-
-// raw (but uncompressed) data for a
-// git object that contains the header;
-type RawObject struct {
-    bytes []byte
-    pInx  uint // start of payload bytes
-    h     *ObjectHeader
 }
 
 // ObjectHeader is the deserialized (and more efficiently stored)
@@ -74,8 +67,17 @@ func (otype ObjectType) String() string {
     panic("unknown type")
 }
 
+// raw (but uncompressed) data for a
+// git object that contains the header;
+type RawObject struct {
+    bytes []byte
+    pInx  uint // start of payload bytes
+    h     *ObjectHeader
+}
+
 // parses the header from the raw data
 func (obj *RawObject) Header() (h *ObjectHeader, err error) {
+    // the header is parsed lazily, and then cached
     if obj.h == nil {
         obj.h, err = obj.parse()
         return obj.h, err
@@ -123,36 +125,32 @@ func parseHeader(b []byte) (typeStr, sizeStr string, pInx uint) {
 }
 
 // returns the headerless payload of the object
-func (o *RawObject) Payload() (bts []byte, err error) {
-    if o.pInx <= 0 {
+func (obj *RawObject) Payload() (bts []byte, err error) {
+    if obj.pInx <= 0 {
         // must parse the header
-        if _, err = o.Header(); err != nil {
+        if _, err = obj.Header(); err != nil {
             return
         }
     }
-    return o.bytes[o.pInx+1:], nil
-}
-
-func (o *RawObject) Parse() (h *ObjectHeader, payload []byte, err error) {
-    if h, err = o.Header(); err != nil {
-        return
-    }
-
-    if payload, err = o.Payload(); err != nil {
-        return
-    }
-
-    // check size!
-    if h.Size != len(payload) {
+    bts = obj.bytes[obj.pInx+1:]
+    if obj.h.Size != len(bts) {
         err = errors.New("object corrupted (checksize is wrong)")
     }
     return
 }
 
-func (o *RawObject) Write(b []byte) (n int, err error) {
-    if o.bytes == nil {
-        o.bytes = make([]byte, len(b))
-        return copy(o.bytes, b), nil
+func (obj *RawObject) Parse() (h *ObjectHeader, payload []byte, err error) {
+    // Payload() will automatically cache the header
+    if payload, err = obj.Payload(); err != nil {
+        return
+    }
+    return obj.h, payload, nil
+}
+
+func (obj *RawObject) Write(b []byte) (n int, err error) {
+    if obj.bytes == nil {
+        obj.bytes = make([]byte, len(b))
+        return copy(obj.bytes, b), nil
     }
     return 0, errors.New("object already has data")
 }
