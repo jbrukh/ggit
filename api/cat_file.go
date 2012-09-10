@@ -4,7 +4,7 @@ import (
     "errors"
     "flag"
     "fmt"
-    . "github.com/jbrukh/ggit"
+    "ggit"
     "os"
 )
 
@@ -37,17 +37,17 @@ func CatFile(args []string) (err error) {
     id := a[0]
 
     var (
-        repo *Repository
-        oid  *ObjectId
+        repo *ggit.Repository
+        oid  *ggit.ObjectId
     )
 
     // get a proper id
-    if oid, err = NewObjectIdFromString(id); err != nil {
+    if oid, err = ggit.NewObjectIdFromString(id); err != nil {
         return
     }
 
     // TODO: perhaps not open the repo before parsing args?
-    if repo, err = Open(DEFAULT_GIT_DIR); err != nil {
+    if repo, err = ggit.Open(ggit.DEFAULT_GIT_DIR); err != nil {
         return
     }
     defer repo.Close()
@@ -65,7 +65,7 @@ func CatFile(args []string) (err error) {
     return
 }
 
-func doPrint(repo *Repository, oid *ObjectId) (err error) {
+func doPrint(repo *ggit.Repository, oid *ggit.ObjectId) (err error) {
     if obj, err := repo.ReadObject(oid); err == nil {
         obj.WriteTo(os.Stdout)
         return err
@@ -73,14 +73,14 @@ func doPrint(repo *Repository, oid *ObjectId) (err error) {
     return errors.New("could not find object: " + oid.String()) // TODO
 }
 
-func doType(repo *Repository, oid *ObjectId) (err error) {
+func doType(repo *ggit.Repository, oid *ggit.ObjectId) (err error) {
     if h, err := repo.ReadRawObjectHeader(oid); err == nil {
         fmt.Println(h.Type)
     }
     return
 }
 
-func doSize(repo *Repository, oid *ObjectId) (err error) {
+func doSize(repo *ggit.Repository, oid *ggit.ObjectId) (err error) {
     if h, err := repo.ReadRawObjectHeader(oid); err == nil {
         fmt.Println(h.Size)
     }

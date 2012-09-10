@@ -3,7 +3,7 @@ package main
 import (
     "flag"
     "fmt"
-    "github.com/jbrukh/ggit/api"
+    "ggit/api"
     "os"
 )
 
