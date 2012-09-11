@@ -26,8 +26,9 @@ func (rc *rawCommit) ParseCommit() (c *Commit, err error) {
 }
 
 type Commit struct {
-    author    string // TODO: make this struct with time
-    committer string // TODO: make this struct with time
+    author    *AuthorTimestamp // TODO: make this struct with time
+    committer *AuthorTimestamp // TODO: make this struct with time
+	message   string
     tree      *ObjectId
     parent    *ObjectId
     repo      *Repository
