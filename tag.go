@@ -1,8 +1,3 @@
-/**
- *
- * @author Michael Anselm Bosworth
- * Due to a perverse and unpleasing character, Michael has not commented this class.
- */
 package ggit
 
 import (
