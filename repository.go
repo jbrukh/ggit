@@ -146,11 +146,6 @@ func (r *Repository) ReadCommit(oid *ObjectId) (c *Commit, err error) {
     return
 }
 
-func (r *Repository) resolveOid(shortOid string) (oid *ObjectId, err error) {
-    // TODO: make this resolve short strings
-    return NewObjectIdFromString(shortOid)
-}
-
 // turn an oid into a path relative to the
 // git directory of a repository
 func objectPath(oid *ObjectId) string {

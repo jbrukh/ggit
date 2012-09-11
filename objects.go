@@ -39,20 +39,6 @@ type ObjectHeader struct {
     Size int
 }
 
-func toObjectType(typeStr string) (otype ObjectType, err error) {
-    switch typeStr {
-    case OBJECT_BLOB_STR:
-        return OBJECT_BLOB, nil
-    case OBJECT_TREE_STR:
-        return OBJECT_TREE, nil
-    case OBJECT_TAG_STR:
-        return OBJECT_TAG, nil
-    case OBJECT_COMMIT_STR:
-        return OBJECT_COMMIT, nil
-    }
-    return 0, errors.New("unknown object type")
-}
-
 func (otype ObjectType) String() string {
     switch otype {
     case OBJECT_BLOB:
@@ -75,16 +61,6 @@ type RawObject struct {
     h     *ObjectHeader
 }
 
-// parses the header from the raw data
-func (obj *RawObject) Header() (h *ObjectHeader, err error) {
-    // the header is parsed lazily, and then cached
-    if obj.h == nil {
-        obj.h, err = obj.parse()
-        return obj.h, err
-    }
-    return obj.h, nil
-}
-
 func (obj *RawObject) parse() (h *ObjectHeader, err error) {
     if len(obj.bytes) < 1 {
         return nil, errors.New("no data bytes")
@@ -105,23 +81,14 @@ func (obj *RawObject) parse() (h *ObjectHeader, err error) {
     return &ObjectHeader{otype, osize}, nil
 }
 
-func parseHeader(b []byte) (typeStr, sizeStr string, pInx uint) {
-    const MAX_SZ = 32
-    var i, j uint
-    l := uint(min(MAX_SZ, len(b)))
-    for i = 0; i < l; i++ {
-        if b[i] == ' ' {
-            typeStr = string(b[:i])
-            for j = i; j < l; j++ {
-                if b[j] == '\000' {
-                    pInx = j
-                    sizeStr = string(b[i+1 : j])
-                    return
-                }
-            }
-        }
+// parses the header from the raw data
+func (obj *RawObject) Header() (h *ObjectHeader, err error) {
+    // the header is parsed lazily, and then cached
+    if obj.h == nil {
+        obj.h, err = obj.parse()
+        return obj.h, err
     }
-    return
+    return obj.h, nil
 }
 
 // returns the headerless payload of the object
@@ -159,4 +126,37 @@ func (obj *RawObject) Write(b []byte) (n int, err error) {
 // the object
 func (o *RawObject) Bytes() []byte {
     return o.bytes
+}
+
+func parseHeader(b []byte) (typeStr, sizeStr string, pInx uint) {
+    const MAX_SZ = 32
+    var i, j uint
+    l := uint(min(MAX_SZ, len(b)))
+    for i = 0; i < l; i++ {
+        if b[i] == ' ' {
+            typeStr = string(b[:i])
+            for j = i; j < l; j++ {
+                if b[j] == '\000' {
+                    pInx = j
+                    sizeStr = string(b[i+1 : j])
+                    return
+                }
+            }
+        }
+    }
+    return
+}
+
+func toObjectType(typeStr string) (otype ObjectType, err error) {
+    switch typeStr {
+    case OBJECT_BLOB_STR:
+        return OBJECT_BLOB, nil
+    case OBJECT_TREE_STR:
+        return OBJECT_TREE, nil
+    case OBJECT_TAG_STR:
+        return OBJECT_TAG, nil
+    case OBJECT_COMMIT_STR:
+        return OBJECT_COMMIT, nil
+    }
+    return 0, errors.New("unknown object type")
 }
