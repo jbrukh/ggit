@@ -6,6 +6,7 @@ import (
     "errors"
     "fmt"
     "os"
+    "time"
 )
 
 // all serialized data is stored in network
@@ -52,9 +53,12 @@ type indexEntry struct {
 }
 
 func (hdr *indexEntry) String() string {
-    const INDEX_ENTRY_FMT = "IndexEntry{CTimeSecs=%d, CTimeNanos=%d, MTimeSecs=%d, MTimeNanos=%d, Dev=%d, Ino=%d, Mode=%o, Uid=%d, Gid=%d, Size=%d, SHA1=%s, Flags=%d}"
+    const INDEX_ENTRY_FMT = `IndexEntry{CTime=%v, MTime=%v, Dev=%d, Ino=%d, Mode=%o, Uid=%d, Gid=%d, Size=%d, SHA1=%s, Flags=%d}`
     sha := NewObjectIdFromArray(hdr.Sha1)
-    return fmt.Sprintf(INDEX_ENTRY_FMT, hdr.CTimeSecs, hdr.CTimeNanos, hdr.MTimeSecs, hdr.MTimeNanos, hdr.Dev, hdr.Ino, hdr.Mode, hdr.Uid, hdr.Gid, hdr.Size, sha, hdr.Flags)
+    ctime := time.Unix(int64(hdr.CTimeSecs), int64(hdr.CTimeNanos))
+    mtime := time.Unix(int64(hdr.MTimeSecs), int64(hdr.MTimeNanos))
+    return fmt.Sprintf(INDEX_ENTRY_FMT, ctime, mtime, hdr.Dev, hdr.Ino, hdr.Mode, hdr.Uid, hdr.Gid, hdr.Size, sha, hdr.Flags)
+
 }
 
 func ParseIndexFile(repo *Repository) (err error) {
@@ -101,12 +105,13 @@ func parseIndex(f *os.File) (err error) {
         if err != nil {
             return err
         }
-        line = line[:len(line)-1] // get rid of NUL
-        fmt.Printf("read %d: %s\n", len(line), string(line))
 
-        // don't ask me how I figured this out afte
+        line = line[:len(line)-1] // get rid of NUL
+        fmt.Println(string(line))
+
+        // don't ask me how I figured this out after
         // a 14 hour workday
-        leftOver := 8 - (len(line)+6)%8 - 1
+        leftOver := 7 - (len(line)+6)%8
         for j := 0; j < leftOver; j++ {
             if _, err = file.ReadByte(); err != nil {
                 return err
