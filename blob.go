@@ -23,5 +23,5 @@ func (b *Blob) Type() ObjectType {
 }
 
 func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
-    return io.WriteString(w, string(b.String()))
+    return io.WriteString(w, b.String())
 }
