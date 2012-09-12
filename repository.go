@@ -101,7 +101,8 @@ func (r *Repository) ReadObject(oid *ObjectId) (obj Object, err error) {
     return
 }
 
-// ReadBlob obtains a Blob object 
+// ReadBlob obtains a Blob object from
+// the Backend
 func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
     rawObj, err := r.ReadRawObject(oid)
     if err != nil {
@@ -115,7 +116,8 @@ func (r *Repository) ReadBlob(oid *ObjectId) (b *Blob, err error) {
     return
 }
 
-// TODO: this is currently broken
+// ReadTree obtains a Tree object from
+// the Backend
 func (r *Repository) ReadTree(oid *ObjectId) (t *Tree, err error) {
     rawObj, err := r.ReadRawObject(oid)
     if err != nil {
@@ -131,6 +133,8 @@ func (r *Repository) ReadTree(oid *ObjectId) (t *Tree, err error) {
     return
 }
 
+// ReadCommit obtains a Commit object from
+// the Backend
 func (r *Repository) ReadCommit(oid *ObjectId) (c *Commit, err error) {
     rawObj, err := r.ReadRawObject(oid)
     if err != nil {
