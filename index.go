@@ -17,6 +17,59 @@ var ord binary.ByteOrder = binary.BigEndian
 // git index file
 type Index struct {
     version int32
+    entries []*IndexEntry
+    // TODO: extentions
+}
+
+// Version returns the version of the index
+// file. Currently I am supporting version 2.
+// TODO: support 3, 4, ...
+func (inx *Index) Version() int32 {
+    return inx.version
+}
+
+// TODO: how shall we traverse entries? We
+// can possibly use a visitor, depending on
+// what makes sense.
+func (inx *Index) Entries() {
+    // TODO
+}
+
+// Extentions will visit and/or return the
+// index file extentions.
+func (inx *Index) Extentions() {
+    // TODO
+}
+
+// EntryFlags for version 2
+type EntryFlagsV2 int16
+
+// TODO: document
+func (f *EntryFlagsV2) AssumeValid() bool {
+    return false
+}
+
+func (f *EntryFlagsV2) Extended() bool {
+    return false // should be false for version 2
+}
+
+// TODO: this returns some two-bit result
+// not yet clear what it is for
+func (f *EntryFlagsV2) Stage() {
+    // TODO
+}
+
+// 12-bit name length if less than 0xFFF, and
+// 0xFFF otherwise
+func (f *EntryFlagsV2) NameLength() int {
+    // TODO
+    return 0
+}
+
+type IndexEntry struct {
+    eid   *[20]byte // TODO: is this an object id, or just a SHA??
+    flags EntryFlagsV2
+    name  string
 }
 
 //
@@ -35,8 +88,11 @@ func (hdr *indexHeader) String() string {
     return fmt.Sprintf(HEADER_FMT, string(hdr.Sig[:]), hdr.Version, hdr.Count)
 }
 
-// index entry version 2
-type indexEntry struct {
+// data returned from stat, used by git
+// to detect when a file is changed. It appears (according to some docs)
+// that the particular kind of data is not as relevant as the fact that
+// it changes.
+type statInfo struct {
     CTimeSecs  int32
     CTimeNanos int32
     MTimeSecs  int32
@@ -47,12 +103,26 @@ type indexEntry struct {
     Uid        int32
     Gid        int32
     Size       int32
-    Sha1       [20]byte
-    Flags      int16
-    // bytes mod 8 == 4 here
 }
 
-func (hdr *indexEntry) String() string {
+// CTime returns the last time file metadata has changed
+func (i *statInfo) CTime() time.Time {
+    return time.Unix(int64(i.CTimeSecs), int64(i.CTimeNanos))
+}
+
+// MTime returns the last time file metadata has changed
+func (i *statInfo) MTime() time.Time {
+    return time.Unix(int64(i.MTimeSecs), int64(i.MTimeNanos))
+}
+
+// index entry version 2
+type indexEntry struct {
+    StatInfo statInfo
+    Sha1     [20]byte
+    Flags    int16 // TODO: this should be wrapped in the appropriate EntryFlags
+}
+
+func (i *indexEntry) String() string {
     const INDEX_ENTRY_FMT = "IndexEntry{" +
         "CTime=%v, " +
         "MTime=%v, " +
@@ -64,21 +134,19 @@ func (hdr *indexEntry) String() string {
         "Size=%d, " +
         "SHA1=%s, " +
         "Flags=%d}"
-    sha := NewObjectIdFromArray(hdr.Sha1)
-    ctime := time.Unix(int64(hdr.CTimeSecs), int64(hdr.CTimeNanos))
-    mtime := time.Unix(int64(hdr.MTimeSecs), int64(hdr.MTimeNanos))
+    sha := NewObjectIdFromArray(i.Sha1)
     return fmt.Sprintf(
         INDEX_ENTRY_FMT,
-        ctime,
-        mtime,
-        hdr.Dev,
-        hdr.Ino,
-        hdr.Mode,
-        hdr.Uid,
-        hdr.Gid,
-        hdr.Size,
+        i.StatInfo.CTime(),
+        i.StatInfo.MTime(),
+        i.StatInfo.Dev,
+        i.StatInfo.Ino,
+        i.StatInfo.Mode,
+        i.StatInfo.Uid,
+        i.StatInfo.Gid,
+        i.StatInfo.Size,
         sha,
-        hdr.Flags,
+        i.Flags,
     )
 
 }
