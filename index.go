@@ -1,6 +1,7 @@
 package ggit
 
 import (
+    "bufio"
     "encoding/binary"
     "errors"
     "fmt"
@@ -46,6 +47,14 @@ type indexEntry struct {
     Gid        int32
     Size       int32
     Sha1       [20]byte
+    Flags      int16
+    // bytes mod 8 == 4 here
+}
+
+func (hdr *indexEntry) String() string {
+    const INDEX_ENTRY_FMT = "IndexEntry{CTimeSecs=%d, CTimeNanos=%d, MTimeSecs=%d, MTimeNanos=%d, Dev=%d, Ino=%d, Mode=%o, Uid=%d, Gid=%d, Size=%d, SHA1=%s, Flags=%d}"
+    sha := NewObjectIdFromArray(hdr.Sha1)
+    return fmt.Sprintf(INDEX_ENTRY_FMT, hdr.CTimeSecs, hdr.CTimeNanos, hdr.MTimeSecs, hdr.MTimeNanos, hdr.Dev, hdr.Ino, hdr.Mode, hdr.Uid, hdr.Gid, hdr.Size, sha, hdr.Flags)
 }
 
 func ParseIndexFile(repo *Repository) (err error) {
@@ -53,11 +62,14 @@ func ParseIndexFile(repo *Repository) (err error) {
     if err != nil {
         return
     }
+    defer file.Close()
     return parseIndex(file)
 }
 
-func parseIndex(file *os.File) (err error) {
+func parseIndex(f *os.File) (err error) {
     const SIGNATURE = "DIRC"
+
+    file := bufio.NewReader(f)
 
     var hdr indexHeader
     if err = binary.Read(file, ord, &hdr); err != nil {
@@ -78,6 +90,28 @@ func parseIndex(file *os.File) (err error) {
     // read the entries
     var i int32
     for i = 0; i < hdr.Count; i++ {
+        var entry indexEntry
+        err = binary.Read(file, ord, &entry)
+        if err != nil {
+            return err
+        }
+        fmt.Println(entry.String())
+        // TODO: what if it is corrupted and too long?
+        line, err := file.ReadBytes('\000')
+        if err != nil {
+            return err
+        }
+        line = line[:len(line)-1] // get rid of NUL
+        fmt.Printf("read %d: %s\n", len(line), string(line))
+
+        // don't ask me how I figured this out afte
+        // a 14 hour workday
+        leftOver := 8 - (len(line)+6)%8 - 1
+        for j := 0; j < leftOver; j++ {
+            if _, err = file.ReadByte(); err != nil {
+                return err
+            }
+        }
     }
     return
 }
