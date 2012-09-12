@@ -53,11 +53,33 @@ type indexEntry struct {
 }
 
 func (hdr *indexEntry) String() string {
-    const INDEX_ENTRY_FMT = `IndexEntry{CTime=%v, MTime=%v, Dev=%d, Ino=%d, Mode=%o, Uid=%d, Gid=%d, Size=%d, SHA1=%s, Flags=%d}`
+    const INDEX_ENTRY_FMT = "IndexEntry{" +
+        "CTime=%v, " +
+        "MTime=%v, " +
+        "Dev=%d, " +
+        "Ino=%d, " +
+        "Mode=%o, " +
+        "Uid=%d, " +
+        "Gid=%d, " +
+        "Size=%d, " +
+        "SHA1=%s, " +
+        "Flags=%d}"
     sha := NewObjectIdFromArray(hdr.Sha1)
     ctime := time.Unix(int64(hdr.CTimeSecs), int64(hdr.CTimeNanos))
     mtime := time.Unix(int64(hdr.MTimeSecs), int64(hdr.MTimeNanos))
-    return fmt.Sprintf(INDEX_ENTRY_FMT, ctime, mtime, hdr.Dev, hdr.Ino, hdr.Mode, hdr.Uid, hdr.Gid, hdr.Size, sha, hdr.Flags)
+    return fmt.Sprintf(
+        INDEX_ENTRY_FMT,
+        ctime,
+        mtime,
+        hdr.Dev,
+        hdr.Ino,
+        hdr.Mode,
+        hdr.Uid,
+        hdr.Gid,
+        hdr.Size,
+        sha,
+        hdr.Flags,
+    )
 
 }
 
