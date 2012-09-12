@@ -9,6 +9,7 @@ import (
 )
 
 const DEFAULT_GIT_DIR = ".git"
+const INDEX_FILE = "index"
 
 // A Backend supports storage of arbitrary Git
 // objects without particular regard of the technical
@@ -33,7 +34,7 @@ type Repository struct {
     path string
 }
 
-// open a repository that is located at the given path
+// open a reprository that is located at the given path
 func Open(path string) (r *Repository, err error) {
     // check that repo is valid
     if !validateRepo(path) {
@@ -150,8 +151,16 @@ func (r *Repository) ReadCommit(oid *ObjectId) (c *Commit, err error) {
     return
 }
 
+// IndexFile returns an open git index file. It is up to the
+// caller to close this resource.
+func (r *Repository) IndexFile() (file *os.File, err error) {
+    path := path.Join(r.path, INDEX_FILE)
+    return os.Open(path)
+}
+
 // turn an oid into a path relative to the
 // git directory of a repository
+// TODO: return a file here, just like in IndexFile()
 func objectPath(oid *ObjectId) string {
     hex := oid.String()
     return path.Join("objects", hex[0:2], hex[2:])

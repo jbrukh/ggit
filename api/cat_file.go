@@ -4,7 +4,7 @@ import (
     "errors"
     "flag"
     "fmt"
-    "ggit"
+    "github.com/jbrukh/ggit"
     "os"
 )
 

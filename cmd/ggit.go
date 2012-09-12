@@ -3,7 +3,7 @@ package main
 import (
     "flag"
     "fmt"
-    "ggit/api"
+    "github.com/jbrukh/ggit/api"
     "os"
 )
 
@@ -14,7 +14,8 @@ func usage() {
 type handler func([]string) error
 
 var handlers map[string]handler = map[string]handler{
-    "cat-file": api.CatFile,
+    "cat-file":  api.CatFile,
+    "cat-index": api.CatIndex,
 }
 
 func main() {
