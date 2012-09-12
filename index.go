@@ -29,8 +29,8 @@ type indexHeader struct {
 }
 
 func (hdr *indexHeader) String() string {
-    const HEADER_FMT = "IndexHeader{Sig=%s, Version=%d, Count=%d}"
-    return fmt.Sprintf(HEADER_FMT, hdr.Sig, hdr.Version, hdr.Count)
+    const HEADER_FMT = "IndexHeader{Sig=%q, Version=%d, Count=%d}"
+    return fmt.Sprintf(HEADER_FMT, string(hdr.Sig[:]), hdr.Version, hdr.Count)
 }
 
 // index entry version 2
@@ -60,7 +60,7 @@ func parseIndex(file *os.File) (err error) {
     const SIGNATURE = "DIRC"
 
     var hdr indexHeader
-    if err = binary.Read(file, ord, hdr); err != nil {
+    if err = binary.Read(file, ord, &hdr); err != nil {
         return
     }
     sig := string(hdr.Sig[:])
@@ -73,7 +73,7 @@ func parseIndex(file *os.File) (err error) {
     if hdr.Count < 0 {
         return errors.New("header count is off")
     }
-    fmt.Println(hdr)
+    fmt.Printf("%s\n", hdr.String())
 
     // read the entries
     var i int32

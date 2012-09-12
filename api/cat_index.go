@@ -35,7 +35,7 @@ func CatIndex(args []string) (err error) {
     }
     defer repo.Close()
 
-    ggit.ParseIndexFile(repo)
+    err = ggit.ParseIndexFile(repo)
 
     return
 }
