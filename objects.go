@@ -39,6 +39,7 @@ type ObjectHeader struct {
     Size int
 }
 
+// return a human-readable representation of an ObjectType
 func (otype ObjectType) String() string {
     switch otype {
     case OBJECT_BLOB:
