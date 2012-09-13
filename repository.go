@@ -50,11 +50,9 @@ func Open(path string) (r *Repository, err error) {
 func (r *Repository) Close() {
 }
 
-func (r *Repository) ReadRawObject(oid *ObjectId) (o *RawObject, err error) {
-    var file *os.File
-    path := path.Join(r.path, objectPath(oid))
-
-    if file, err = os.Open(path); err != nil {
+func (r *Repository) ReadRawObject(oid *ObjectId) (obj *RawObject, err error) {
+    file, err := r.ObjectFile(oid)
+    if err != nil {
         return
     }
     defer file.Close()
@@ -62,8 +60,8 @@ func (r *Repository) ReadRawObject(oid *ObjectId) (o *RawObject, err error) {
     var zr io.ReadCloser
     if zr, err = zlib.NewReader(file); err == nil {
         defer zr.Close()
-        o = new(RawObject)
-        _, err = io.Copy(o, zr)
+        obj = new(RawObject)
+        _, err = io.Copy(obj, zr)
     }
     return
 }
@@ -160,14 +158,15 @@ func (r *Repository) IndexFile() (file *os.File, err error) {
 
 // turn an oid into a path relative to the
 // git directory of a repository
-// TODO: return a file here, just like in IndexFile()
-func objectPath(oid *ObjectId) string {
+func (r *Repository) ObjectFile(oid *ObjectId) (file *os.File, err error) {
     hex := oid.String()
-    return path.Join("objects", hex[0:2], hex[2:])
+    path := path.Join(r.path, "objects", hex[0:2], hex[2:])
+    return os.Open(path)
 }
 
 // validate a repository path to make sure it has
 // the right format and that it exists
 func validateRepo(path string) bool {
+    // TODO
     return true
 }
