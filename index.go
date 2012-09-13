@@ -151,7 +151,7 @@ func (i *indexEntry) String() string {
 
 }
 
-func ParseIndexFile(repo *Repository) (err error) {
+func ParseIndexFile(repo Repository) (err error) {
     file, err := repo.IndexFile()
     if err != nil {
         return

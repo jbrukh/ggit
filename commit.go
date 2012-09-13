@@ -5,7 +5,7 @@ import (
     "io"
 )
 
-func toCommit(obj *RawObject) (c *Commit, err error) {
+func toCommit(repo Repository, obj *RawObject) (c *Commit, err error) {
     p, err := obj.Payload()
     if err != nil {
         return
@@ -21,7 +21,7 @@ type Commit struct {
     message   string
     tree      *ObjectId
     parent    *ObjectId
-    repo      *Repository
+    repo      Repository
 }
 
 func (c *Commit) Type() ObjectType {

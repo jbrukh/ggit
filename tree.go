@@ -20,7 +20,7 @@ const (
 
 type Tree struct {
     entries []*TreeEntry
-    repo    *Repository
+    repo    Repository
 }
 
 // TODO: is this necessary?
@@ -56,7 +56,7 @@ func (e *TreeEntry) String() (s string) {
     return
 }
 
-func toTree(obj *RawObject) (t *Tree, err error) {
+func toTree(repo Repository, obj *RawObject) (t *Tree, err error) {
     p, err := obj.Payload()
     if err != nil {
         return
@@ -72,7 +72,7 @@ func toTree(obj *RawObject) (t *Tree, err error) {
     }
     t = &Tree{
         entries,
-        nil,
+        repo,
     }
     return
 }
