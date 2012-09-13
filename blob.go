@@ -1,6 +1,7 @@
 package ggit
 
 import (
+    "errors"
     "io"
 )
 
@@ -28,8 +29,11 @@ func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
 // returned object is not associated with any repository
 // by default.
 func toBlob(obj *RawObject) (b *Blob, err error) {
+    if obj == nil {
+        return nil, errors.New("no raw data")
+    }
     return &Blob{
         RawObject: *obj,
         repo:      nil,
-    }
+    }, nil
 }

@@ -7,7 +7,7 @@ import (
 )
 
 // the types of Git objects
-type ObjectType int
+type ObjectType int8
 
 const (
     OBJECT_BLOB ObjectType = iota

@@ -122,8 +122,7 @@ func (r *Repository) ReadTree(oid *ObjectId) (t *Tree, err error) {
     if err != nil {
         return
     }
-    rawTree := newRawTree(rawObj)
-    t, err = rawTree.ParseTree()
+    t, err = toTree(rawObj)
     if err != nil {
         return
     }
@@ -139,9 +138,8 @@ func (r *Repository) ReadCommit(oid *ObjectId) (c *Commit, err error) {
     if err != nil {
         return
     }
-    rc := newRawCommit(rawObj)
-    c, err = rc.ParseCommit()
-    if err != nil {
+
+    if c, err = toCommit(rawObj); err != nil {
         return
     }
     // associate

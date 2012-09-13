@@ -5,18 +5,8 @@ import (
     "io"
 )
 
-type rawCommit struct {
-    RawObject
-}
-
-func newRawCommit(obj *RawObject) *rawCommit {
-    return &rawCommit{
-        RawObject: *obj,
-    }
-}
-
-func (rc *rawCommit) ParseCommit() (c *Commit, err error) {
-    p, err := rc.Payload()
+func toCommit(obj *RawObject) (c *Commit, err error) {
+    p, err := obj.Payload()
     if err != nil {
         return
     }
@@ -28,7 +18,7 @@ func (rc *rawCommit) ParseCommit() (c *Commit, err error) {
 type Commit struct {
     author    *AuthorTimestamp // TODO: make this struct with time
     committer *AuthorTimestamp // TODO: make this struct with time
-	message   string
+    message   string
     tree      *ObjectId
     parent    *ObjectId
     repo      *Repository

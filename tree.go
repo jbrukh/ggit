@@ -37,7 +37,7 @@ func (t *Tree) WriteTo(w io.Writer) (n int, err error) {
         s := fmt.Sprintf("%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)
         N, err := io.WriteString(w, s)
         if err != nil {
-            break
+            break // TODO: is the error above shadowing err??
         }
         n += N
     }
@@ -56,19 +56,8 @@ func (e *TreeEntry) String() (s string) {
     return
 }
 
-type rawTree struct {
-    RawObject
-}
-
-func newRawTree(rawObj *RawObject) (rt *rawTree) {
-    // TODO: decide if object check should be done here
-    return &rawTree{
-        RawObject: *rawObj,
-    }
-}
-
-func (rt *rawTree) ParseTree() (t *Tree, err error) {
-    p, err := rt.Payload()
+func toTree(obj *RawObject) (t *Tree, err error) {
+    p, err := obj.Payload()
     if err != nil {
         return
     }
@@ -118,6 +107,7 @@ func parseEntry(p []byte) (e *TreeEntry, size int, err error) {
     return
 }
 
+// getTreeEntry converts raw data for the entry into a TreeEntry object.
 func getTreeEntry(modeStr, fileName string, hsh []byte) (e *TreeEntry, err error) {
     mode, err := strconv.ParseInt(modeStr, 8, 32)
     if err != nil {
