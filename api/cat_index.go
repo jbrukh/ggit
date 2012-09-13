@@ -25,17 +25,15 @@ func init() {
 */
 
 func CatIndex(args []string) (err error) {
-    var (
-        repo *ggit.Repository
-    )
 
     // TODO: perhaps not open the repo before parsing args?
-    if repo, err = ggit.Open(ggit.DEFAULT_GIT_DIR); err != nil {
-        return
+    repo, err := ggit.Open(ggit.DEFAULT_GIT_DIR)
+    if err != nil {
+        return err
     }
     defer repo.Close()
 
-    err = ggit.ParseIndexFile(repo)
+    _, err = repo.Index()
 
     return
 }

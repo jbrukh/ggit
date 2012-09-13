@@ -37,7 +37,7 @@ func CatFile(args []string) (err error) {
     id := a[0]
 
     var (
-        repo *ggit.Repository
+        repo *ggit.DiskRepository
         oid  *ggit.ObjectId
     )
 
@@ -65,7 +65,7 @@ func CatFile(args []string) (err error) {
     return
 }
 
-func doPrint(repo *ggit.Repository, oid *ggit.ObjectId) (err error) {
+func doPrint(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
     if obj, err := repo.ReadObject(oid); err == nil {
         obj.WriteTo(os.Stdout)
         return err
@@ -73,16 +73,22 @@ func doPrint(repo *ggit.Repository, oid *ggit.ObjectId) (err error) {
     return errors.New("could not find object: " + oid.String()) // TODO
 }
 
-func doType(repo *ggit.Repository, oid *ggit.ObjectId) (err error) {
-    if h, err := repo.ReadRawObjectHeader(oid); err == nil {
-        fmt.Println(h.Type)
+func doType(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
+    if obj, err := repo.ReadRawObject(oid); err == nil {
+        h, err := obj.Header()
+        if err == nil {
+            fmt.Println(h.Type)
+        }
     }
     return
 }
 
-func doSize(repo *ggit.Repository, oid *ggit.ObjectId) (err error) {
-    if h, err := repo.ReadRawObjectHeader(oid); err == nil {
-        fmt.Println(h.Size)
+func doSize(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
+    if obj, err := repo.ReadRawObject(oid); err == nil {
+        h, err := obj.Header()
+        if err == nil {
+            fmt.Println(h.Size)
+        }
     }
     return
 }

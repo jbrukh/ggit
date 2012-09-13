@@ -27,6 +27,7 @@ type Repository interface {
     Backend
     IndexFile() (file *os.File, err error)
     ObjectFile(oid *ObjectId) (file *os.File, err error)
+    Index() (idx *Index, err error)
 }
 
 // a representation of a git repository
@@ -66,15 +67,6 @@ func (r *DiskRepository) ReadRawObject(oid *ObjectId) (obj *RawObject, err error
     return
 }
 
-// readRawOHeader reads the header information of an object in the repository
-func (r *DiskRepository) readRawHeader(oid *ObjectId) (h *ObjectHeader, err error) {
-    // TODO: could do special parsing to get header info only
-    if obj, err := r.ReadRawObject(oid); err == nil {
-        h, err = obj.Header()
-    }
-    return
-}
-
 func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
     rawObj, err := r.ReadRawObject(oid)
     if err != nil {
@@ -98,6 +90,14 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
         panic("unsupported type")
     }
     return
+}
+
+func (r *DiskRepository) Index() (idx *Index, err error) {
+    file, err := r.IndexFile()
+    if err != nil {
+        return
+    }
+    return toIndex(file)
 }
 
 // IndexFile returns an open git index file. It is up to the
