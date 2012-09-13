@@ -16,10 +16,15 @@ type Hashable interface {
 
 // produce a hash for any object that
 // can be construed as a bunch of bytes
-func Hash(h Hashable) (o *ObjectId) {
+func makeHash(h Hashable) (o *ObjectId) {
     sha.Reset()
     sha.Write(h.Bytes())
     return NewObjectIdFromHash(sha)
+}
+
+// get the first OID_SZ of the hash
+func getHash(h hash.Hash) []byte {
+    return h.Sum(nil)[0:OID_SZ]
 }
 
 func min(a, b int) int {
