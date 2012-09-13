@@ -5,16 +5,6 @@ import (
     "io"
 )
 
-func toCommit(repo Repository, obj *RawObject) (c *Commit, err error) {
-    p, err := obj.Payload()
-    if err != nil {
-        return
-    }
-    // TODO implement the parsing
-    fmt.Println(string(p))
-    return new(Commit), nil // TODO
-}
-
 type Commit struct {
     author    *AuthorTimestamp // TODO: make this struct with time
     committer *AuthorTimestamp // TODO: make this struct with time
@@ -31,4 +21,14 @@ func (c *Commit) Type() ObjectType {
 func (c *Commit) WriteTo(w io.Writer) (n int, err error) {
     // TODO
     return 0, nil
+}
+
+func toCommit(repo Repository, obj *RawObject) (c *Commit, err error) {
+    p, err := obj.Payload()
+    if err != nil {
+        return
+    }
+    // TODO implement the parsing
+    fmt.Println(string(p))
+    return new(Commit), nil // TODO
 }

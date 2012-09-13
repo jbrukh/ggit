@@ -13,6 +13,15 @@ import (
 // byte order as per the specification
 var ord binary.ByteOrder = binary.BigEndian
 
+// the Git index must begin with this code
+const SIGNATURE = "DIRC"
+
+type IndexEntry struct {
+    eid   *ObjectId // TODO: is this an object id, or just a SHA??
+    flags EntryFlagsV2
+    name  string
+}
+
 // the deserialized version of the 
 // git index file
 type Index struct {
@@ -64,12 +73,6 @@ func (f *EntryFlagsV2) Stage() {
 func (f *EntryFlagsV2) NameLength() int {
     // TODO
     return 0
-}
-
-type IndexEntry struct {
-    eid   *[20]byte // TODO: is this an object id, or just a SHA??
-    flags EntryFlagsV2
-    name  string
 }
 
 //
@@ -151,35 +154,22 @@ func (i *indexEntry) String() string {
 
 }
 
-func ParseIndexFile(repo Repository) (err error) {
-    file, err := repo.IndexFile()
-    if err != nil {
-        return
-    }
-    defer file.Close()
-    return parseIndex(file)
-}
-
-func parseIndex(f *os.File) (err error) {
-    const SIGNATURE = "DIRC"
-
+func toIndex(f *os.File) (idx *Index, err error) {
     file := bufio.NewReader(f)
+    defer f.Close()
 
     var hdr indexHeader
     if err = binary.Read(file, ord, &hdr); err != nil {
         return
     }
     sig := string(hdr.Sig[:])
-    if string(sig) != SIGNATURE {
-        return errors.New("wrong signature")
+    if sig != SIGNATURE || hdr.Version != 2 || hdr.Count < 0 {
+        return nil, errors.New("bad header")
     }
-    if hdr.Version != 2 {
-        return errors.New("unsupported index file format version")
-    }
-    if hdr.Count < 0 {
-        return errors.New("header count is off")
-    }
-    fmt.Printf("%s\n", hdr.String())
+    //fmt.Printf("%s\n", hdr.String())
+    idx = new(Index)
+    idx.version = hdr.Version
+    idx.entries = make([]*IndexEntry, hdr.Count)
 
     // read the entries
     var i int32
@@ -187,13 +177,13 @@ func parseIndex(f *os.File) (err error) {
         var entry indexEntry
         err = binary.Read(file, ord, &entry)
         if err != nil {
-            return err
+            return nil, err
         }
         fmt.Println(entry.String())
         // TODO: what if it is corrupted and too long?
         line, err := file.ReadBytes('\000')
         if err != nil {
-            return err
+            return nil, err
         }
 
         line = line[:len(line)-1] // get rid of NUL
@@ -204,7 +194,7 @@ func parseIndex(f *os.File) (err error) {
         leftOver := 7 - (len(line)+6)%8
         for j := 0; j < leftOver; j++ {
             if _, err = file.ReadByte(); err != nil {
-                return err
+                return nil, err
             }
         }
     }
