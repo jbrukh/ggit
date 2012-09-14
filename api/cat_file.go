@@ -74,12 +74,15 @@ func doPrint(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
 }
 
 func doType(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
-    if obj, err := repo.ReadRawObject(oid); err == nil {
-        h, err := obj.Header()
-        if err == nil {
-            fmt.Println(h.Type)
-        }
+    obj, err := repo.ReadRawObject(oid)
+    if err != nil {
+        return
     }
+    h, err := obj.Header()
+    if err != nil {
+        return
+    }
+    fmt.Println(h.Type)
     return
 }
 
