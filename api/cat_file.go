@@ -31,8 +31,11 @@ func CatFile(args []string) (err error) {
     catFileFlags.Parse(args[1:])
 
     a := catFileFlags.Args()
-    if len(a) != 1 {
+    if len(a) < 1 {
         return errors.New("provide an object")
+    }
+    if len(a) > 1 {
+        return errors.New(fmt.Sprint("expecting a single argument, found ", len(a)))
     }
     id := a[0]
 
