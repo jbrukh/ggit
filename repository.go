@@ -77,7 +77,6 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
         return
     }
 
-    // TODO: fix the double lookup
     switch h.Type {
     case OBJECT_BLOB:
         return toBlob(r, rawObj)

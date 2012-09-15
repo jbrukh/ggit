@@ -6,8 +6,8 @@ import (
 )
 
 type Commit struct {
-    author    *AuthorTimestamp // TODO: make this struct with time
-    committer *AuthorTimestamp // TODO: make this struct with time
+    author    *AuthorTimestamp 
+    committer *AuthorTimestamp 
     message   string
     tree      *ObjectId
     parent    *ObjectId
