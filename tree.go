@@ -86,7 +86,7 @@ func parseEntry(p []byte) (e *TreeEntry, size int, err error) {
             modeStr := string(p[:i])
             // fmt.Printf("modeStr:\t%s\n", modeStr)
             for j := i; j < l; j++ {
-                if p[j] == '\000' {
+                if p[j] == NUL {
                     fileName := string(p[i+1 : j])
                     // fmt.Printf("fileName:\t%s\n", fileName)
                     j++ // skip the null

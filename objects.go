@@ -137,7 +137,7 @@ func parseHeader(b []byte) (typeStr, sizeStr string, pInx uint) {
         if b[i] == ' ' {
             typeStr = string(b[:i])
             for j = i; j < l; j++ {
-                if b[j] == '\000' {
+                if b[j] == NUL {
                     pInx = j
                     sizeStr = string(b[i+1 : j])
                     return

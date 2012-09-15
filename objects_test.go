@@ -38,7 +38,7 @@ func Test_Parse(t *testing.T) {
         if err != nil {
             t.Error("gave error: ", err)
         }
-        toks := strings.Split(data, "\000")
+        toks := strings.Split(data, string(NUL))
         pld := toks[1]
         if pld != string(p) {
             t.Error("parsed wrong payload: ", p)

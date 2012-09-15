@@ -181,7 +181,7 @@ func toIndex(f *os.File) (idx *Index, err error) {
         }
         fmt.Println(entry.String())
         // TODO: what if it is corrupted and too long?
-        line, err := file.ReadBytes('\000')
+        line, err := file.ReadBytes(NUL)
         if err != nil {
             return nil, err
         }

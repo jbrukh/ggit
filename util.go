@@ -5,6 +5,8 @@ import (
     "hash"
 )
 
+const NUL = '\000'
+
 // the hash object used to build
 // hashes of our objects
 var sha hash.Hash = sha1.New()
