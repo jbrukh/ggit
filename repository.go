@@ -25,8 +25,6 @@ type Backend interface {
 
 type Repository interface {
     Backend
-    IndexFile() (file *os.File, err error)
-    ObjectFile(oid *ObjectId) (file *os.File, err error)
     Index() (idx *Index, err error)
 }
 
@@ -52,7 +50,7 @@ func (r *DiskRepository) Close() {
 }
 
 func (r *DiskRepository) ReadRawObject(oid *ObjectId) (obj *RawObject, err error) {
-    file, err := r.ObjectFile(oid)
+    file, err := r.objectFile(oid)
     if err != nil {
         return
     }
@@ -93,7 +91,7 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
 }
 
 func (r *DiskRepository) Index() (idx *Index, err error) {
-    file, err := r.IndexFile()
+    file, err := r.indexFile()
     if err != nil {
         return
     }
@@ -102,14 +100,14 @@ func (r *DiskRepository) Index() (idx *Index, err error) {
 
 // IndexFile returns an open git index file. It is up to the
 // caller to close this resource.
-func (r *DiskRepository) IndexFile() (file *os.File, err error) {
+func (r *DiskRepository) indexFile() (file *os.File, err error) {
     path := path.Join(r.path, INDEX_FILE)
     return os.Open(path)
 }
 
 // turn an oid into a path relative to the
 // git directory of a repository
-func (r *DiskRepository) ObjectFile(oid *ObjectId) (file *os.File, err error) {
+func (r *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error) {
     hex := oid.String()
     path := path.Join(r.path, "objects", hex[0:2], hex[2:])
     return os.Open(path)
