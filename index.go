@@ -5,6 +5,7 @@ import (
     "encoding/binary"
     "errors"
     "fmt"
+    "io"
     "os"
     "time"
 )
@@ -178,14 +179,11 @@ func toIndex(f *os.File) (idx *Index, err error) {
     file := bufio.NewReader(f)
     defer f.Close()
 
-    var hdr indexHeader
-    if err = binary.Read(file, ord, &hdr); err != nil {
-        return
+    hdr, err := parseIndexHeader(file)
+    if err != nil {
+        return nil, err
     }
-    sig := signature(hdr.Sig[:])
-    if sig != SIG_INDEX_FILE || hdr.Version != 2 || hdr.Count < 0 {
-        return nil, errors.New("bad header")
-    }
+
     //fmt.Printf("%s\n", hdr.String())
     idx = new(Index)
     idx.version = hdr.Version
@@ -201,34 +199,55 @@ func toIndex(f *os.File) (idx *Index, err error) {
         }
 
         // TODO: what if it is corrupted and too long?
-        path, err := file.ReadBytes(NUL)
+        name, err := file.ReadBytes(NUL)
         if err != nil {
             return nil, err
         }
 
-        path = path[:len(path)-1] // get rid of NUL
+        name = name[:len(name)-1] // get rid of NUL
 
         // don't ask me how I figured this out after
         // a 14 hour workday
-        leftOver := 7 - (len(path)+6)%8
+        leftOver := 7 - (len(name)+6)%8
         for j := 0; j < leftOver; j++ {
+            // TODO: read the bytes at once somehow
             if _, err = file.ReadByte(); err != nil {
                 return nil, err
             }
         }
 
         // record the entry
-        entry := toIndexEntry(&binEntry, string(path))
+        entry := toIndexEntry(&binEntry, string(name))
         idx.entries = append(idx.entries, entry)
     }
 
     // read the extentions
+    for {
+        var binExtHeader indexExtentionHeader
+        err = binary.Read(file, ord, &binExtHeader)
+        if err != nil {
+            return nil, err
+        }
 
+    }
     return
 }
 
-func toIndexEntry(entry *indexEntry, path string) *IndexEntry {
+func parseIndexHeader(r io.Reader) (hdr *indexHeader, err error) {
+    if err = binary.Read(r, ord, &hdr); err != nil {
+        return
+    }
+    sig := signature(hdr.Sig[:])
+    if sig != SIG_INDEX_FILE || hdr.Version != 2 || hdr.Count < 0 {
+        return nil, errors.New("bad header")
+    }
+    return
+}
+
+func toIndexEntry(entry *indexEntry, name string) *IndexEntry {
     return &IndexEntry{
-        eid: NewObjectIdFromArray(entry.Sha1),
+        eid:   NewObjectIdFromArray(entry.Sha1),
+        flags: EntryFlagsV2(entry.Flags),
+        name:  name,
     }
 }
