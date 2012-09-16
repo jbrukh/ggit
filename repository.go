@@ -95,7 +95,7 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
 func (r *DiskRepository) Index() (idx *Index, err error) {
     file, e := r.indexFile()
     if e != nil {
-        return
+        return nil, e
     }
     defer file.Close()
     return toIndex(bufio.NewReader(file))

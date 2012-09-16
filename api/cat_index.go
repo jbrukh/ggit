@@ -37,7 +37,7 @@ func CatIndex(args []string) (err error) {
     if e != nil {
         return e
     }
-    fmt.Println(inx)
+    fmt.Print(inx)
 
     return
 }

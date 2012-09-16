@@ -58,17 +58,28 @@ func (inx *Index) Entries() []*IndexEntry {
 // Extentions will visit and/or return the
 // index file extentions.
 func (inx *Index) Extentions() []*IndexExtention {
-    return inx.entries
+    return inx.extentions
 }
 
 func (inx *Index) String() string {
     buf := bytes.NewBufferString("")
-    fmt.Fprint(buf, "Index (v.%s)\n", inx.version)
-    for _, entry := range inx.entries {
-        buf.WriteString(entry.String())
+    fmt.Fprintf(buf, "Index (v.%d)\n", inx.version)
+
+    if inx.entries != nil {
+        for _, entry := range inx.entries {
+            buf.WriteString(entry.String())
+            buf.WriteString("\n")
+        }
+    } else {
+        buf.WriteString("(no entries)\n")
     }
-    for _, ext := range inx.extentions {
-        buf.WriteString(ext.String())
+    if inx.extentions != nil {
+        for _, ext := range inx.extentions {
+            buf.WriteString(ext.String())
+            buf.WriteString("\n")
+        }
+    } else {
+        buf.WriteString("(no extentions)\n")
     }
     return buf.String()
 }
@@ -81,7 +92,7 @@ type IndexEntry struct {
 }
 
 func (entry *IndexEntry) String() string {
-    return fmt.Sprint(entry.eid, entry.name, entry.info)
+    return fmt.Sprint(entry.eid.String(), " ", entry.info.String(), " ", entry.name)
 }
 
 type IndexExtention struct {
@@ -178,15 +189,7 @@ func (info *statInfo) MTime() time.Time {
 }
 
 func (info *statInfo) String() string {
-    const FMT_STATINFO = "StatInfo{" +
-        "CTime=%v, " +
-        "MTime=%v, " +
-        "Dev=%d, " +
-        "Ino=%d, " +
-        "Mode=%o, " +
-        "Uid=%d, " +
-        "Gid=%d, " +
-        "Size=%d, "
+    const FMT_STATINFO = "%v  %v  %d  %d  %o  %d  %d  %6d"
     return fmt.Sprintf(
         FMT_STATINFO,
         info.CTime(),
@@ -269,7 +272,7 @@ func toIndex(file *bufio.Reader) (idx *Index, err error) {
     // this in vain if entries are invalid, etc.
     idx = new(Index)
     idx.version = hdr.Version
-    idx.entries = make([]*IndexEntry, hdr.Count)
+    idx.entries = make([]*IndexEntry, 0, hdr.Count)
 
     // read the entries
     var i int32
