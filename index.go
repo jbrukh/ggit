@@ -182,8 +182,8 @@ func toIndex(f *os.File) (idx *Index, err error) {
     if err = binary.Read(file, ord, &hdr); err != nil {
         return
     }
-    sig := string(hdr.Sig[:])
-    if signature(sig) != SIG_INDEX_FILE || hdr.Version != 2 || hdr.Count < 0 {
+    sig := signature(hdr.Sig[:])
+    if sig != SIG_INDEX_FILE || hdr.Version != 2 || hdr.Count < 0 {
         return nil, errors.New("bad header")
     }
     //fmt.Printf("%s\n", hdr.String())
@@ -194,29 +194,41 @@ func toIndex(f *os.File) (idx *Index, err error) {
     // read the entries
     var i int32
     for i = 0; i < hdr.Count; i++ {
-        var entry indexEntry
-        err = binary.Read(file, ord, &entry)
-        if err != nil {
-            return nil, err
-        }
-        fmt.Println(entry.String())
-        // TODO: what if it is corrupted and too long?
-        line, err := file.ReadBytes(NUL)
+        var binEntry indexEntry
+        err = binary.Read(file, ord, &binEntry)
         if err != nil {
             return nil, err
         }
 
-        line = line[:len(line)-1] // get rid of NUL
-        fmt.Println(string(line))
+        // TODO: what if it is corrupted and too long?
+        path, err := file.ReadBytes(NUL)
+        if err != nil {
+            return nil, err
+        }
+
+        path = path[:len(path)-1] // get rid of NUL
 
         // don't ask me how I figured this out after
         // a 14 hour workday
-        leftOver := 7 - (len(line)+6)%8
+        leftOver := 7 - (len(path)+6)%8
         for j := 0; j < leftOver; j++ {
             if _, err = file.ReadByte(); err != nil {
                 return nil, err
             }
         }
+
+        // record the entry
+        entry := toIndexEntry(&binEntry, string(path))
+        idx.entries = append(idx.entries, entry)
     }
+
+    // read the extentions
+
     return
+}
+
+func toIndexEntry(entry *indexEntry, path string) *IndexEntry {
+    return &IndexEntry{
+        eid: NewObjectIdFromArray(entry.Sha1),
+    }
 }
