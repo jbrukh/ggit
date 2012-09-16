@@ -71,12 +71,12 @@ func (obj *RawObject) parse() (h *ObjectHeader, err error) {
     if obj.pInx <= 0 {
         return nil, errors.New("bad header")
     }
-    otype, err := toObjectType(typeStr)
-    if err != nil {
-        return
+    otype, e := toObjectType(typeStr)
+    if e != nil {
+        return nil, e
     }
-    osize, err := strconv.Atoi(sizeStr)
-    if err != nil {
+    osize, e := strconv.Atoi(sizeStr)
+    if e != nil {
         return nil, errors.New("bad object size")
     }
     return &ObjectHeader{otype, osize}, nil

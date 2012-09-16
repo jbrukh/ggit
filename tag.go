@@ -1,8 +1,8 @@
 package ggit
 
 import (
-    "io"
     "fmt"
+    "io"
 )
 
 type Tag struct {
@@ -30,10 +30,10 @@ func (t *Tag) WriteTo(w io.Writer) (n int, err error) {
     return io.WriteString(w, t.String())
 }
 
-func toTag(repo Repository, obj *RawObject) (c *Tag, err error) {
-    p, err := obj.Payload()
-    if err != nil {
-        return
+func toTag(repo Repository, obj *RawObject) (t *Tag, err error) {
+    p, e := obj.Payload()
+    if e != nil {
+        return nil, e
     }
     // TODO implement the parsing
     fmt.Println(string(p))
