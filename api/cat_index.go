@@ -1,6 +1,7 @@
 package api
 
 import (
+    "fmt"
     "github.com/jbrukh/ggit"
 )
 
@@ -26,14 +27,17 @@ func init() {
 
 func CatIndex(args []string) (err error) {
 
-    // TODO: perhaps not open the repo before parsing args?
-    repo, err := ggit.Open(ggit.DEFAULT_GIT_DIR)
-    if err != nil {
-        return err
+    repo, e := ggit.Open(ggit.DEFAULT_GIT_DIR)
+    if e != nil {
+        return e
     }
     defer repo.Close()
 
-    _, err = repo.Index()
+    inx, e := repo.Index()
+    if e != nil {
+        return e
+    }
+    fmt.Println(inx)
 
     return
 }
