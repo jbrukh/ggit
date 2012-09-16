@@ -192,32 +192,7 @@ func toIndex(f *os.File) (idx *Index, err error) {
     // read the entries
     var i int32
     for i = 0; i < hdr.Count; i++ {
-        var binEntry indexEntry
-        err = binary.Read(file, ord, &binEntry)
-        if err != nil {
-            return nil, err
-        }
-
-        // TODO: what if it is corrupted and too long?
-        name, err := file.ReadBytes(NUL)
-        if err != nil {
-            return nil, err
-        }
-
-        name = name[:len(name)-1] // get rid of NUL
-
-        // don't ask me how I figured this out after
-        // a 14 hour workday
-        leftOver := 7 - (len(name)+6)%8
-        for j := 0; j < leftOver; j++ {
-            // TODO: read the bytes at once somehow
-            if _, err = file.ReadByte(); err != nil {
-                return nil, err
-            }
-        }
-
-        // record the entry
-        entry := toIndexEntry(&binEntry, string(name))
+        entry, err := parseIndexEntry(file)
         idx.entries = append(idx.entries, entry)
     }
 
@@ -242,6 +217,35 @@ func parseIndexHeader(r io.Reader) (hdr *indexHeader, err error) {
         return nil, errors.New("bad header")
     }
     return
+}
+
+func parseIndexEntry(r io.Reader) (entry *IndexEntry, err error) {
+    var binEntry indexEntry
+    err = binary.Read(r, ord, &binEntry)
+    if err != nil {
+        return nil, err
+    }
+
+    // TODO: what if it is corrupted and too long?
+    name, err := file.ReadBytes(NUL)
+    if err != nil {
+        return nil, err
+    }
+
+    name = name[:len(name)-1] // get rid of NUL
+
+    // don't ask me how I figured this out after
+    // a 14 hour workday
+    leftOver := 7 - (len(name)+6)%8
+    for j := 0; j < leftOver; j++ {
+        // TODO: read the bytes at once somehow
+        if _, err = file.ReadByte(); err != nil {
+            return nil, err
+        }
+    }
+
+    // record the entry
+    return toIndexEntry(&binEntry, string(name)), nil
 }
 
 func toIndexEntry(entry *indexEntry, name string) *IndexEntry {
