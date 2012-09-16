@@ -1,6 +1,7 @@
 package ggit
 
 import (
+    "bufio"
     "compress/zlib"
     "errors"
     "io"
@@ -91,11 +92,12 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
 }
 
 func (r *DiskRepository) Index() (idx *Index, err error) {
-    file, err := r.indexFile()
-    if err != nil {
+    file, e := r.indexFile()
+    if e != nil {
         return
     }
-    return toIndex(file)
+    defer file.Close()
+    return toIndex(bufio.NewReader(file))
 }
 
 // IndexFile returns an open git index file. It is up to the

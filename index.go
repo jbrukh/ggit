@@ -5,8 +5,6 @@ import (
     "encoding/binary"
     "errors"
     "fmt"
-    "io"
-    "os"
     "time"
 )
 
@@ -175,16 +173,20 @@ func (i *indexEntry) String() string {
 
 }
 
-func toIndex(f *os.File) (idx *Index, err error) {
-    file := bufio.NewReader(f)
-    defer f.Close()
-
-    hdr, err := parseIndexHeader(file)
-    if err != nil {
+// toIndex converts a reader pointing at a serialized
+// index object into a ggit.Index object
+func toIndex(file *bufio.Reader) (idx *Index, err error) {
+    // first parse the header of the index and make
+    // sure we are OK with the version and know the
+    // index entry count
+    hdr, e := parseIndexHeader(file)
+    if e != nil {
         return nil, err
     }
 
-    //fmt.Printf("%s\n", hdr.String())
+    // initialize the index object and prepare for
+    // populating the entries. note we may be doing
+    // this in vain if entries are invalid, etc.
     idx = new(Index)
     idx.version = hdr.Version
     idx.entries = make([]*IndexEntry, hdr.Count)
@@ -192,7 +194,10 @@ func toIndex(f *os.File) (idx *Index, err error) {
     // read the entries
     var i int32
     for i = 0; i < hdr.Count; i++ {
-        entry, err := parseIndexEntry(file)
+        entry, e := parseIndexEntry(file)
+        if e != nil {
+            return nil, e
+        }
         idx.entries = append(idx.entries, entry)
     }
 
@@ -208,7 +213,7 @@ func toIndex(f *os.File) (idx *Index, err error) {
     return
 }
 
-func parseIndexHeader(r io.Reader) (hdr *indexHeader, err error) {
+func parseIndexHeader(r *bufio.Reader) (hdr *indexHeader, err error) {
     if err = binary.Read(r, ord, &hdr); err != nil {
         return
     }
@@ -219,7 +224,7 @@ func parseIndexHeader(r io.Reader) (hdr *indexHeader, err error) {
     return
 }
 
-func parseIndexEntry(r io.Reader) (entry *IndexEntry, err error) {
+func parseIndexEntry(r *bufio.Reader) (entry *IndexEntry, err error) {
     var binEntry indexEntry
     err = binary.Read(r, ord, &binEntry)
     if err != nil {
@@ -227,7 +232,7 @@ func parseIndexEntry(r io.Reader) (entry *IndexEntry, err error) {
     }
 
     // TODO: what if it is corrupted and too long?
-    name, err := file.ReadBytes(NUL)
+    name, err := r.ReadBytes(NUL)
     if err != nil {
         return nil, err
     }
@@ -239,7 +244,7 @@ func parseIndexEntry(r io.Reader) (entry *IndexEntry, err error) {
     leftOver := 7 - (len(name)+6)%8
     for j := 0; j < leftOver; j++ {
         // TODO: read the bytes at once somehow
-        if _, err = file.ReadByte(); err != nil {
+        if _, err = r.ReadByte(); err != nil {
             return nil, err
         }
     }
