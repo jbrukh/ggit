@@ -13,8 +13,18 @@ import (
 // byte order as per the specification
 var ord binary.ByteOrder = binary.BigEndian
 
-// the Git index must begin with this code
-const SIGNATURE = "DIRC"
+// index files use 4-letter codes as signatures
+// to identify the format and extention
+type signature string
+
+// the Git index must begin with this signature code
+const SIG_INDEX_FILE signature = "DIRC"
+
+// extention signatures
+const (
+    SIG_CACHED_TREE  signature = "TREE"
+    SIG_RESOLVE_UNDO signature = "REUC"
+)
 
 type IndexEntry struct {
     eid   *ObjectId // TODO: is this an object id, or just a SHA??
@@ -91,6 +101,16 @@ func (hdr *indexHeader) String() string {
     return fmt.Sprintf(HEADER_FMT, string(hdr.Sig[:]), hdr.Version, hdr.Count)
 }
 
+// the header of an index extention
+type indexExtentionHeader struct {
+    Sig   [4]byte
+    Count int32
+}
+
+type IndexExtention struct {
+    etype signature
+}
+
 // data returned from stat, used by git
 // to detect when a file is changed. It appears (according to some docs)
 // that the particular kind of data is not as relevant as the fact that
@@ -163,7 +183,7 @@ func toIndex(f *os.File) (idx *Index, err error) {
         return
     }
     sig := string(hdr.Sig[:])
-    if sig != SIGNATURE || hdr.Version != 2 || hdr.Count < 0 {
+    if signature(sig) != SIG_INDEX_FILE || hdr.Version != 2 || hdr.Count < 0 {
         return nil, errors.New("bad header")
     }
     //fmt.Printf("%s\n", hdr.String())
