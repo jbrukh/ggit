@@ -84,6 +84,8 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
         return toTree(r, rawObj)
     case OBJECT_COMMIT:
         return toCommit(r, rawObj)
+    case OBJECT_TAG:
+        return toTag(r, rawObj)
     default:
         panic("unsupported type")
     }
