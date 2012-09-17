@@ -63,7 +63,7 @@ func toTree(repo Repository, obj *RawObject) (t *Tree, err error) {
     }
     entries := make([]*TreeEntry, 0, 10)
     for len(p) > 0 {
-        e, size, err := parseEntry(p)
+        e, size, err := parseTreeEntry(p)
         if err != nil {
             return nil, err
         }
@@ -77,7 +77,7 @@ func toTree(repo Repository, obj *RawObject) (t *Tree, err error) {
     return
 }
 
-func parseEntry(p []byte) (e *TreeEntry, size int, err error) {
+func parseTreeEntry(p []byte) (e *TreeEntry, size int, err error) {
     const MAX_SZ = 64
     l := min(MAX_SZ, len(p))
     size = 0
@@ -97,7 +97,7 @@ func parseEntry(p []byte) (e *TreeEntry, size int, err error) {
                     }
                     hsh := p[j:size]
                     // fmt.Printf("hash:\t%s\n", NewObjectIdFromBytes(hsh))
-                    e, err = getTreeEntry(modeStr, fileName, hsh)
+                    e, err = toTreeEntry(modeStr, fileName, hsh)
                     return
                 }
             }
@@ -108,7 +108,7 @@ func parseEntry(p []byte) (e *TreeEntry, size int, err error) {
 }
 
 // getTreeEntry converts raw data for the entry into a TreeEntry object.
-func getTreeEntry(modeStr, fileName string, hsh []byte) (e *TreeEntry, err error) {
+func toTreeEntry(modeStr, fileName string, hsh []byte) (e *TreeEntry, err error) {
     mode, err := strconv.ParseInt(modeStr, 8, 32)
     if err != nil {
         return
