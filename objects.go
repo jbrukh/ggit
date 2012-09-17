@@ -32,6 +32,10 @@ func (p ParseErr) Error() string {
     return string(p)
 }
 
+func ParseErrf(fmt string, items ...interface{}) {
+    return ParseErr(fmt.Sprintf(fmt, items))
+}
+
 type Object interface {
     Type() ObjectType
 
