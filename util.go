@@ -1,6 +1,7 @@
 package ggit
 
 import (
+    "bytes"
     "crypto/sha1"
     "hash"
 )
@@ -8,6 +9,7 @@ import (
 const (
     NUL = '\000'
     SP  = ' '
+    LF  = '\n'
 )
 
 // the hash object used to build
@@ -61,4 +63,12 @@ func trimLast(b []byte) []byte {
 
 func trimLastStr(b []byte) string {
     return string(trimLast(b))
+}
+
+func nextToken(buf *bytes.Buffer, delim byte) (tok string, err error) {
+    line, e := buf.ReadBytes(delim)
+    if e != nil {
+        return "", e
+    }
+    return trimLastStr(line), nil
 }

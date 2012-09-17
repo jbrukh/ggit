@@ -92,7 +92,7 @@ func parseTreeEntry(p []byte) (e *TreeEntry, size int, err error) {
                     j++ // skip the null
                     size = j + OID_SZ
                     if size > l {
-                        err = errors.New("not enough bytes for hash")
+                        err = parseErr("not enough bytes for hash")
                         return
                     }
                     hsh := p[j:size]
