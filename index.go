@@ -241,7 +241,7 @@ func (info *statInfo) MTime() time.Time {
 }
 
 func (info *statInfo) String() string {
-    const FMT_STATINFO = "%v  %v  %d  %d  %o  %d  %d  %6d"
+    const FMT_STATINFO = "%v  %v  %9d  %9d  %6o  %5d  %5d  %6d"
     return fmt.Sprintf(
         FMT_STATINFO,
         info.CTime(),
