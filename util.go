@@ -5,7 +5,10 @@ import (
     "hash"
 )
 
-const NUL = '\000'
+const (
+    NUL = '\000'
+    SP  = ' '
+)
 
 // the hash object used to build
 // hashes of our objects
@@ -46,4 +49,12 @@ func deduceObjectType(mode FileMode) ObjectType {
     }
     // TODO
     panic("unknown mode")
+}
+
+// trimLast throws away the last character of a byte slice
+func trimLast(b []byte) []byte {
+    if b == nil || len(b) == 0 {
+        return b
+    }
+    return b[:len(b)-1]
 }

@@ -9,29 +9,39 @@ import (
     "time"
 )
 
+// ================================================================= //
+// CONSTANTS AND SIGNATURES
+// ================================================================= //
+
 // all serialized data is stored in network
 // byte order as per the specification
 var ord binary.ByteOrder = binary.BigEndian
 
-// ================================================================= //
-// CONSTANTS
-// ================================================================= //
-
 // index files use 4-letter codes as signatures
 // to identify the format and extention
 type signature string
+type ExtType signature
 
 // the Git index must begin with this signature code
 const SIG_INDEX_FILE signature = "DIRC"
 
 // extention signatures
 const (
-    SIG_CACHED_TREE  signature = "TREE"
-    SIG_RESOLVE_UNDO signature = "REUC"
+    SIG_CACHED_TREE  ExtType = "TREE"
+    SIG_RESOLVE_UNDO ExtType = "REUC"
 )
 
+// convert raw bytes to a signature
+func toSig(raw [4]byte) signature {
+    return signature(raw[:])
+}
+
+func toExtType(raw [4]byte) ExtType {
+    return ExtType(raw[:])
+}
+
 // ================================================================= //
-// PUBLIC GGIT INDEX OBJECTS
+// PUBLIC GGIT INDEX OBJECT
 // ================================================================= //
 
 // the ggit Index object
@@ -73,14 +83,14 @@ func (inx *Index) String() string {
     } else {
         buf.WriteString("(no entries)\n")
     }
-    if inx.extentions != nil {
-        for _, ext := range inx.extentions {
-            buf.WriteString(ext.String())
-            buf.WriteString("\n")
-        }
-    } else {
-        buf.WriteString("(no extentions)\n")
-    }
+    // if inx.extentions != nil {
+    // 	for _, ext := range inx.extentions {
+    // 		buf.WriteString(ext.String())
+    // 		buf.WriteString("\n")
+    // 	}
+    // } else {
+    // 	buf.WriteString("(no extentions)\n")
+    // }
     return buf.String()
 }
 
@@ -93,14 +103,6 @@ type IndexEntry struct {
 
 func (entry *IndexEntry) String() string {
     return fmt.Sprint(entry.eid.String(), " ", entry.info.String(), " ", entry.name)
-}
-
-type IndexExtention struct {
-    etype signature
-}
-
-func (ext *IndexExtention) String() string {
-    return ""
 }
 
 // EntryFlags for version 2
@@ -117,8 +119,8 @@ func (f *EntryFlagsV2) Extended() bool {
 
 // TODO: this returns some two-bit result
 // not yet clear what it is for
-func (f *EntryFlagsV2) Stage() {
-    // TODO
+func (f *EntryFlagsV2) Stage() byte {
+    return 0x000 // TODO TODO TODO
 }
 
 // 12-bit name length if less than 0xFFF, and
@@ -126,6 +128,56 @@ func (f *EntryFlagsV2) Stage() {
 func (f *EntryFlagsV2) NameLength() int {
     // TODO
     return 0
+}
+
+// ================================================================= //
+// INDEX EXTENTIONS
+// ================================================================= //
+
+// index extention
+type IndexExtention interface {
+    // the extention type, or signature
+    ExtType() ExtType
+
+    // size of the data
+    Size() int
+}
+
+type CachedTreeIndexExtention struct {
+    entries []*CachedTreeEntry
+    size    int
+}
+
+func (ext *CachedTreeIndexExtention) ExtType() ExtType {
+    return SIG_CACHED_TREE
+}
+
+func (ext *CachedTreeIndexExtention) Size() int {
+    return ext.size
+}
+
+type CachedTreeEntry struct {
+    Path         string
+    Count        int
+    SubtreeCount int
+    Oid          *ObjectId
+}
+
+type ResolveUndoIndexExtention struct {
+    entries []*ResolveUndoEntry
+    size    int
+}
+
+func (ext *ResolveUndoIndexExtention) ExtType() ExtType {
+    return SIG_RESOLVE_UNDO
+}
+
+func (ext *ResolveUndoIndexExtention) Size() int {
+    return ext.size
+}
+
+type ResolveUndoEntry struct {
+    // TODO
 }
 
 // ================================================================= //
@@ -145,7 +197,7 @@ type indexHeader struct {
 
 func (hdr *indexHeader) String() string {
     const HEADER_FMT = "IndexHeader{Sig=%q, Version=%d, Count=%d}"
-    return fmt.Sprintf(HEADER_FMT, string(hdr.Sig[:]), hdr.Version, hdr.Count)
+    return fmt.Sprintf(HEADER_FMT, toSig(hdr.Sig), hdr.Version, hdr.Count)
 }
 
 // index entry version 2
@@ -212,7 +264,7 @@ func parseIndexHeader(r *bufio.Reader) (hdr *indexHeader, err error) {
     if err = binary.Read(r, ord, &h); err != nil {
         return
     }
-    sig := signature(h.Sig[:])
+    sig := toSig(h.Sig)
     if sig != SIG_INDEX_FILE || h.Version != 2 || h.Count < 0 {
         return nil, errors.New("bad header")
     }
@@ -227,12 +279,11 @@ func parseIndexEntry(r *bufio.Reader) (entry *IndexEntry, err error) {
     }
 
     // TODO: what if it is corrupted and too long?
-    name, err := r.ReadBytes(NUL)
-    if err != nil {
-        return nil, err
+    name, e := r.ReadBytes(NUL)
+    if e != nil {
+        return nil, e
     }
-
-    name = name[:len(name)-1] // get rid of NUL
+    name = trimLast(name) // get rid of NUL
 
     // don't ask me how I figured this out after
     // a 14 hour workday
@@ -248,8 +299,32 @@ func parseIndexEntry(r *bufio.Reader) (entry *IndexEntry, err error) {
     return toIndexEntry(&binEntry, string(name)), nil
 }
 
-func parseIndexExtention(file *bufio.Reader) (ext *IndexExtention, err error) {
-    return
+func parseIndexExt(r *bufio.Reader) (ext IndexExtention, err error) {
+    var hdr indexExtentionHeader
+    err = binary.Read(r, ord, &hdr)
+    if err != nil {
+        return nil, err
+    }
+
+    // do we support this extention type?
+    sig := toExtType(hdr.Sig)
+    switch sig {
+    case SIG_CACHED_TREE:
+        return parseCachedTree(r)
+    case SIG_RESOLVE_UNDO:
+        return parseResolveUndo(r)
+    }
+    return nil, errors.New("unsupported extention signature: " + string(sig))
+}
+
+// TODO: implement
+func parseCachedTree(r *bufio.Reader) (ext *CachedTreeIndexExtention, err error) {
+    return nil, nil
+}
+
+// TODO: implement
+func parseResolveUndo(r *bufio.Reader) (ext *ResolveUndoIndexExtention, err error) {
+    return nil, nil
 }
 
 // ================================================================= //
@@ -284,16 +359,16 @@ func toIndex(file *bufio.Reader) (idx *Index, err error) {
         idx.entries = append(idx.entries, entry)
     }
 
-    /*  // read the extentions
-        idx.extentions = make([]*IndexExtention, 4)
-        for {
-            ext, e := parseIndexExtention(file)
-            if e != nil {
-                return nil, e
-            }
-            idx.extentions = append(idx.extentions, ext)
-        }
-    */
+    // // read the extentions
+    // idx.extentions = make([]*IndexExtention, 4)
+    // for {
+    // 	ext, e := parseIndexExt(file)
+    // 	if e != nil {
+    // 		return nil, e
+    // 	}
+    // 	idx.extentions = append(idx.extentions, ext)
+    // }
+
     return
 }
 
@@ -304,4 +379,14 @@ func toIndexEntry(entry *indexEntry, name string) *IndexEntry {
         name:  name,
         info:  &entry.Info,
     }
+}
+
+// isExtIgnorable returns true if and only if the
+// extention begins with one of 'A'...'Z', which by spec
+// means this is an optional optimization
+func isExtIgnorable(sig signature) bool {
+    if len(sig) < 1 {
+        panic("nil signature")
+    }
+    return sig[0] >= 'A' && sig[0] <= 'Z'
 }
