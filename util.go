@@ -58,3 +58,7 @@ func trimLast(b []byte) []byte {
     }
     return b[:len(b)-1]
 }
+
+func trimLastStr(b []byte) string {
+    return string(trimLast(b))
+}

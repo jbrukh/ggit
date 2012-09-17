@@ -24,6 +24,14 @@ const (
     OBJECT_TAG_STR    = "tag"
 )
 
+// ParseErr is a common error that occurs when ggit is 
+// parsing binary objects
+type ParseErr string
+
+func (p ParseErr) Error() string {
+    return string(p)
+}
+
 type Object interface {
     Type() ObjectType
 
@@ -64,12 +72,12 @@ type RawObject struct {
 
 func (obj *RawObject) parse() (h *ObjectHeader, err error) {
     if len(obj.bytes) < 1 {
-        return nil, errors.New("no data bytes")
+        return nil, ParseErr("no data bytes")
     }
     var typeStr, sizeStr string
     typeStr, sizeStr, obj.pInx = parseHeader(obj.bytes)
     if obj.pInx <= 0 {
-        return nil, errors.New("bad header")
+        return nil, ParseErr("bad header")
     }
     otype, e := toObjectType(typeStr)
     if e != nil {
@@ -77,7 +85,7 @@ func (obj *RawObject) parse() (h *ObjectHeader, err error) {
     }
     osize, e := strconv.Atoi(sizeStr)
     if e != nil {
-        return nil, errors.New("bad object size")
+        return nil, ParseErr("bad object size")
     }
     return &ObjectHeader{otype, osize}, nil
 }
