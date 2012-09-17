@@ -2,12 +2,33 @@ package ggit
 
 import (
     "errors"
+    "fmt"
     "io"
     "strconv"
 )
 
+// ================================================================= //
+// CONSTANTS RELATED TO TYPES
+// ================================================================= //
+
 // the types of Git objects
 type ObjectType int8
+
+// return a human-readable representation of an ObjectType
+// TODO: turn this into a to-function
+func (otype ObjectType) String() string {
+    switch otype {
+    case OBJECT_BLOB:
+        return OBJECT_BLOB_STR
+    case OBJECT_TREE:
+        return OBJECT_TREE_STR
+    case OBJECT_COMMIT:
+        return OBJECT_COMMIT_STR
+    case OBJECT_TAG:
+        return OBJECT_TAG_STR
+    }
+    panic("unknown type")
+}
 
 const (
     OBJECT_BLOB ObjectType = iota
@@ -24,17 +45,26 @@ const (
     OBJECT_TAG_STR    = "tag"
 )
 
+// ================================================================= //
+// PARSE ERROR TYPE
+// ================================================================= //
+
 // ParseErr is a common error that occurs when ggit is 
 // parsing binary objects
-type ParseErr string
+type parseErr string
 
-func (p ParseErr) Error() string {
+func (p parseErr) Error() string {
     return string(p)
 }
 
-func ParseErrf(fmt string, items ...interface{}) {
-    return ParseErr(fmt.Sprintf(fmt, items))
+// parseErrf allows convenience formatting for ParseErrors
+func parseErrf(format string, items ...interface{}) parseErr {
+    return parseErr(fmt.Sprintf(format, items))
 }
+
+// ================================================================= //
+// OBJECTS AND RAWOBJECTS
+// ================================================================= //
 
 type Object interface {
     Type() ObjectType
@@ -51,21 +81,6 @@ type ObjectHeader struct {
     Size int
 }
 
-// return a human-readable representation of an ObjectType
-func (otype ObjectType) String() string {
-    switch otype {
-    case OBJECT_BLOB:
-        return OBJECT_BLOB_STR
-    case OBJECT_TREE:
-        return OBJECT_TREE_STR
-    case OBJECT_COMMIT:
-        return OBJECT_COMMIT_STR
-    case OBJECT_TAG:
-        return OBJECT_TAG_STR
-    }
-    panic("unknown type")
-}
-
 // raw (but uncompressed) data for a
 // git object that contains the header;
 type RawObject struct {
@@ -76,12 +91,12 @@ type RawObject struct {
 
 func (obj *RawObject) parse() (h *ObjectHeader, err error) {
     if len(obj.bytes) < 1 {
-        return nil, ParseErr("no data bytes")
+        return nil, parseErr("no data bytes")
     }
     var typeStr, sizeStr string
-    typeStr, sizeStr, obj.pInx = parseHeader(obj.bytes)
+    typeStr, sizeStr, obj.pInx = parseObjectHeader(obj.bytes)
     if obj.pInx <= 0 {
-        return nil, ParseErr("bad header")
+        return nil, parseErr("bad header")
     }
     otype, e := toObjectType(typeStr)
     if e != nil {
@@ -89,7 +104,7 @@ func (obj *RawObject) parse() (h *ObjectHeader, err error) {
     }
     osize, e := strconv.Atoi(sizeStr)
     if e != nil {
-        return nil, ParseErr("bad object size")
+        return nil, parseErr("bad object size")
     }
     return &ObjectHeader{otype, osize}, nil
 }
@@ -141,7 +156,7 @@ func (o *RawObject) Bytes() []byte {
     return o.bytes
 }
 
-func parseHeader(b []byte) (typeStr, sizeStr string, pInx uint) {
+func parseObjectHeader(b []byte) (typeStr, sizeStr string, pInx uint) {
     const MAX_SZ = 32
     var i, j uint
     l := uint(min(MAX_SZ, len(b)))
