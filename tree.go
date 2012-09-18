@@ -114,11 +114,15 @@ func toTreeEntry(modeStr, fileName string, hsh []byte) (e *TreeEntry, err error)
         return
     }
     m := FileMode(mode)
+    var oid *ObjectId
+    if oid, err = NewObjectIdFromBytes(hsh); err != nil {
+        return nil, err
+    }
     e = &TreeEntry{
         mode:  m,
         otype: deduceObjectType(m),
         name:  fileName,
-        oid:   NewObjectIdFromBytes(hsh),
+        oid:   oid,
     }
     return
 }

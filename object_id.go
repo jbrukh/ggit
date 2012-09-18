@@ -19,9 +19,9 @@ type ObjectId struct {
 // in from left to right, with no regard for the number
 // of bytes in the input. Extra bytes are discarded and
 // missing bytes are padded with zeros.
-func NewObjectIdFromBytes(bytes []byte) (id *ObjectId) {
+func NewObjectIdFromBytes(bytes []byte) (id *ObjectId, err error) {
     if len(bytes) < OID_SZ {
-        // TODO: decide if error
+        return nil, errors.New("not enough bytes for oid")
     }
     id = &ObjectId{
         bytes: make([]byte, OID_SZ),
@@ -31,7 +31,8 @@ func NewObjectIdFromBytes(bytes []byte) (id *ObjectId) {
 }
 
 func NewObjectIdFromArray(bytes [20]byte) (id *ObjectId) {
-    return NewObjectIdFromBytes(bytes[:])
+    oid, _ := NewObjectIdFromBytes(bytes[:]) // no error can happen
+    return oid
 }
 
 func NewObjectIdFromString(hex string) (id *ObjectId, err error) {
