@@ -2,7 +2,6 @@ package ggit
 
 import (
     "errors"
-    "fmt"
     "io"
     "strconv"
 )
@@ -44,23 +43,6 @@ const (
     OBJECT_COMMIT_STR = "commit"
     OBJECT_TAG_STR    = "tag"
 )
-
-// ================================================================= //
-// PARSE ERROR TYPE
-// ================================================================= //
-
-// ParseErr is a common error that occurs when ggit is 
-// parsing binary objects
-type parseErr string
-
-func (p parseErr) Error() string {
-    return string(p)
-}
-
-// parseErrf allows convenience formatting for ParseErrors
-func parseErrf(format string, items ...interface{}) parseErr {
-    return parseErr(fmt.Sprintf(format, items))
-}
 
 // ================================================================= //
 // OBJECTS AND RAWOBJECTS
