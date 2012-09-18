@@ -4,6 +4,15 @@ import (
     "testing"
 )
 
+func newBlobFromString(blobStr string) *Blob {
+    return &Blob{
+        RawObject: RawObject{
+            bytes: []byte(blobStr),
+        },
+        repo: nil,
+    }
+}
+
 var passBlob1 *Blob = newBlobFromString("blob 0\000")
 var passBlob2 *Blob = newBlobFromString("blob 1\0001")
 var passBlob3 *Blob = newBlobFromString("blob 10\0001234567890")

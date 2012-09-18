@@ -43,7 +43,10 @@ func TestObjectIdString(t *testing.T) {
 }
 
 func compareHexRepr(t *testing.T, bytes []byte, expected string) {
-    id := NewObjectIdFromBytes(bytes)
+    id, e := NewObjectIdFromBytes(bytes)
+    if e != nil {
+        t.Error("could not parse bytes")
+    }
     repr := id.String()
     if repr != expected {
         t.Error("representation is not correct, expected ", expected, " but got ", repr)
@@ -95,8 +98,8 @@ func TestNewObjectIdFromHash(t *testing.T) {
 
 func TestNewObjectIdFromBytes(t *testing.T) {
     bytes := make([]byte, OID_SZ)
-    id := NewObjectIdFromBytes(bytes)
-    if id.bytes == nil {
+    id, e := NewObjectIdFromBytes(bytes)
+    if e != nil {
         t.Error("did not initialize bytes properly")
     }
     if id.repr != "" {

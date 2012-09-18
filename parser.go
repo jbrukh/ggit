@@ -2,12 +2,15 @@ package ggit
 
 import (
     "bufio"
+    "bytes"
     "fmt"
+    "io"
+    "strconv"
     "strings"
 )
 
 // ================================================================= //
-// PARSE ERROR TYPE
+// PARSE ERROR TYPE & PANICS
 // ================================================================= //
 
 // ParseErr is a common error that occurs when ggit is 
@@ -42,6 +45,22 @@ func panicErrf(format string, items ...interface{}) {
 }
 
 // ================================================================= //
+// HELPERS
+// ================================================================= //
+
+// trimLast throws away the last character of a byte slice
+func trimLast(b []byte) []byte {
+    if b == nil || len(b) == 0 {
+        return b
+    }
+    return b[:len(b)-1]
+}
+
+func trimLastStr(b []byte) string {
+    return string(trimLast(b))
+}
+
+// ================================================================= //
 // DATA PARSER
 // ================================================================= //
 
@@ -50,33 +69,44 @@ type dataParser struct {
 }
 
 // ================================================================= //
-// DATA PARSING PANICS
-// 
-// The idea is that the parser will panic on any error and the user
-// will catch the panic. The type of object thrown during a panic
-// is parseErr.
+// DATA PARSING API
 // ================================================================= //
 
-func (p *dataParser) TokenString(delim byte) string {
-    str, e := p.buf.ReadString(delim)
-    if e != nil {
-        panicErrf(e.Error())
-    }
-    return str
+// dataParse allows you to call a number of parsing functions on your
+// parser at once, without having to handle errors explicitly. If an
+// error occurs, the parser commands will panic with parseErr, which
+// this method will recover and return
+func dataParse(f func()) (err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            if e, ok := r.(parseErr); ok {
+                err = e
+            }
+        }
+    }()
+    f()
+    return
 }
 
+// TokenBytes returns the next token of bytes delimited
+// by the given byte, not including the delimiter
 func (p *dataParser) TokenBytes(delim byte) []byte {
     b, e := p.buf.ReadBytes(delim)
     if e != nil {
         panicErr(e.Error())
     }
-    return b
+    return trimLast(b)
 }
 
-func (p *dataParser) NextString(n int) string {
-    return string(p.NextBytes(n))
+// TokenStringreturns the next token of bytes delimited
+// by the given byte, not including the delimiter, as 
+// a string
+func (p *dataParser) TokenString(delim byte) string {
+    return string(p.TokenBytes(delim))
 }
 
+// NextBytes returns the next n bytes of the Reader,
+// or bust
 func (p *dataParser) NextBytes(n int) []byte {
     b := make([]byte, n)
     if rd, e := p.buf.Read(b); e != nil || rd != n {
@@ -85,7 +115,13 @@ func (p *dataParser) NextBytes(n int) []byte {
     return b
 }
 
-// nextObjectIdString reads the next OID_HEXSZ bytes from the Reader
+// NextBytes returns the next n bytes of the Reader,
+// or bust, as a string
+func (p *dataParser) NextString(n int) string {
+    return string(p.NextBytes(n))
+}
+
+// NextObjectIdString reads the next OID_HEXSZ bytes from the Reader
 // and interprets them as an ObjectId
 func (p *dataParser) NextObjectIdString() *ObjectId {
     hex := p.NextString(OID_HEXSZ)
@@ -96,7 +132,7 @@ func (p *dataParser) NextObjectIdString() *ObjectId {
     return oid
 }
 
-// nextObjectIdString reads the next OID_SZ bytes from the Reader
+// NextObjectIdString reads the next OID_SZ bytes from the Reader
 // and interprets them as an ObjectId
 func (p *dataParser) NextObjectIdBytes() *ObjectId {
     b := p.NextBytes(OID_SZ)
@@ -107,24 +143,38 @@ func (p *dataParser) NextObjectIdBytes() *ObjectId {
     return oid
 }
 
-func (p *dataParser) NextIntString(delim byte) int {
-    return 0 // TODO
-}
-
-func (p *dataParser) NextInt32String(delim byte) int32 {
-    return 0 // TODO
+//
+func (p *dataParser) TokenStringInt(delim byte) (n int) {
+    str := p.TokenString(delim)
+    var e error
+    if n, e = strconv.Atoi(str); e != nil {
+        panicErrn("cannot convert integer: %s", str)
+    }
+    return n
 }
 
 // FlushString returns the entirety of the remaining data
 // in the buffer, up to the EOF, as a string
 func (p *dataParser) FlushString() string {
-    return "" // TODO
+    return string(p.FlushBytes())
 }
 
 func (p *dataParser) FlushBytes() []byte {
-    return nil // TODO
+    b := new(bytes.Buffer)
+    _, e := io.Copy(b, p.buf)
+    if e != nil {
+        panicErr(e.Error())
+    }
+    return b.Bytes()
 }
 
+// VerifyString returns true if and only if the next bytes
+// in the buffer match the given input string
 func (p *dataParser) VerifyString(str string) bool {
+    // TODO: can implement this more efficiently with ReadByte()
     return p.NextString(len(str)) == str
+}
+
+func (p *dataParser) VerifyStringPeek(str string) bool {
+    return false
 }

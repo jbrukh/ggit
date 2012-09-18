@@ -53,18 +53,6 @@ func deduceObjectType(mode FileMode) ObjectType {
     panic("unknown mode")
 }
 
-// trimLast throws away the last character of a byte slice
-func trimLast(b []byte) []byte {
-    if b == nil || len(b) == 0 {
-        return b
-    }
-    return b[:len(b)-1]
-}
-
-func trimLastStr(b []byte) string {
-    return string(trimLast(b))
-}
-
 func nextToken(buf *bytes.Buffer, delim byte) (tok string, err error) {
     line, e := buf.ReadBytes(delim)
     if e != nil {
