@@ -35,13 +35,13 @@ func NewObjectIdFromArray(bytes [20]byte) (id *ObjectId) {
 }
 
 func NewObjectIdFromString(hex string) (id *ObjectId, err error) {
-    bytes, err := computeBytes(hex)
-    if err == nil {
+    bytes, e := computeBytes(hex)
+    if e == nil {
         id = &ObjectId{
             bytes: bytes,
         }
     }
-    return
+    return id, e
 }
 
 func NewObjectIdFromHash(h hash.Hash) (id *ObjectId) {

@@ -57,7 +57,7 @@ func parseOidLine(buf *bytes.Buffer) (marker string, oid *ObjectId, err error) {
     var m, oidStr string
     n, e := fmt.Fscanf(buf, "%s %s\n", &m, &oidStr)
     if e != nil || n != 2 {
-        return "", oid, parseErr("could not parse oid line")
+        return "", nil, parseErr("could not parse oid line")
     }
     oid, err = NewObjectIdFromString(oidStr)
     return m, oid, err
