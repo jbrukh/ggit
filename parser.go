@@ -169,12 +169,20 @@ func (p *dataParser) FlushBytes() []byte {
 }
 
 // VerifyString returns true if and only if the next bytes
-// in the buffer match the given input string
+// in the buffer match the given input string (the string
+// in the buffer is consumed)
 func (p *dataParser) VerifyString(str string) bool {
     // TODO: can implement this more efficiently with ReadByte()
     return p.NextString(len(str)) == str
 }
 
-func (p *dataParser) VerifyStringPeek(str string) bool {
-    return false
+// PeekString returns true if and only if the next bytes
+// in the buffer match the given input string (the string
+// in the buffer is NOT consumed)
+func (p *dataParser) PeekString(str string) bool {
+    peek, e := p.buf.Peek(len(str))
+    if e != nil {
+        panicErr(e.Error())
+    }
+    return string(peek) == str
 }

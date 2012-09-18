@@ -88,3 +88,25 @@ func Test_FlushString(t *testing.T) {
     assert(t, t2.FlushString() == MSG[1:])
     assert(t, t3.FlushString() == "")
 }
+
+func Test_FlushString(t *testing.T) {
+    const MSG = "The quick brown fox jumped over the lazy dog."
+    t1 := parserForString(MSG)
+    assert(t, t1.PeekString("The"))
+    assert(t, t1.PeekString("The quick"))
+    assert(t, t1.PeekString(MSG))
+
+    assert(t, t1.VerifyString("The "))
+    assert(t, t1.VerifyString("quick "))
+    assert(t, t1.VerifyString("brown "))
+    assert(t, t1.VerifyString("fox "))
+    assert(t, t1.VerifyString("jumped "))
+    assert(t, t1.VerifyString("over "))
+    assert(t, t1.VerifyString("the "))
+    assert(t, t1.VerifyString("lazy dog."))
+    assert(t, t1.VerifyString(""))
+
+    assertPanic(t, func() {
+        t1.VerifyString("garbage")
+    })
+}
