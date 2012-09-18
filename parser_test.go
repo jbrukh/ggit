@@ -3,6 +3,7 @@ package ggit
 import (
     "bufio"
     "bytes"
+    "errors"
     "fmt"
     "testing"
 )
@@ -89,7 +90,7 @@ func Test_FlushString(t *testing.T) {
     assert(t, t3.FlushString() == "")
 }
 
-func Test_FlushString(t *testing.T) {
+func Test_VerifyPeekString(t *testing.T) {
     const MSG = "The quick brown fox jumped over the lazy dog."
     t1 := parserForString(MSG)
     assert(t, t1.PeekString("The"))
@@ -109,4 +110,21 @@ func Test_FlushString(t *testing.T) {
     assertPanic(t, func() {
         t1.VerifyString("garbage")
     })
+}
+
+func Test_dataParse(t *testing.T) {
+    err := dataParse(func() {
+        // we only care about parseErr's
+        panic(errors.New("not a parseErr"))
+    })
+    if err != nil {
+        t.Error("threw an error when not supposed to")
+    }
+
+    err = dataParse(func() {
+        panic(parseErr("this is a parse error"))
+    })
+    if err == nil {
+        t.Error("didn't throw an error when supposed to")
+    }
 }
