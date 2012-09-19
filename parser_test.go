@@ -134,6 +134,6 @@ func Test_dataParse(t *testing.T) {
 func Test_ParseObjectIdString(t *testing.T) {
     var oid *ObjectId
     t1 := parserForString(CRAZY)
-    t1.ParseObjectId(&oid)
+    oid = t1.ParseObjectId()
     assert(t, oid.String() == CRAZY)
 }
