@@ -6,22 +6,6 @@ import (
     "strconv"
 )
 
-// return a human-readable representation of an ObjectType
-// TODO: turn this into a to-function
-func (otype ObjectType) String() string {
-    switch otype {
-    case OBJECT_BLOB:
-        return OBJECT_BLOB_STR
-    case OBJECT_TREE:
-        return OBJECT_TREE_STR
-    case OBJECT_COMMIT:
-        return OBJECT_COMMIT_STR
-    case OBJECT_TAG:
-        return OBJECT_TAG_STR
-    }
-    panic("unknown type")
-}
-
 // ================================================================= //
 // OBJECTS AND RAWOBJECTS
 // ================================================================= //
