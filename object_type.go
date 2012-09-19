@@ -1,5 +1,7 @@
 package ggit
 
+import "errors"
+
 // ================================================================= //
 // CONSTANTS RELATED TO TYPES
 // ================================================================= //
@@ -38,3 +40,16 @@ func (otype ObjectType) String() string {
 	panic("unknown type")
 }
 
+func toObjectType(typeStr string) (otype ObjectType, err error) {
+	switch typeStr {
+	case OBJECT_BLOB_STR:
+		return OBJECT_BLOB, nil
+	case OBJECT_TREE_STR:
+		return OBJECT_TREE, nil
+	case OBJECT_TAG_STR:
+		return OBJECT_TAG, nil
+	case OBJECT_COMMIT_STR:
+		return OBJECT_COMMIT, nil
+	}
+	return 0, errors.New("unknown object type")
+}
