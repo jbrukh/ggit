@@ -131,7 +131,7 @@ func Test_dataParse(t *testing.T) {
     }
 }
 
-func Test_ParseObjectIdString(t *testing.T) {
+func Test_ParseObjectId(t *testing.T) {
     var oid *ObjectId
     t1 := parserForString(CRAZY)
     oid = t1.ParseObjectId()
