@@ -5,7 +5,6 @@ import (
     "bytes"
     "fmt"
     "io"
-    "strconv"
     "strings"
 )
 
@@ -69,10 +68,6 @@ type dataParser struct {
     buf *bufio.Reader
 }
 
-// ================================================================= //
-// DATA PARSING API
-// ================================================================= //
-
 // dataParse allows you to call a number of parsing functions on your
 // parser at once, without having to handle errors explicitly. If an
 // error occurs, the parser commands will panic with parseErr, which
@@ -89,86 +84,110 @@ func dataParse(f func()) (err error) {
     return
 }
 
-// TokenBytes returns the next token of bytes delimited
-// by the given byte, not including the delimiter
-func (p *dataParser) TokenBytes(delim byte) []byte {
-    b, e := p.buf.ReadBytes(delim)
-    if e != nil {
-        panicErr(e.Error())
-    }
-    return trimLast(b)
-}
+// ================================================================= //
+// DATA PARSING API
+// ================================================================= //
 
-// TokenStringreturns the next token of bytes delimited
-// by the given byte, not including the delimiter, as 
-// a string
-func (p *dataParser) TokenString(delim byte) string {
-    return string(p.TokenBytes(delim))
-}
-
-// NextBytes returns the next n bytes of the Reader,
-// or bust
-func (p *dataParser) NextBytes(n int) []byte {
+func (p *dataParser) consume(n int) []byte {
     b := make([]byte, n)
     if rd, e := p.buf.Read(b); e != nil || rd != n {
-        panicErrf("couldn't read %d bytes", n)
+        panicErrf("expected: %d byte(s)", n)
     }
     return b
 }
 
-// NextBytes returns the next n bytes of the Reader,
-// or bust, as a string
-func (p *dataParser) NextString(n int) string {
-    return string(p.NextBytes(n))
+func (p *dataParser) peek(n int) []byte {
+    b := make([]byte, n)
+    if pk, e := p.buf.Peek(n); e != nil || len(pk) != n {
+        panicErrf("expected: %d byte(s)", n)
+    }
+    return b
 }
 
-// NextObjectIdString reads the next OID_HEXSZ bytes from the Reader
-// and interprets them as an ObjectId
-func (p *dataParser) NextObjectIdString() *ObjectId {
-    hex := p.NextString(OID_HEXSZ)
-    oid, e := NewObjectIdFromString(hex)
+func (p *dataParser) consumeUntil(delim byte) []byte {
+    b, e := p.buf.ReadBytes(delim)
     if e != nil {
-        panicErr(e.Error())
+        panicErrf("expected delimiter: %v", delim)
     }
-    return oid
+    return trimLast(b)
 }
 
-// ParseObjectIdString reads the next OID_HEXSZ bytes from the
-// Reader and places the resulting object id in oid
-func (p *dataParser) ParseObjectIdString(oid **ObjectId) {
-    *oid = p.NextObjectIdString()
+// Consume will consume n bytes without regard for what the underlying
+// data might be. If it is unable to consume, then a panic is raised
+// with parseErr.
+func (p *dataParser) Consume(n int) {
+    p.consume(n)
 }
 
-// NextObjectIdString reads the next OID_SZ bytes from the Reader
-// and interprets them as an ObjectId
-func (p *dataParser) NextObjectIdBytes() *ObjectId {
-    b := p.NextBytes(OID_SZ)
-    oid, e := NewObjectIdFromBytes(b)
+// ConsumeByte will consume a single byte and compare it to b. If it
+// does not match, or cannot be read, then a panic is raised with parseErr.
+func (p *dataParser) ConsumeByte(b byte) {
+    if p.consume(1)[0] != b {
+        panicErrf("expected byte: %v", b)
+    }
+}
+
+// PeekBute will return the next byte without advancing the reader. If
+// it cannot be read, then a panic is raised with parseErr.
+func (p *dataParser) PeekByte() byte {
+    return p.peek(1)[0]
+}
+
+// PeekBytes
+func (p *dataParser) PeekBytes(n int) []byte {
+    return p.peek(n)
+}
+
+// ConsumeBytes will consume len(b) bytes and compare them to b. If they
+// do not match, or cannot be read, then a panic is raised with parseErr.
+func (p *dataParser) ConsumeBytes(b []byte) {
+    d := p.consume(len(b))
+    for inx, v := range d {
+        if d[inx] != v {
+            panicErrf("expected bytes: %v", b)
+        }
+    }
+}
+
+// ConsumeString will consume len(b) bytes and compare them to the string s. If they
+// do not match, or cannot be read, then a panic is raised with parseErr.
+func (p *dataParser) ConsumeString(s string) {
+    b := p.consume(len(s))
+    if string(b) != s {
+        panicErrf("expected string: %s", s)
+    }
+}
+
+// PeekString returns true if and only if the next bytes
+// in the buffer match the given input string (the string
+// in the buffer is NOT consumed)
+func (p *dataParser) PeekString(n int) string {
+    pk, e := p.buf.Peek(n)
     if e != nil {
-        panicErr(e.Error())
+        panicErrf("expected: %d byte(s)", n)
     }
-    return oid
+    return string(pk)
 }
 
-//
-func (p *dataParser) TokenStringInt(delim byte) (n int) {
-    str := p.TokenString(delim)
-    var e error
-    if n, e = strconv.Atoi(str); e != nil {
-        panicErrn("cannot convert integer: %s", str)
-    }
-    return n
+// ReadBytesUntil
+func (p *dataParser) ReadBytes(delim byte) []byte {
+    return p.consumeUntil(delim)
 }
 
-// FlushString returns the entirety of the remaining data
+// ReadStringUtil
+func (p *dataParser) ReadString(delim byte) string {
+    return string(p.consumeUntil(delim))
+}
+
+// String returns the entirety of the remaining data
 // in the buffer, up to the EOF, as a string
-func (p *dataParser) FlushString() string {
-    return string(p.FlushBytes())
+func (p *dataParser) String() string {
+    return string(p.Bytes())
 }
 
-// FlushBytes returns the entirety of the remaining data
+// Bytes returns the entirety of the remaining data
 // in the buffer, up to the EOF, as bytes
-func (p *dataParser) FlushBytes() []byte {
+func (p *dataParser) Bytes() []byte {
     b := new(bytes.Buffer)
     _, e := io.Copy(b, p.buf)
     if e != nil {
@@ -177,39 +196,47 @@ func (p *dataParser) FlushBytes() []byte {
     return b.Bytes()
 }
 
-// VerifyString panics if and only if the next bytes
-// in the buffer do not match the given input string (the string
-// in the buffer is consumed)
-func (p *dataParser) VerifyString(str string) {
-    // TODO	: can implement this more efficiently with ReadByte()
-    if p.NextString(len(str)) != str {
-        panicErrn("data did not match: ", str)
-    }
-}
+// ================================================================= //
+// SPECIALIZED PARSING FUNCTIONS
+// ================================================================= //
 
-// PeekString returns true if and only if the next bytes
-// in the buffer match the given input string (the string
-// in the buffer is NOT consumed)
-func (p *dataParser) PeekString(str string) bool {
-    peek, e := p.buf.Peek(len(str))
+// ParseObjectId reads the next OID_HEXSZ bytes from the
+// Reader and places the resulting object id in oid.
+func (p *dataParser) ParseObjectId(oid **ObjectId) {
+    hex := string(p.consume(OID_HEXSZ))
+    id, e := NewObjectIdFromString(hex)
     if e != nil {
-        panicErr(e.Error())
+        panicErrf("expected: hex string of size %d", OID_HEXSZ)
     }
-    return string(peek) == str
+    *oid = id
 }
 
-// VerifyRune consumes the next byte and panics with parseErr
-// if it does not match the reference byte b.
-func (p *dataParser) VerifyByte(b byte) {
-    data, e := p.buf.ReadByte()
-    if e != nil {
-        panicErr(e.Error())
-    }
-    if b != data {
-        panicErrf("data did not match: %s", b)
-    }
-}
+// func (p *dataParser) NextObjectIdString() *ObjectId {
+// 	hex := p.NextString(OID_HEXSZ)
+// 	oid, e := NewObjectIdFromString(hex)
+// 	if e != nil {
+// 		panicErr(e.Error())
+// 	}
+// 	return oid
+// }
 
-func (p *dataParser) PeekByte(r byte) bool {
-    return p.PeekString(string(r))
-}
+// // NextObjectIdString reads the next OID_SZ bytes from the Reader
+// // and interprets them as an ObjectId
+// func (p *dataParser) NextObjectIdBytes() *ObjectId {
+// 	b := p.ReadBytes(OID_SZ)
+// 	oid, e := NewObjectIdFromBytes(b)
+// 	if e != nil {
+// 		panicErr(e.Error())
+// 	}
+// 	return oid
+// }
+
+// //
+// func (p *dataParser) TokenStringInt(delim byte) (n int) {
+// 	str := p.TokenString(delim)
+// 	var e error
+// 	if n, e = strconv.Atoi(str); e != nil {
+// 		panicErrn("cannot convert integer: %s", str)
+// 	}
+// 	return n
+// }

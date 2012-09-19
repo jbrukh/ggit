@@ -1,9 +1,17 @@
 package ggit
 
 import (
+    "bufio"
     "bytes"
     "fmt"
     "io"
+)
+
+const (
+    markerTree      = "tree"
+    markerParent    = "parent"
+    markerAuthor    = "author"
+    markerCommitter = "committer"
 )
 
 type Commit struct {
@@ -20,47 +28,97 @@ func (c *Commit) Type() ObjectType {
 }
 
 func (c *Commit) WriteTo(w io.Writer) (n int, err error) {
-    // TODO
-    return 0, nil
+    return io.WriteString(w, c.message)
+}
+
+func (c *Commit) addParent(oid *ObjectId) {
+    if c.parents == nil {
+        c.parents = make([]*ObjectId, 0, 2)
+    }
+    c.parents = append(c.parents, oid)
 }
 
 func toCommit(repo Repository, obj *RawObject) (c *Commit, err error) {
-    p, err := obj.Payload()
-    if err != nil {
+    var p []byte
+    if p, err = obj.Payload(); err != nil {
         return
     }
-    // TODO implement the parsing
-    fmt.Println(string(p))
-    return new(Commit), nil // TODO
+    if c, err = parseCommit(p); err != nil {
+        return
+    }
+    return c, nil // TODO
 }
 
 func parseCommit(b []byte) (c *Commit, err error) {
-    buf := bytes.NewBuffer(b)
-    c = new(Commit)
+    buf := bufio.NewReader(bytes.NewBuffer(b))
 
-    marker, oid, e := parseOidLine(buf)
-    if e != nil || marker != OBJECT_TREE_STR {
-        return nil, parseErr("wrong marker")
-    }
-    c.tree = oid
+    p := &dataParser{buf}
+    err = dataParse(func() {
 
-    // c.parents = make([]*ObjectId, 0, 2)
+        // read the tree line
+        p.ConsumeString(markerTree)
+        p.ConsumeByte(SP)
+        p.ParseObjectId(&c.tree)
+        p.ConsumeByte(LF)
 
-    //    for {
-    //        marker, oid, e := parseOidLine(buf, "parent") // TODO: const
-    //        if 
-    //    }
+        // read an arbitrary number of parent lines
+        for {
+            if n := len(markerParent); p.PeekString(n) != markerParent {
+                break
+            }
+            p.ConsumeString(markerParent)
+            p.ConsumeByte(SP)
+            var oid *ObjectId
+            p.ParseObjectId(&oid)
+            c.addParent(oid)
+            p.ConsumeByte(LF)
+        }
+
+        // read the author
+        p.ConsumeString(markerAuthor)
+        p.ConsumeByte(SP)
+        line := p.ReadString(LF)
+        c.author = &AuthorTimestamp{line, "", ""} // TODO
+        p.ConsumeByte(LF)
+
+        // read the committer
+        p.ConsumeString(markerCommitter)
+        p.ConsumeByte(SP)
+        line = p.ReadString(LF)
+        c.committer = &AuthorTimestamp{line, "", ""} // TODO
+        p.ConsumeByte(LF)
+
+        // read the commit message
+        p.ConsumeByte(LF)
+        c.message = p.String()
+    })
     return
 }
 
-func parseOidLine(buf *bytes.Buffer) (marker string, oid *ObjectId, err error) {
+func isParentMarker(buf *bufio.Reader) (bool, error) {
+    peek, err := buf.Peek(len(markerParent))
+    if err != nil {
+        return false, err
+    }
+    return string(peek) == markerParent, nil
+}
+
+func parseOidLine(buf *bufio.Reader) (marker string, oid *ObjectId, err error) {
     var m, oidStr string
-    n, e := fmt.Fscanf(buf, "%s %s\n", &m, &oidStr)
-    if e != nil || n != 2 {
-        return "", nil, parseErr("could not parse oid line")
+    _, e := fmt.Fscanf(buf, "%s %s\n", &m, &oidStr)
+    if e != nil {
+        return "", nil, parseErrn("could not parse oid line: ", e.Error())
     }
     oid, err = NewObjectIdFromString(oidStr)
     return m, oid, err
+}
+
+func parseAuthorTimestamp(buf *bufio.Reader) (string, *AuthorTimestamp, error) {
+    var marker, name, email, date string
+    if _, e := fmt.Fscanf(buf, "%s %s <%s> %s\n", &marker, &name, &email, &date); e != nil {
+        return "", nil, e
+    }
+    return marker, &AuthorTimestamp{name, email, date}, nil
 }
 
 func parseHex(buf *bytes.Buffer, delim byte) (oid *ObjectId, err error) {
