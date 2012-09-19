@@ -158,6 +158,21 @@ func (p *dataParser) ConsumeString(s string) {
     }
 }
 
+// ConsumeStrings will check if the Reader contains any one of the provided strings
+// and if so, consumes it and returns it. If a string match cannot be found, or 
+// cannot be read, than a panic is raised with parseErr. (The first string matched
+// is the one returned, such that if strings are substrings of one another, only
+// the first match matters.)
+func (p *dataParser) ConsumeStrings(s []string) string {
+    for _, str := range s {
+        pk := p.PeekString(len(str))
+        if pk == str {
+            return str
+        }
+    }
+    panicErrf("expected one of: %v", s)
+}
+
 // PeekString returns true if and only if the next bytes
 // in the buffer match the given input string (the string
 // in the buffer is NOT consumed)
@@ -211,6 +226,15 @@ func (p *dataParser) ParseObjectId() *ObjectId {
     return oid
 }
 
+// TODO: this should be smarter than delimiter
+func (p *dataParser) ParseInt(delim byte) (n int) {
+    str := p.consumeUntil(delim)
+    if n, e := strconv.Atoi(str); e != nil {
+        panicErrf("cannot convert integer: %s", str)
+    }
+    return n
+}
+
 // func (p *dataParser) NextObjectIdString() *ObjectId {
 // 	hex := p.NextString(OID_HEXSZ)
 // 	oid, e := NewObjectIdFromString(hex)
@@ -229,14 +253,4 @@ func (p *dataParser) ParseObjectId() *ObjectId {
 // 		panicErr(e.Error())
 // 	}
 // 	return oid
-// }
-
-// //
-// func (p *dataParser) TokenStringInt(delim byte) (n int) {
-// 	str := p.TokenString(delim)
-// 	var e error
-// 	if n, e = strconv.Atoi(str); e != nil {
-// 		panicErrn("cannot convert integer: %s", str)
-// 	}
-// 	return n
 // }
