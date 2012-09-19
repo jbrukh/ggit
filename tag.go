@@ -18,17 +18,16 @@ type Tag struct {
     repo *Repository
     //commit-SHA1
     object *ObjectId
-    //tag name
     tag string
-    //author with timestamp
     tagger *PersonTimestamp
-    //message
     message string
+    typeName string
 }
 
 func (t *Tag) String() string {
+    const FMT = "object %s\ntype %s\ntag %s\ntagger %s\nmessage %s"
     //TODO
-    return ""
+    return fmt.Sprintf(FMT, t.object, t.typeName, t.tag, *(t.tagger), t.message)
 }
 
 func (t *Tag) Type() ObjectType {
@@ -41,12 +40,14 @@ func (t *Tag) WriteTo(w io.Writer) (n int, err error) {
 
 func toTag(repo Repository, obj *RawObject) (*Tag, error) {
     var p []byte
+    var t *Tag
+    var err error
     if p, err = obj.Payload(); err != nil {
-        return
+        return nil, err
     }
     if t, err = parseTag(p); err != nil {
         fmt.Println("could not parse: ", err)
-        return
+        return nil, err
     }
     return t, nil // TODO
 }
@@ -65,6 +66,7 @@ func parseTag(b []byte) (*Tag, error) {
 		p.ConsumeString(tokenType)
 		p.ConsumeByte(SP)
 		line := p.ReadString(LF)                  // gets rid of the LF!
+        tag.typeName = line
 		//TODO: what do? do tags ever refer to e.g. other tags, or trees, or is type always "commit"?
 
 		// read the tag
