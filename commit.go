@@ -15,8 +15,8 @@ const (
 )
 
 type Commit struct {
-    author    *AuthorTimestamp
-    committer *AuthorTimestamp
+    author    *PersonTimestamp
+    committer *PersonTimestamp
     message   string
     tree      *ObjectId
     parents   []*ObjectId
@@ -81,13 +81,13 @@ func parseCommit(b []byte) (c *Commit, err error) {
         p.ConsumeString(markerAuthor)
         p.ConsumeByte(SP)
         line := p.ReadString(LF)                  // gets rid of the LF!
-        c.author = &AuthorTimestamp{line, "", ""} // TODO
+        c.author = &PersonTimestamp{line, "", ""} // TODO
 
         // read the committer
         p.ConsumeString(markerCommitter)
         p.ConsumeByte(SP)
         line = p.ReadString(LF)                      // gets rid of the LF!
-        c.committer = &AuthorTimestamp{line, "", ""} // TODO
+        c.committer = &PersonTimestamp{line, "", ""} // TODO
 
         // read the commit message
         p.ConsumeByte(LF)
@@ -114,12 +114,12 @@ func parseOidLine(buf *bufio.Reader) (marker string, oid *ObjectId, err error) {
     return m, oid, err
 }
 
-func parseAuthorTimestamp(buf *bufio.Reader) (string, *AuthorTimestamp, error) {
+func parsePersonTimestamp(buf *bufio.Reader) (string, *PersonTimestamp, error) {
     var marker, name, email, date string
     if _, e := fmt.Fscanf(buf, "%s %s <%s> %s\n", &marker, &name, &email, &date); e != nil {
         return "", nil, e
     }
-    return marker, &AuthorTimestamp{name, email, date}, nil
+    return marker, &PersonTimestamp{name, email, date}, nil
 }
 
 func parseHex(buf *bytes.Buffer, delim byte) (oid *ObjectId, err error) {

@@ -12,7 +12,7 @@ type Tag struct {
     //tag name
     tag string
     //author with timestamp
-    tagger *AuthorTimestamp
+    tagger *PersonTimestamp
     //message
     message string
 }
