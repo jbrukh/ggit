@@ -6,13 +6,6 @@ import (
     "strconv"
 )
 
-// ================================================================= //
-// CONSTANTS RELATED TO TYPES
-// ================================================================= //
-
-// the types of Git objects
-type ObjectType int8
-
 // return a human-readable representation of an ObjectType
 // TODO: turn this into a to-function
 func (otype ObjectType) String() string {
@@ -28,21 +21,6 @@ func (otype ObjectType) String() string {
     }
     panic("unknown type")
 }
-
-const (
-    OBJECT_BLOB ObjectType = iota
-    OBJECT_TREE
-    OBJECT_COMMIT
-    OBJECT_TAG
-)
-
-// string representations of Git objects
-const (
-    OBJECT_BLOB_STR   = "blob"
-    OBJECT_TREE_STR   = "tree"
-    OBJECT_COMMIT_STR = "commit"
-    OBJECT_TAG_STR    = "tag"
-)
 
 // ================================================================= //
 // OBJECTS AND RAWOBJECTS
