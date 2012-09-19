@@ -12,10 +12,10 @@ func Test_toObjectType(t *testing.T) {
             t.Error("mismatch")
         }
     }
-    test("blob", OBJECT_BLOB)
-    test("tree", OBJECT_TREE)
-    test("tag", OBJECT_TAG)
-    test("commit", OBJECT_COMMIT)
+    test("blob", ObjectBlob)
+    test("tree", ObjectTree)
+    test("tag", ObjectTag)
+    test("commit", ObjectCommit)
 }
 
 func Test_Parse(t *testing.T) {
@@ -55,11 +55,11 @@ func Test_Parse(t *testing.T) {
             t.Error("should have failed")
         }
     }
-    testOk(P1, OBJECT_BLOB)
-    testOk(P2, OBJECT_COMMIT)
-    testOk(P3, OBJECT_TREE)
-    testOk(P4, OBJECT_BLOB)
-    testOk(P5, OBJECT_TAG)
+    testOk(P1, ObjectBlob)
+    testOk(P2, ObjectCommit)
+    testOk(P3, ObjectTree)
+    testOk(P4, ObjectBlob)
+    testOk(P5, ObjectTag)
     testFail(F1)
     testFail(F2)
     testFail(F3)
@@ -77,7 +77,7 @@ func Test_Payload(t *testing.T) {
         if err != nil {
             t.Error("could not parse: ", err)
         }
-        if h.Type != OBJECT_BLOB || h.Size != len(payload) {
+        if h.Type != ObjectBlob || h.Size != len(payload) {
             t.Error("wrong type or size")
         }
         p, err := r.Payload()

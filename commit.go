@@ -24,7 +24,7 @@ type Commit struct {
 }
 
 func (c *Commit) Type() ObjectType {
-    return OBJECT_COMMIT
+    return ObjectCommit
 }
 
 func (c *Commit) String() string {

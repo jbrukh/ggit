@@ -34,7 +34,7 @@ var failBlob11 *Blob = newBlobFromString("blob\000hehe")    // bad header
 
 func TestType(t *testing.T) {
     b := new(Blob)
-    assert(t, b.Type() == OBJECT_BLOB)
+    assert(t, b.Type() == ObjectBlob)
 }
 
 func TestHeaderPass(t *testing.T) {
@@ -44,11 +44,11 @@ func TestHeaderPass(t *testing.T) {
         assert(t, otype == h.Type, "type is wrong: ", otype)
         assert(t, osize == h.Size, "size is wrong: ", osize)
     }
-    assertHeader(passBlob1, OBJECT_BLOB, 0)
-    assertHeader(passBlob2, OBJECT_BLOB, 1)
-    assertHeader(passBlob3, OBJECT_BLOB, 10)
-    assertHeader(passBlob4, OBJECT_BLOB, 10)
-    assertHeader(passBlob5, OBJECT_BLOB, 10)
+    assertHeader(passBlob1, ObjectBlob, 0)
+    assertHeader(passBlob2, ObjectBlob, 1)
+    assertHeader(passBlob3, ObjectBlob, 10)
+    assertHeader(passBlob4, ObjectBlob, 10)
+    assertHeader(passBlob5, ObjectBlob, 10)
 }
 
 func TestPayloadPass(t *testing.T) {

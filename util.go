@@ -45,9 +45,9 @@ func min(a, b int) int {
 func deduceObjectType(mode FileMode) ObjectType {
     switch mode {
     case MODE_DLTD, MODE_FILE, MODE_EXEC:
-        return OBJECT_BLOB
+        return ObjectBlob
     case MODE_TREE:
-        return OBJECT_TREE
+        return ObjectTree
     }
     // TODO
     panic("unknown mode")

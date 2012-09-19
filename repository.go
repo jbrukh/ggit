@@ -78,13 +78,13 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
     }
 
     switch h.Type {
-    case OBJECT_BLOB:
+    case ObjectBlob:
         return toBlob(r, rawObj)
-    case OBJECT_TREE:
+    case ObjectTree:
         return toTree(r, rawObj)
-    case OBJECT_COMMIT:
+    case ObjectCommit:
         return toCommit(r, rawObj)
-    case OBJECT_TAG:
+    case ObjectTag:
         return toTag(r, rawObj)
     default:
         panic("unsupported type")

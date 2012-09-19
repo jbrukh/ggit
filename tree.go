@@ -29,7 +29,7 @@ func (t *Tree) Entries() []*TreeEntry {
 }
 
 func (t *Tree) Type() ObjectType {
-    return OBJECT_TREE
+    return ObjectTree
 }
 
 func (t *Tree) WriteTo(w io.Writer) (n int, err error) {

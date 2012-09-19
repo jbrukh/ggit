@@ -31,7 +31,7 @@ func (t *Tag) String() string {
 }
 
 func (t *Tag) Type() ObjectType {
-    return OBJECT_TAG
+    return ObjectTag
 }
 
 func (t *Tag) WriteTo(w io.Writer) (n int, err error) {

@@ -17,7 +17,7 @@ func (b *Blob) String() string {
 }
 
 func (b *Blob) Type() ObjectType {
-    return OBJECT_BLOB
+    return ObjectBlob
 }
 
 func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
