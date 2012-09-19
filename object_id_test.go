@@ -8,27 +8,27 @@ import (
 )
 
 const (
-    ZEROS  = "0000000000000000000000000000000000000000"
-    ONES   = "1111111111111111111111111111111111111111"
-    ALLSET = "ffffffffffffffffffffffffffffffffffffffff"
-    CRAZY  = "abcdef1234567890000000000000000000000000"
+    testOidZeros  = "0000000000000000000000000000000000000000"
+    testOidOnes   = "1111111111111111111111111111111111111111"
+    testOidAllset = "ffffffffffffffffffffffffffffffffffffffff"
+    testOidCrazy  = "abcdef1234567890000000000000000000000000"
 )
 
 func TestObjectIdString(t *testing.T) {
     zeros := make([]byte, OID_SZ)
-    compareHexRepr(t, zeros, ZEROS)
+    compareHexRepr(t, zeros, testOidZeros)
 
     ones := make([]byte, OID_SZ)
     for inx, _ := range ones {
         ones[inx] |= 0x11
     }
-    compareHexRepr(t, ones, ONES)
+    compareHexRepr(t, ones, testOidOnes)
 
     allset := make([]byte, OID_SZ)
     for inx, _ := range allset {
         allset[inx] |= 0xff
     }
-    compareHexRepr(t, allset, ALLSET)
+    compareHexRepr(t, allset, testOidAllset)
 
     crazy := make([]byte, OID_SZ)
     crazy[0] = 0xAB
@@ -39,7 +39,7 @@ func TestObjectIdString(t *testing.T) {
     crazy[5] = 0x56
     crazy[6] = 0x78
     crazy[7] = 0x90
-    compareHexRepr(t, crazy, CRAZY)
+    compareHexRepr(t, crazy, testOidCrazy)
 }
 
 func compareHexRepr(t *testing.T, bytes []byte, expected string) {
@@ -54,9 +54,9 @@ func compareHexRepr(t *testing.T, bytes []byte, expected string) {
 }
 
 func TestHex2Bytes(t *testing.T) {
-    testHex2Bytes(t, ZEROS)
-    testHex2Bytes(t, ONES)
-    testHex2Bytes(t, ALLSET)
+    testHex2Bytes(t, testOidZeros)
+    testHex2Bytes(t, testOidOnes)
+    testHex2Bytes(t, testOidAllset)
 }
 
 func testHex2Bytes(t *testing.T, hex string) {
@@ -71,7 +71,7 @@ func testHex2Bytes(t *testing.T, hex string) {
 }
 
 func TestNewObjectIdFromString(t *testing.T) {
-    id, err := NewObjectIdFromString(CRAZY)
+    id, err := NewObjectIdFromString(testOidCrazy)
     if err != nil || id == nil || id.bytes == nil {
         t.Error("did not initialize bytes properly")
     }
@@ -91,7 +91,7 @@ func TestNewObjectIdFromHash(t *testing.T) {
     id = NewObjectIdFromHash(h)
 
     expected, actual := computeRepr(hashBytes), id.String()
-    if actual == ZEROS || expected == ZEROS || actual != expected {
+    if actual == testOidZeros || expected == testOidZeros || actual != expected {
         t.Error("bad hash initialization: ", expected, " but got ", actual)
     }
 }
