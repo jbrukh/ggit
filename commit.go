@@ -95,39 +95,3 @@ func parseCommit(b []byte) (c *Commit, err error) {
     })
     return
 }
-
-func isParentMarker(buf *bufio.Reader) (bool, error) {
-    peek, err := buf.Peek(len(markerParent))
-    if err != nil {
-        return false, err
-    }
-    return string(peek) == markerParent, nil
-}
-
-func parseOidLine(buf *bufio.Reader) (marker string, oid *ObjectId, err error) {
-    var m, oidStr string
-    _, e := fmt.Fscanf(buf, "%s %s\n", &m, &oidStr)
-    if e != nil {
-        return "", nil, parseErrn("could not parse oid line: ", e.Error())
-    }
-    oid, err = NewObjectIdFromString(oidStr)
-    return m, oid, err
-}
-
-func parsePersonTimestamp(buf *bufio.Reader) (string, *PersonTimestamp, error) {
-    var marker, name, email, date string
-    if _, e := fmt.Fscanf(buf, "%s %s <%s> %s\n", &marker, &name, &email, &date); e != nil {
-        return "", nil, e
-    }
-    return marker, &PersonTimestamp{name, email, date}, nil
-}
-
-func parseHex(buf *bytes.Buffer, delim byte) (oid *ObjectId, err error) {
-    oidStr, e := nextToken(buf, delim)
-    if e == nil {
-        if oid, err = NewObjectIdFromString(oidStr); err != nil {
-            return
-        }
-    }
-    return nil, e
-}
