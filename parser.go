@@ -202,13 +202,13 @@ func (p *dataParser) Bytes() []byte {
 
 // ParseObjectId reads the next OID_HEXSZ bytes from the
 // Reader and places the resulting object id in oid.
-func (p *dataParser) ParseObjectId(oid **ObjectId) {
+func (p *dataParser) ParseObjectId() *ObjectId {
     hex := string(p.consume(OID_HEXSZ))
-    id, e := NewObjectIdFromString(hex)
+    oid, e := NewObjectIdFromString(hex)
     if e != nil {
         panicErrf("expected: hex string of size %d", OID_HEXSZ)
     }
-    *oid = id
+    return oid
 }
 
 // func (p *dataParser) NextObjectIdString() *ObjectId {

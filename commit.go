@@ -27,8 +27,13 @@ func (c *Commit) Type() ObjectType {
     return OBJECT_COMMIT
 }
 
+func (c *Commit) String() string {
+    const FMT = "Commit{author=%s, committer=%s, tree=%s, parents=%v, message='%s'}"
+    return fmt.Sprintf(FMT, c.author, c.committer, c.tree, c.parents, c.message)
+}
+
 func (c *Commit) WriteTo(w io.Writer) (n int, err error) {
-    return io.WriteString(w, c.message)
+    return io.WriteString(w, c.String())
 }
 
 func (c *Commit) addParent(oid *ObjectId) {
@@ -44,6 +49,7 @@ func toCommit(repo Repository, obj *RawObject) (c *Commit, err error) {
         return
     }
     if c, err = parseCommit(p); err != nil {
+        fmt.Println("could not parse: ", err)
         return
     }
     return c, nil // TODO
@@ -51,6 +57,7 @@ func toCommit(repo Repository, obj *RawObject) (c *Commit, err error) {
 
 func parseCommit(b []byte) (c *Commit, err error) {
     buf := bufio.NewReader(bytes.NewBuffer(b))
+    c = new(Commit)
 
     p := &dataParser{buf}
     err = dataParse(func() {
@@ -58,35 +65,29 @@ func parseCommit(b []byte) (c *Commit, err error) {
         // read the tree line
         p.ConsumeString(markerTree)
         p.ConsumeByte(SP)
-        p.ParseObjectId(&c.tree)
+        c.tree = p.ParseObjectId()
         p.ConsumeByte(LF)
 
         // read an arbitrary number of parent lines
-        for {
-            if n := len(markerParent); p.PeekString(n) != markerParent {
-                break
-            }
+        n := len(markerParent)
+        for p.PeekString(n) == markerParent {
             p.ConsumeString(markerParent)
             p.ConsumeByte(SP)
-            var oid *ObjectId
-            p.ParseObjectId(&oid)
-            c.addParent(oid)
+            c.addParent(p.ParseObjectId())
             p.ConsumeByte(LF)
         }
 
         // read the author
         p.ConsumeString(markerAuthor)
         p.ConsumeByte(SP)
-        line := p.ReadString(LF)
+        line := p.ReadString(LF)                  // gets rid of the LF!
         c.author = &AuthorTimestamp{line, "", ""} // TODO
-        p.ConsumeByte(LF)
 
         // read the committer
         p.ConsumeString(markerCommitter)
         p.ConsumeByte(SP)
-        line = p.ReadString(LF)
+        line = p.ReadString(LF)                      // gets rid of the LF!
         c.committer = &AuthorTimestamp{line, "", ""} // TODO
-        p.ConsumeByte(LF)
 
         // read the commit message
         p.ConsumeByte(LF)
