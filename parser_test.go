@@ -97,15 +97,17 @@ func Test_VerifyPeekString(t *testing.T) {
     assert(t, t1.PeekString("The quick"))
     assert(t, t1.PeekString(MSG))
 
-    assert(t, t1.VerifyString("The "))
-    assert(t, t1.VerifyString("quick "))
-    assert(t, t1.VerifyString("brown "))
-    assert(t, t1.VerifyString("fox "))
-    assert(t, t1.VerifyString("jumped "))
-    assert(t, t1.VerifyString("over "))
-    assert(t, t1.VerifyString("the "))
-    assert(t, t1.VerifyString("lazy dog."))
-    assert(t, t1.VerifyString(""))
+    assertPanicFree(t, func() {
+        t1.VerifyString("The ")
+        t1.VerifyString("quick ")
+        t1.VerifyString("brown ")
+        t1.VerifyString("fox ")
+        t1.VerifyString("jumped ")
+        t1.VerifyString("over ")
+        t1.VerifyString("the ")
+        t1.VerifyString("lazy dog.")
+        t1.VerifyString("")
+    })
 
     assertPanic(t, func() {
         t1.VerifyString("garbage")
@@ -127,4 +129,11 @@ func Test_dataParse(t *testing.T) {
     if err == nil {
         t.Error("didn't throw an error when supposed to")
     }
+}
+
+func Test_ParseObjectIdString(t *testing.T) {
+    var oid *ObjectId
+    t1 := parserForString(CRAZY)
+    t1.ParseObjectIdString(&oid)
+    assert(t, oid.String() == CRAZY)
 }

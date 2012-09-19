@@ -27,7 +27,8 @@ func parseErrf(format string, items ...interface{}) parseErr {
     return parseErr(fmt.Sprintf(format, items))
 }
 
-// parseErrn concatenates a bunch of items together
+// parseErrn concatenates a bunch of items together to 
+// form the error string
 func parseErrn(items ...string) parseErr {
     return parseErr(strings.Join(items, ""))
 }
@@ -132,6 +133,12 @@ func (p *dataParser) NextObjectIdString() *ObjectId {
     return oid
 }
 
+// ParseObjectIdString reads the next OID_HEXSZ bytes from the
+// Reader and places the resulting object id in oid
+func (p *dataParser) ParseObjectIdString(oid **ObjectId) {
+    *oid = p.NextObjectIdString()
+}
+
 // NextObjectIdString reads the next OID_SZ bytes from the Reader
 // and interprets them as an ObjectId
 func (p *dataParser) NextObjectIdBytes() *ObjectId {
@@ -159,6 +166,8 @@ func (p *dataParser) FlushString() string {
     return string(p.FlushBytes())
 }
 
+// FlushBytes returns the entirety of the remaining data
+// in the buffer, up to the EOF, as bytes
 func (p *dataParser) FlushBytes() []byte {
     b := new(bytes.Buffer)
     _, e := io.Copy(b, p.buf)
@@ -168,12 +177,14 @@ func (p *dataParser) FlushBytes() []byte {
     return b.Bytes()
 }
 
-// VerifyString returns true if and only if the next bytes
-// in the buffer match the given input string (the string
+// VerifyString panics if and only if the next bytes
+// in the buffer do not match the given input string (the string
 // in the buffer is consumed)
-func (p *dataParser) VerifyString(str string) bool {
-    // TODO: can implement this more efficiently with ReadByte()
-    return p.NextString(len(str)) == str
+func (p *dataParser) VerifyString(str string) {
+    // TODO	: can implement this more efficiently with ReadByte()
+    if p.NextString(len(str)) != str {
+        panicErrn("data did not match: ", str)
+    }
 }
 
 // PeekString returns true if and only if the next bytes
@@ -185,4 +196,20 @@ func (p *dataParser) PeekString(str string) bool {
         panicErr(e.Error())
     }
     return string(peek) == str
+}
+
+// VerifyRune consumes the next byte and panics with parseErr
+// if it does not match the reference byte b.
+func (p *dataParser) VerifyByte(b byte) {
+    data, e := p.buf.ReadByte()
+    if e != nil {
+        panicErr(e.Error())
+    }
+    if b != data {
+        panicErrf("data did not match: %s", b)
+    }
+}
+
+func (p *dataParser) PeekByte(r byte) bool {
+    return p.PeekString(string(r))
 }
