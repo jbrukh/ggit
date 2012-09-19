@@ -17,7 +17,7 @@ const (
 type Tag struct {
     repo *Repository
     //commit-SHA1
-    object ObjectId
+    object *ObjectId
     //tag name
     tag string
     //author with timestamp
