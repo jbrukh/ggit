@@ -39,14 +39,16 @@ func (t *Tag) WriteTo(w io.Writer) (n int, err error) {
     return io.WriteString(w, t.String())
 }
 
-func toTag(repo Repository, obj *RawObject) (t *Tag, err error) {
-    p, e := obj.Payload()
-    if e != nil {
-        return nil, e
+func toTag(repo Repository, obj *RawObject) (*Tag, error) {
+    var p []byte
+    if p, err = obj.Payload(); err != nil {
+        return
     }
-    // TODO implement the parsing
-    fmt.Println(string(p))
-    return new(Tag), nil // TODO
+    if t, err = parseTag(p); err != nil {
+        fmt.Println("could not parse: ", err)
+        return
+    }
+    return t, nil // TODO
 }
 
 func parseTag(b []byte) (*Tag, error) {
