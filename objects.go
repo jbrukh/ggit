@@ -2,21 +2,12 @@ package ggit
 
 import (
     "errors"
-    "io"
     "strconv"
 )
 
 // ================================================================= //
 // OBJECTS AND RAWOBJECTS
 // ================================================================= //
-
-type Object interface {
-    Type() ObjectType
-
-    // write the string representation of 
-    // this object to the writer
-    WriteTo(w io.Writer) (n int, err error)
-}
 
 // raw (but uncompressed) data for a
 // git object that contains the header;
