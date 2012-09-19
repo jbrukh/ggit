@@ -18,13 +18,6 @@ type Object interface {
     WriteTo(w io.Writer) (n int, err error)
 }
 
-// ObjectHeader is the deserialized (and more efficiently stored)
-// version of a git object header
-type ObjectHeader struct {
-    Type ObjectType
-    Size int
-}
-
 // raw (but uncompressed) data for a
 // git object that contains the header;
 type RawObject struct {
