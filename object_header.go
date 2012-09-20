@@ -21,7 +21,7 @@ func parseObjectHeader(buf *bufio.Reader) (*objectHeader, error) {
     err := dataParse(func() {
         h.Type = ObjectType(p.ConsumeStrings(objectTypes))
         p.ConsumeByte(SP)
-        h.Size = p.ParseInt(NUL)
+        h.Size = p.ParseAtoi(NUL)
     })
     return h, err
 }
