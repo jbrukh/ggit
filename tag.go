@@ -37,7 +37,7 @@ func (t *Tag) WriteTo(w io.Writer) (n int, err error) {
     return io.WriteString(w, t.String())
 }
 
-func parseTag(repo Repository, buf *bufio.Reader) (*Tag, error) {
+func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error) {
     p := &dataParser{buf}
     tag := new(Tag)
     err := dataParse(func() {

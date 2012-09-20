@@ -42,7 +42,7 @@ func (c *Commit) addParent(oid *ObjectId) {
     c.parents = append(c.parents, oid)
 }
 
-func parseCommit(repo Repository, buf *bufio.Reader) (c *Commit, err error) {
+func parseCommit(repo Repository, h *objectHeader, buf *bufio.Reader) (c *Commit, err error) {
     c = new(Commit)
     p := &dataParser{buf}
     err = dataParse(func() {

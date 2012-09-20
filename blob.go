@@ -14,7 +14,7 @@ type Blob struct {
 
 // parseBlob parses the payload of a binary blob object
 // and converts it to Blob
-func parseBlob(repo Repository, buf *bufio.Reader) (*Blob, error) {
+func parseBlob(repo Repository, h *objectHeader, buf *bufio.Reader) (*Blob, error) {
     p := dataParser{buf}
     b := new(Blob)
     err := dataParse(func() {

@@ -8,7 +8,6 @@ alias gf="gofmt -tabs=false -tabwidth=4 -w *.go"
 
 # the most up-to-date ggit command
 alias ggit="go run $GOPATH/src/github.com/jbrukh/ggit/ggit/ggit.go"
-TREE=fd1b0c3074c2a27e3b4f4c74553078aec42e8bbc
 
 # list some objects... this is slow, so use on small repos
 objects() {
