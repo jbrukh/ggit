@@ -1,10 +1,9 @@
 package ggit
 
 import (
-    "errors"
+    "bufio"
     "fmt"
     "io"
-    "strconv"
 )
 
 type FileMode uint16
@@ -64,10 +63,12 @@ func parseTree(repo Repository, buf *bufio.Reader) (*Tree, error) {
     }
     dataParse(func() {
         mode := p.ReadString(SP)
-
+        println(mode)
     })
+    return t, nil // TODO
 }
 
+/*
 func toTree(repo Repository, obj *RawObject) (t *Tree, err error) {
     p, err := obj.Payload()
     if err != nil {
@@ -138,3 +139,4 @@ func toTreeEntry(modeStr, fileName string, hsh []byte) (e *TreeEntry, err error)
     }
     return
 }
+*/

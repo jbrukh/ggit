@@ -172,6 +172,7 @@ func (p *dataParser) ConsumeStrings(s []string) string {
         }
     }
     panicErrf("expected one of: %v", s)
+    return ""
 }
 
 // PeekString returns true if and only if the next bytes
