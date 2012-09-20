@@ -2,7 +2,6 @@ package ggit
 
 import (
     "bufio"
-    "bytes"
     "fmt"
     "io"
 )
@@ -43,22 +42,8 @@ func (c *Commit) addParent(oid *ObjectId) {
     c.parents = append(c.parents, oid)
 }
 
-func toCommit(repo Repository, obj *RawObject) (c *Commit, err error) {
-    var p []byte
-    if p, err = obj.Payload(); err != nil {
-        return
-    }
-    if c, err = parseCommit(p); err != nil {
-        fmt.Println("could not parse: ", err)
-        return
-    }
-    return c, nil // TODO
-}
-
-func parseCommit(b []byte) (c *Commit, err error) {
-    buf := bufio.NewReader(bytes.NewBuffer(b))
+func parseCommit(repo Repository, buf *bufio.Reader) (c *Commit, err error) {
     c = new(Commit)
-
     p := &dataParser{buf}
     err = dataParse(func() {
 
