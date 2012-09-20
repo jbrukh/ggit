@@ -61,7 +61,8 @@ func CatFile(args []string) (err error) {
     case *isType:
         return doType(repo, oid)
     case *isSize:
-        return doSize(repo, oid)
+        println("TODO")
+        //return doSize(repo, oid)
     default:
         return errors.New("unknown command")
     }
@@ -73,22 +74,20 @@ func doPrint(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
         obj.WriteTo(os.Stdout)
         return err
     }
-    return errors.New("could not find object: " + oid.String()) // TODO
+    return errors.New("could not find object: " + oid.String() + ": " + err.Error()) // TODO
 }
 
 func doType(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
-    obj, err := repo.ReadRawObject(oid)
-    if err != nil {
-        return
+    var obj ggit.Object
+    if obj, err = repo.ReadObject(oid); err != nil {
+        return err
     }
-    h, err := obj.Header()
-    if err != nil {
-        return
-    }
-    fmt.Println(h.Type)
+    fmt.Println(obj.Type())
     return
 }
 
+/*
+// commenting until I figure out what size means in this context
 func doSize(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
     if obj, err := repo.ReadRawObject(oid); err == nil {
         h, err := obj.Header()
@@ -98,3 +97,4 @@ func doSize(repo *ggit.DiskRepository, oid *ggit.ObjectId) (err error) {
     }
     return
 }
+*/

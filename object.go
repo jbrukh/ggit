@@ -3,9 +3,9 @@ package ggit
 import "io"
 
 type Object interface {
-	Type() ObjectType
+    Type() ObjectType
 
-	// write the string representation of
-	// this object to the writer
-	WriteTo(w io.Writer) (n int, err error)
+    // write the string representation of
+    // this object to the writer
+    WriteTo(w io.Writer) (n int, err error)
 }

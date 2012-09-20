@@ -166,9 +166,10 @@ func (p *dataParser) ConsumeString(s string) {
 // the first match matters.)
 func (p *dataParser) ConsumeStrings(s []string) string {
     for _, str := range s {
-        pk := p.PeekString(len(str))
+        l := len(str)
+        pk := p.PeekString(l)
         if pk == str {
-            return str
+            return string(p.consume(l))
         }
     }
     panicErrf("expected one of: %v", s)
