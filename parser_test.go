@@ -45,39 +45,6 @@ func Test_ReadBytesPanic(t *testing.T) {
     })
 }
 
-// func Test_TokenStringInt(t *testing.T) {
-// 	t1 := parserForString("100E")
-// 	t2 := parserForString("-100E")
-// 	t3 := parserForString("0E")
-// 	t4 := parserForString("1000000E")
-
-// 	assert(t, t1.TokenStringInt('E') == 100)
-// 	assert(t, t2.TokenStringInt('E') == -100)
-// 	assert(t, t3.TokenStringInt('E') == 0)
-// 	assert(t, t4.TokenStringInt('E') == 1000000)
-
-// }
-
-// func Test_TokenStringIntPanic(t *testing.T) {
-// 	t1 := parserForString(".100E")
-// 	t2 := parserForString("catE")
-// 	t3 := parserForString("100")
-// 	t4 := parserForString("")
-
-// 	assertPanic(t, func() {
-// 		t1.TokenStringInt('E')
-// 	})
-// 	assertPanic(t, func() {
-// 		t2.TokenStringInt('E') // should not find 'a'
-// 	})
-// 	assertPanic(t, func() {
-// 		t3.TokenStringInt('E')
-// 	})
-// 	assertPanic(t, func() {
-// 		t4.TokenStringInt('E') // should not find 'a'
-// 	})
-// }
-
 func Test_String(t *testing.T) {
     const MSG = "The quick brown fox jumped over the lazy dog."
     t1 := parserForString(MSG)
@@ -136,4 +103,33 @@ func Test_ParseObjectId(t *testing.T) {
     t1 := parserForString(testOidCrazy)
     oid = t1.ParseObjectId()
     assert(t, oid.String() == testOidCrazy)
+}
+
+func Test_ParseAtoi(t *testing.T) {
+    t1 := parserForString("-100\000")
+    t2 := parserForString("101\000")
+    t3 := parserForString("0\000")
+    t4 := parserForString("dog\000")
+    t5 := parserForString("eleven\000")
+    t6 := parserForString("\000")
+    t7 := parserForString("14.3\000")
+
+    assertPanicFree(t, func() {
+        assert(t, t1.ParseAtoi(NUL) == -100)
+        assert(t, t2.ParseAtoi(NUL) == 101)
+        assert(t, t3.ParseAtoi(NUL) == 0)
+    })
+
+    assertPanic(t, func() {
+        t4.ParseAtoi(NUL)
+    })
+    assertPanic(t, func() {
+        t5.ParseAtoi(NUL)
+    })
+    assertPanic(t, func() {
+        t6.ParseAtoi(NUL)
+    })
+    assertPanic(t, func() {
+        t7.ParseAtoi(NUL)
+    })
 }
