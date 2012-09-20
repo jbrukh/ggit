@@ -230,7 +230,8 @@ func (p *dataParser) ParseObjectId() *ObjectId {
 // TODO: this should be smarter than delimiter
 func (p *dataParser) ParseAtoi(delim byte) (n int) {
     str := p.ReadString(delim)
-    if n, e := strconv.Atoi(str); e != nil {
+    var e error
+    if n, e = strconv.Atoi(str); e != nil {
         panicErrf("cannot convert integer: %s", str)
     }
     return n
@@ -238,7 +239,8 @@ func (p *dataParser) ParseAtoi(delim byte) (n int) {
 
 func (p *dataParser) ParseInt(delim byte, base int, bitSize int) (n int64) {
     str := p.ReadString(delim)
-    if n, e := strconv.ParseInt(str, base, bitSize); e != nil {
+    var e error
+    if n, e = strconv.ParseInt(str, base, bitSize); e != nil {
         panicErrf("cannot convert integer (base $d): %s", base, str)
     }
     return n
