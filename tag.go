@@ -20,14 +20,14 @@ type Tag struct {
     tag      string
     tagger   *PersonTimestamp
     message  string
-    typeName string
     size     int
+    objectType ObjectType
 }
 
 func (t *Tag) String() string {
     const FMT = "object %s\ntype %s\ntag %s\ntagger %s\nmessage %s"
     //TODO
-    return fmt.Sprintf(FMT, t.object, t.typeName, t.tag, *(t.tagger), t.message)
+    return fmt.Sprintf(FMT, t.object, t.objectType, t.tag, *(t.tagger), t.message)
 }
 
 func (t *Tag) Type() ObjectType {
@@ -56,8 +56,11 @@ func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error)
         p.ConsumeString(tokenType)
         p.ConsumeByte(SP)
         line := p.ReadString(LF) // gets rid of the LF!
-        tag.typeName = line
-        //TODO: what do? do tags ever refer to e.g. other tags, or trees, or is type always "commit"?
+        if objectType, err := toObjectType(line); err == nil {
+			tag.objectType = objectType
+		} else {
+			panicErr(err.Error())
+		}
 
         // read the tag
         p.ConsumeString(tokenTag)

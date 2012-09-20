@@ -1,5 +1,10 @@
 package ggit
 
+import (
+	"errors"
+	"fmt"
+)
+
 // ================================================================= //
 // CONSTANTS RELATED TO TYPES
 // ================================================================= //
@@ -24,4 +29,20 @@ var objectTypes []string = []string{
     ObjectTree.String(),
     ObjectCommit.String(),
     ObjectTag.String(),
+}
+
+func toObjectType(s string) (t ObjectType, err error) {
+	switch s {
+	case ObjectBlob.String():
+		t = ObjectBlob
+	case ObjectTree.String():
+		t = ObjectTree
+	case ObjectCommit.String():
+		t = ObjectCommit
+	case ObjectTag.String():
+		t = ObjectTag
+	default:
+		err = errors.New(fmt.Sprint("Unrecognized object type. Expected one of: ", objectTypes))
+	}
+	return
 }
