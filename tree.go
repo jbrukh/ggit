@@ -56,6 +56,18 @@ func (e *TreeEntry) String() (s string) {
     return
 }
 
+func parseTree(repo Repository, buf *bufio.Reader) (*Tree, error) {
+    p := dataParser{buf}
+    t := &Tree{
+        entries: make([]*TreeEntry, 0),
+        repo:    repo,
+    }
+    dataParse(func() {
+        mode := p.ReadString(SP)
+
+    })
+}
+
 func toTree(repo Repository, obj *RawObject) (t *Tree, err error) {
     p, err := obj.Payload()
     if err != nil {

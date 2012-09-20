@@ -1,19 +1,31 @@
 package ggit
 
 import (
+    "bufio"
     "io"
 )
 
 // Blob represents the deserialized version of a Git blob
 // object.
 type Blob struct {
-    RawObject
+    data []byte
     repo Repository
 }
 
+// parseBlob parses the payload of a binary blob object
+// and converts it to Blob
+func parseBlob(repo Repository, buf *bufio.Reader) (*Blob, error) {
+    p := dataParser{buf}
+    b := new(Blob)
+    err := dataParse(func() {
+        b.data = p.Bytes()
+    })
+    b.repo = repo
+    return b, err
+}
+
 func (b *Blob) String() string {
-    p, _ := b.Payload()
-    return string(p)
+    return string(b.data)
 }
 
 func (b *Blob) Type() ObjectType {
@@ -22,17 +34,4 @@ func (b *Blob) Type() ObjectType {
 
 func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
     return io.WriteString(w, b.String())
-}
-
-// ToBlob converts a RawObject to a Blob object. The
-// returned object is not associated with any repository
-// by default.
-func toBlob(repo Repository, obj *RawObject) (b *Blob, err error) {
-    if obj == nil {
-        return nil, parseErr("no raw data")
-    }
-    return &Blob{
-        RawObject: *obj,
-        repo:      repo,
-    }, nil
 }

@@ -17,9 +17,6 @@ const INDEX_FILE = "index"
 // specifics. The backend can deliver a RawObject
 // by id (it is a read-only key-value store.)
 type Backend interface {
-    // ReadRawObject reads a raw object from the backend
-    ReadRawObject(oid *ObjectId) (obj *RawObject, err error)
-
     // Read an arbitrary object from the backend
     ReadObject(oid *ObjectId) (o Object, err error)
 }
@@ -50,42 +47,38 @@ func Open(path string) (r *DiskRepository, err error) {
 func (r *DiskRepository) Close() {
 }
 
-func (r *DiskRepository) ReadRawObject(oid *ObjectId) (obj *RawObject, err error) {
-    file, err := r.objectFile(oid)
-    if err != nil {
-        return
-    }
-    defer file.Close()
-
-    var zr io.ReadCloser
-    if zr, err = zlib.NewReader(file); err == nil {
-        defer zr.Close()
-        obj = new(RawObject)
-        _, err = io.Copy(obj, zr)
-    }
-    return
-}
-
 func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
-    rawObj, err := r.ReadRawObject(oid)
-    if err != nil {
-        return
+    var (
+        f   *os.File
+        e   error
+        rz  io.ReadCloser
+    )
+    if f, e = r.objectFile(oid); e != nil {
+        return nil, e
     }
+    defer f.Close() // just in case
 
-    h, err := rawObj.Header()
+    if rz, e = zlib.NewReader(f); e != nil {
+        return nil, e
+    }
+    defer rz.Close()
+
+    file := bufio.NewReader(rz)
+
+    h, err := parseObjectHeader(file)
     if err != nil {
         return
     }
 
     switch h.Type {
     case ObjectBlob:
-        return toBlob(r, rawObj)
+        return parseBlob(r, file)
     case ObjectTree:
-        return toTree(r, rawObj)
+        return parseTree(r, file)
     case ObjectCommit:
-        return toCommit(r, rawObj)
+        return parseCommit(r, file)
     case ObjectTag:
-        return toTag(r, rawObj)
+        return parseTag(r, file)
     default:
         panic("unsupported type")
     }
