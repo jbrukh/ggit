@@ -16,7 +16,7 @@ type objectHeader struct {
 }
 
 func parseObjectHeader(buf *bufio.Reader) (*objectHeader, error) {
-    h := new(ObjectHeader)
+    h := new(objectHeader)
     p := dataParser{buf}
     err := dataParse(func() {
         h.Type = ObjectType(p.ConsumeStrings(objectTypes))
