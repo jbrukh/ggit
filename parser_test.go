@@ -4,7 +4,6 @@ import (
     "bufio"
     "bytes"
     "errors"
-    "fmt"
     "testing"
 )
 
@@ -19,19 +18,15 @@ func parserForString(str string) *dataParser {
 }
 
 func Test_ReadBytes(t *testing.T) {
-    defer func() {
-        if r := recover(); r != nil {
-            t.Error("parser paniced with error: " + fmt.Sprintf("%v", r))
-        }
-    }()
-
     t1 := parserForString("poop\000")           // simple case
     t2 := parserForString("b")                  // empty token
     t3 := parserForString("    life\000oh\000") // more delims
 
-    assert(t, string(t1.ReadBytes(NUL)) == "poop")
-    assert(t, string(t2.ReadBytes('b')) == "")
-    assert(t, string(t3.ReadBytes(NUL)) == "    life")
+    assertPanicFree(t, func() {
+        assert(t, string(t1.ReadBytes(NUL)) == "poop")
+        assert(t, string(t2.ReadBytes('b')) == "")
+        assert(t, string(t3.ReadBytes(NUL)) == "    life")
+    })
 }
 
 func Test_ReadBytesPanic(t *testing.T) {
@@ -50,21 +45,23 @@ func Test_String(t *testing.T) {
     t1 := parserForString(MSG)
     t2 := parserForString(MSG)
     t3 := parserForString("")
-    assert(t, t1.String() == MSG)
 
-    t2.buf.ReadByte()
-    assert(t, t2.String() == MSG[1:])
-    assert(t, t3.String() == "")
+    assertPanicFree(t, func() {
+        assert(t, t1.String() == MSG)
+        t2.buf.ReadByte()
+        assert(t, t2.String() == MSG[1:])
+        assert(t, t3.String() == "")
+    })
 }
 
 func Test_ConsumePeekString(t *testing.T) {
     const MSG = "The quick brown fox jumped over the lazy dog."
     t1 := parserForString(MSG)
-    assert(t, t1.PeekString(3) == "The")
-    assert(t, t1.PeekString(9) == "The quick")
-    assert(t, t1.PeekString(len(MSG)) == MSG)
 
     assertPanicFree(t, func() {
+        assert(t, t1.PeekString(3) == "The")
+        assert(t, t1.PeekString(9) == "The quick")
+        assert(t, t1.PeekString(len(MSG)) == MSG)
         t1.ConsumeString("The ")
         t1.ConsumeString("quick ")
         t1.ConsumeString("brown ")
