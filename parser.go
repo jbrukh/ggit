@@ -168,7 +168,7 @@ func (p *dataParser) ConsumeStrings(s []string) string {
     for _, str := range s {
         l := len(str)
         pk := p.PeekString(l)
-        if pk == str {
+        if l != 0 && pk == str {
             return string(p.consume(l))
         }
     }

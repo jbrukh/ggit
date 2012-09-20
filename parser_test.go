@@ -130,3 +130,39 @@ func Test_ParseAtoi(t *testing.T) {
         t7.ParseAtoi(NUL)
     })
 }
+
+var animals []string = []string{
+    "dog",
+    "cat",
+    "doggie",
+}
+
+func Test_ConsumeStrings(t *testing.T) {
+    t1 := parserForString("dogcat")
+    t2 := parserForString("doggie")
+
+    assertPanicFree(t, func() {
+        assert(t, t1.ConsumeStrings(animals) == "dog")
+        assert(t, t1.ConsumeStrings(animals) == "cat")
+        assert(t, t2.ConsumeStrings(animals) == "dog") // only first match is returned
+    })
+
+    t3 := parserForString("dogcat")
+    t4 := parserForString("")
+
+    assertPanic(t, func() {
+        t3.ConsumeStrings([]string{})
+    })
+    assertPanic(t, func() {
+        t3.ConsumeStrings(nil)
+    })
+    assertPanic(t, func() {
+        t3.ConsumeStrings(objectTypes)
+    })
+    assertPanic(t, func() {
+        t4.ConsumeStrings(animals)
+    })
+    assertPanic(t, func() {
+        t4.ConsumeStrings([]string{""})
+    })
+}
