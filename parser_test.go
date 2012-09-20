@@ -17,6 +17,18 @@ func parserForString(str string) *dataParser {
     return parserForBytes([]byte(str))
 }
 
+func Test_AssertEOF(t *testing.T) {
+    t1 := parserForString("")
+    assertPanicFree(t, func() {
+        t1.AssertEOF()
+    })
+
+    t2 := parserForString("1")
+    assertPanic(t, func() {
+        t2.AssertEOF()
+    })
+}
+
 func Test_ReadBytes(t *testing.T) {
     t1 := parserForString("poop\000")           // simple case
     t2 := parserForString("b")                  // empty token

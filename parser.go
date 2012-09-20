@@ -97,9 +97,9 @@ func (p *dataParser) consume(n int) []byte {
     return b
 }
 
-func (p *dataParser) peek(n int) []byte {
-    b := make([]byte, n)
-    if pk, e := p.buf.Peek(n); e != nil || len(pk) != n {
+func (p *dataParser) peek(n int) (b []byte) {
+    var e error
+    if b, e = p.buf.Peek(n); e != nil || len(b) != n {
         panicErrf("expected: %d byte(s)", n)
     }
     return b
@@ -111,6 +111,21 @@ func (p *dataParser) consumeUntil(delim byte) []byte {
         panicErrf("expected delimiter: %v", delim)
     }
     return trimLast(b)
+}
+
+func (p *dataParser) AssertEOF() {
+    if _, e := p.buf.Peek(1); e != nil {
+        if e != io.EOF {
+            panicErrf("expecting: EOF")
+        } else {
+            return
+        }
+    }
+    panicErrf("expecting: EOF")
+}
+
+func (p *dataParser) AssertNotEOF() {
+    p.peek(1)
 }
 
 // Consume will consume n bytes without regard for what the underlying
@@ -246,6 +261,16 @@ func (p *dataParser) ParseInt(delim byte, base int, bitSize int) (n int64) {
         panicErrf("cannot convert integer (base $d): %s", base, str)
     }
     return n
+}
+
+// TODO : consider moving this to special parser
+func (p *dataParser) ParseFileMode(delim byte) (mode FileMode) {
+    var ok bool
+    if mode, ok = assertFileMode(uint16(p.ParseInt(delim, 8, 32))); !ok {
+        panicErrf("expected: filemode")
+    }
+    return
+
 }
 
 // func (p *dataParser) NextObjectIdString() *ObjectId {

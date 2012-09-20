@@ -7,19 +7,8 @@ import (
 )
 
 // ================================================================= //
-// FILE MODE
+// TREE
 // ================================================================= //
-
-type FileMode uint16
-
-const (
-    // TODO: there are more modes
-    ModeDeleted    FileMode = 0000000
-    ModeFile       FileMode = 0100644
-    ModeExecutable FileMode = 0100755
-    ModeTree       FileMode = 0040000
-    ModeLink       FileMode = 0120000
-)
 
 type Tree struct {
     entries []*TreeEntry
@@ -52,6 +41,10 @@ func (t *Tree) WriteTo(w io.Writer) (n int, err error) {
     return
 }
 
+// ================================================================= //
+// TREE ENTRY
+// ================================================================= //
+
 type TreeEntry struct {
     mode  FileMode
     otype ObjectType
@@ -64,15 +57,20 @@ func (e *TreeEntry) String() (s string) {
     return
 }
 
+// ================================================================= //
+// TREE PARSING
+// ================================================================= //
+
 func parseTree(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tree, error) {
-    p := dataParser{buf}
+    //p := dataParser{buf}
     t := &Tree{
         entries: make([]*TreeEntry, 0),
         repo:    repo,
     }
     dataParse(func() {
-        mode := p.ReadString(SP)
-        println(mode)
+        // mode := p.ParseFileMode(SP)
+        // name := p.ReadString(NUL)
+        // oid := p.ParseObjectIdBytes()
     })
     t.repo = repo
     t.size = h.Size
