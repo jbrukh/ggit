@@ -9,6 +9,7 @@ import (
 // object.
 type Blob struct {
     data []byte
+    size int
     repo Repository
 }
 
@@ -21,6 +22,7 @@ func parseBlob(repo Repository, h *objectHeader, buf *bufio.Reader) (*Blob, erro
         b.data = p.Bytes()
     })
     b.repo = repo
+    b.size = h.Size
     return b, err
 }
 
@@ -30,6 +32,10 @@ func (b *Blob) String() string {
 
 func (b *Blob) Type() ObjectType {
     return ObjectBlob
+}
+
+func (b *Blob) Size() int {
+    return b.size
 }
 
 func (b *Blob) WriteTo(w io.Writer) (n int, err error) {

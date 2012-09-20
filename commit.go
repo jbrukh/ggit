@@ -20,10 +20,15 @@ type Commit struct {
     tree      *ObjectId
     parents   []*ObjectId
     repo      Repository
+    size      int
 }
 
 func (c *Commit) Type() ObjectType {
     return ObjectCommit
+}
+
+func (c *Commit) Size() int {
+    return c.size
 }
 
 func (c *Commit) String() string {
@@ -78,5 +83,7 @@ func parseCommit(repo Repository, h *objectHeader, buf *bufio.Reader) (c *Commit
         p.ConsumeByte(LF)
         c.message = p.String()
     })
+    c.size = h.Size
+    c.repo = repo
     return
 }

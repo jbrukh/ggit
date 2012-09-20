@@ -21,6 +21,7 @@ type Tag struct {
     tagger   *PersonTimestamp
     message  string
     typeName string
+    size     int
 }
 
 func (t *Tag) String() string {
@@ -31,6 +32,10 @@ func (t *Tag) String() string {
 
 func (t *Tag) Type() ObjectType {
     return ObjectTag
+}
+
+func (t *Tag) Size() int {
+    return t.size
 }
 
 func (t *Tag) WriteTo(w io.Writer) (n int, err error) {
@@ -70,5 +75,7 @@ func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error)
         p.ConsumeByte(LF)
         tag.message = p.String()
     })
+    tag.repo = repo
+    tag.size = h.Size
     return tag, err
 }

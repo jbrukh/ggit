@@ -20,6 +20,7 @@ const (
 type Tree struct {
     entries []*TreeEntry
     repo    Repository
+    size    int
 }
 
 // TODO: is this necessary?
@@ -29,6 +30,10 @@ func (t *Tree) Entries() []*TreeEntry {
 
 func (t *Tree) Type() ObjectType {
     return ObjectTree
+}
+
+func (t *Tree) Size() int {
+    return t.size
 }
 
 func (t *Tree) WriteTo(w io.Writer) (n int, err error) {
@@ -65,6 +70,8 @@ func parseTree(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tree, erro
         mode := p.ReadString(SP)
         println(mode)
     })
+    t.repo = repo
+    t.size = h.Size
     return t, nil // TODO
 }
 
