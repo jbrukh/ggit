@@ -124,8 +124,15 @@ func (p *dataParser) AssertEOF() {
     panicErrf("expecting: EOF")
 }
 
-func (p *dataParser) AssertNotEOF() {
-    p.peek(1)
+func (p *dataParser) EOF() bool {
+    if _, e := p.buf.Peek(1); e != nil {
+        if e == io.EOF {
+            return true
+        } else {
+            panicErr("reading error")
+        }
+    }
+    return false
 }
 
 // Consume will consume n bytes without regard for what the underlying
@@ -240,6 +247,15 @@ func (p *dataParser) ParseObjectId() *ObjectId {
     oid, e := NewObjectIdFromString(hex)
     if e != nil {
         panicErrf("expected: hex string of size %d", OID_HEXSZ)
+    }
+    return oid
+}
+
+func (p *dataParser) ParseObjectIdBytes() *ObjectId {
+    b := p.consume(OID_SZ)
+    oid, e := NewObjectIdFromBytes(b)
+    if e != nil {
+        panicErrf("expected: hash bytes %d long", OID_SZ)
     }
     return oid
 }
