@@ -6,15 +6,19 @@ import (
     "io"
 )
 
+// ================================================================= //
+// FILE MODE
+// ================================================================= //
+
 type FileMode uint16
 
 const (
     // TODO: there are more modes
-    MODE_DLTD FileMode = 0000000
-    MODE_FILE FileMode = 0100644
-    MODE_EXEC FileMode = 0100755
-    MODE_TREE FileMode = 0040000
-    MODE_LINK FileMode = 0120000
+    ModeDeleted    FileMode = 0000000
+    ModeFile       FileMode = 0100644
+    ModeExecutable FileMode = 0100755
+    ModeTree       FileMode = 0040000
+    ModeLink       FileMode = 0120000
 )
 
 type Tree struct {

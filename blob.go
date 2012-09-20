@@ -19,7 +19,11 @@ func parseBlob(repo Repository, h *objectHeader, buf *bufio.Reader) (*Blob, erro
     p := dataParser{buf}
     b := new(Blob)
     err := dataParse(func() {
-        b.data = p.Bytes()
+        data := p.Bytes()
+        if len(data) != h.Size {
+            panicErrf("wrong payload size, expecting: %d", h.Size)
+        }
+        b.data = data
     })
     b.repo = repo
     b.size = h.Size
