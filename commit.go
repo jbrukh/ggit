@@ -14,8 +14,8 @@ const (
 )
 
 type Commit struct {
-    author    *PersonTimestamp
-    committer *PersonTimestamp
+    author    *WhoWhen
+    committer *WhoWhen
     message   string
     tree      *ObjectId
     parents   []*ObjectId
@@ -71,13 +71,13 @@ func parseCommit(repo Repository, h *objectHeader, buf *bufio.Reader) (c *Commit
         p.ConsumeString(markerAuthor)
         p.ConsumeByte(SP)
         line := p.ReadString(LF)                  // gets rid of the LF!
-        c.author = &PersonTimestamp{line, "", ""} // TODO
+        c.author = &WhoWhen{line, "", ""} // TODO
 
         // read the committer
         p.ConsumeString(markerCommitter)
         p.ConsumeByte(SP)
         line = p.ReadString(LF)                      // gets rid of the LF!
-        c.committer = &PersonTimestamp{line, "", ""} // TODO
+        c.committer = &WhoWhen{line, "", ""} // TODO
 
         // read the commit message
         p.ConsumeByte(LF)

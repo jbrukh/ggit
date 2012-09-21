@@ -18,7 +18,7 @@ type Tag struct {
     //commit-SHA1
     object   *ObjectId
     tag      string
-    tagger   *PersonTimestamp
+    tagger   *WhoWhen
     message  string
     size     int
     objectType ObjectType
@@ -72,7 +72,7 @@ func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error)
         p.ConsumeString(tokenTagger)
         p.ConsumeByte(SP)
         line = p.ReadString(LF)                     // gets rid of the LF!
-        tag.tagger = &PersonTimestamp{line, "", ""} // TODO
+        tag.tagger = &WhoWhen{line, "", ""} // TODO
 
         // read the commit message
         p.ConsumeByte(LF)
