@@ -2,7 +2,6 @@ package ggit
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 )
 
@@ -93,8 +92,6 @@ func Test_dataParse(t *testing.T) {
 	})
 	if err == nil {
 		t.Error("didn't throw an error when supposed to")
-	} else {
-		fmt.Println("sample error text:", err)
 	}
 }
 

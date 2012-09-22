@@ -288,25 +288,4 @@ func (p *dataParser) ParseFileMode(delim byte) (mode FileMode) {
 		panicErrf("expected: filemode")
 	}
 	return
-
 }
-
-// func (p *dataParser) NextObjectIdString() *ObjectId {
-// 	hex := p.NextString(OID_HEXSZ)
-// 	oid, e := NewObjectIdFromString(hex)
-// 	if e != nil {
-// 		panicErr(e.Error())
-// 	}
-// 	return oid
-// }
-
-// // NextObjectIdString reads the next OID_SZ bytes from the Reader
-// // and interprets them as an ObjectId
-// func (p *dataParser) NextObjectIdBytes() *ObjectId {
-// 	b := p.ReadBytes(OID_SZ)
-// 	oid, e := NewObjectIdFromBytes(b)
-// 	if e != nil {
-// 		panicErr(e.Error())
-// 	}
-// 	return oid
-// }

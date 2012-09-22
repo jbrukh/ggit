@@ -32,5 +32,5 @@ func assertObjectType(str string) (ObjectType, bool) {
 	case ObjectBlob, ObjectCommit, ObjectTag, ObjectTree:
 		return otype, true
 	}
-	return 0, false
+	return ObjectType(0), false
 }
