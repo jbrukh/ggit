@@ -56,11 +56,7 @@ func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error)
         p.ConsumeString(tokenType)
         p.ConsumeByte(SP)
         line := p.ReadString(LF) // gets rid of the LF!
-        if objectType, err := toObjectType(line); err == nil {
-			tag.objectType = objectType
-		} else {
-			panicErr(err.Error())
-		}
+        tag.objectType = ObjectType(line)
 
         // read the tag
         p.ConsumeString(tokenTag)

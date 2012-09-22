@@ -30,19 +30,3 @@ var objectTypes []string = []string{
     ObjectCommit.String(),
     ObjectTag.String(),
 }
-
-func toObjectType(s string) (t ObjectType, err error) {
-	switch s {
-	case ObjectBlob.String():
-		t = ObjectBlob
-	case ObjectTree.String():
-		t = ObjectTree
-	case ObjectCommit.String():
-		t = ObjectCommit
-	case ObjectTag.String():
-		t = ObjectTag
-	default:
-		err = errors.New(fmt.Sprint("Unrecognized object type. Expected one of: ", objectTypes))
-	}
-	return
-}
