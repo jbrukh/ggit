@@ -46,29 +46,28 @@ func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error)
 	p := &dataParser{buf}
 	tag := new(Tag)
 	err := dataParse(func() {
-		// read the tree line
+		// read the object id
 		p.ConsumeString(markerObject)
 		p.ConsumeByte(SP)
 		tag.object = p.ParseObjectId()
 		p.ConsumeByte(LF)
 
-		// read the tagger
+		// read object type
 		p.ConsumeString(markerType)
 		p.ConsumeByte(SP)
-		line := p.ReadString(LF) // gets rid of the LF!
-		tag.objectType = ObjectType(line)
+		tag.objectType = ObjectType(p.ConsumeStrings(objectTypes))
+		p.ConsumeByte(LF)
 
-		// read the tag
+		// read the tag name
 		p.ConsumeString(markerTag)
 		p.ConsumeByte(SP)
-		line = p.ReadString(LF) // gets rid of the LF!
-		tag.tag = line
+		tag.tag = p.ReadString(LF) // gets rid of the LF!
 
 		// read the tagger
 		p.ConsumeString(markerTagger)
 		p.ConsumeByte(SP)
-		line = p.ReadString(LF) // gets rid of the LF!
 		tag.tagger = parseWhoWhen(p, markerTagger)
+		p.ConsumeByte(LF)
 
 		// read the commit message
 		p.ConsumeByte(LF)
