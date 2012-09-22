@@ -6,11 +6,14 @@ import (
 )
 
 const (
-	NUL   = '\000'
-	SP    = ' '
-	LF    = '\n'
-	LT    = '<'
-	GT    = '>'
+	NUL = '\000'
+	SP  = ' '
+	LF  = '\n'
+	LT  = '<'
+	GT  = '>'
+)
+
+const (
 	PLUS  = "+"
 	MINUS = "-"
 )
