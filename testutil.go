@@ -3,12 +3,17 @@ package ggit
 import (
 	"bufio"
 	"bytes"
+	"runtime"
 	"testing"
 )
 
 func assert(t *testing.T, b bool, items ...interface{}) {
 	if !b {
-		t.Error("error: ", items)
+		_, file, line, ok := runtime.Caller(1)
+		if !ok {
+			file = "(unknown file)"
+		}
+		t.Errorf("%s:%d: %s", file, line, items)
 	}
 }
 

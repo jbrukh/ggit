@@ -68,9 +68,12 @@ func parseCommit(repo Repository, h *objectHeader, buf *bufio.Reader) (c *Commit
 		}
 
 		c.author = parseWhoWhen(p, markerAuthor)
-		c.committer = parseWhoWhen(p, markerCommitter)
+		p.ConsumeByte(LF)
 
-		// read the commit message
+		c.committer = parseWhoWhen(p, markerCommitter)
+		p.ConsumeByte(LF)
+
+		// commit message
 		p.ConsumeByte(LF)
 		c.message = p.String()
 	})

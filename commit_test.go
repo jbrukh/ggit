@@ -23,7 +23,7 @@ func Test_parseCommit(t *testing.T) {
 	c1 := readerForString(testCommit1)
 
 	c, err := parseCommit(nil, &objectHeader{ObjectCommit, len(testCommit1)}, c1)
-	assert(t, err != nil, "failed due to error")
+	assertf(t, err == nil, "failed due to error")
 
 	assert(t, c.tree.String() == testTreeSha.String())
 	assert(t, c.parents != nil && len(c.parents) != 0)
@@ -36,5 +36,5 @@ func Test_parseCommit(t *testing.T) {
 	assert(t, c.committer.Email() == "brukhman@gmail.com")
 	assert(t, c.committer.Seconds() == 1348333582)
 	assert(t, c.committer.Offset() == -240)
-
+	assert(t, c.message == "Structure for WhoWhen.")
 }
