@@ -1,5 +1,10 @@
 package ggit
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Who represents a user that has been using
 // (g)git
 type Who struct {
@@ -32,4 +37,23 @@ func (w *When) Offset() int {
 type WhoWhen struct {
 	Who
 	When
+}
+
+func (ww *WhoWhen) String() string {
+	const format = "%s <%s>"                          // TODO
+	return fmt.Sprintf(format, ww.Name(), ww.Email()) // TODO
+}
+
+func parseWhoWhen(p *dataParser, marker string) *WhoWhen {
+	p.ConsumeString(marker)
+	p.ConsumeByte(SP)
+	user := strings.Trim(p.ReadString(LT), string(SP))
+	email := p.ReadString(GT)
+	p.ConsumeByte(SP)
+	seconds := p.ParseInt(SP, 10, 64)
+	ww := &WhoWhen{
+		Who{user, email},
+		When{seconds, 0},
+	} // TODO
+	return ww
 }

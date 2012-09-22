@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"strings"
 )
 
 const (
@@ -78,15 +77,4 @@ func parseCommit(repo Repository, h *objectHeader, buf *bufio.Reader) (c *Commit
 	c.size = h.Size
 	c.repo = repo
 	return
-}
-
-func parseWhoWhen(p *dataParser, marker string) *WhoWhen {
-	p.ConsumeString(marker)
-	p.ConsumeByte(SP)
-	user := strings.Trim(p.ReadString(LT), string(SP))
-	email := p.ReadString(GT)
-	return &WhoWhen{
-		Who{user, email},
-		When{0, 0},
-	} // TODO
 }

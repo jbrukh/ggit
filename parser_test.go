@@ -1,21 +1,9 @@
 package ggit
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"testing"
 )
-
-func parserForBytes(b []byte) *dataParser {
-	return &dataParser{
-		bufio.NewReader(bytes.NewBuffer(b)),
-	}
-}
-
-func parserForString(str string) *dataParser {
-	return parserForBytes([]byte(str))
-}
 
 func Test_AssertEOF(t *testing.T) {
 	t1 := parserForString("")
