@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	tokenObject = "object"
-	tokenType   = "type"
-	tokenTag    = "tag"
-	tokenTagger = "tagger"
+	markerObject = "object"
+	markerType   = "type"
+	markerTag    = "tag"
+	markerTagger = "tagger"
 )
 
 type Tag struct {
@@ -47,31 +47,28 @@ func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error)
 	tag := new(Tag)
 	err := dataParse(func() {
 		// read the tree line
-		p.ConsumeString(tokenObject)
+		p.ConsumeString(markerObject)
 		p.ConsumeByte(SP)
 		tag.object = p.ParseObjectId()
 		p.ConsumeByte(LF)
 
 		// read the tagger
-		p.ConsumeString(tokenType)
+		p.ConsumeString(markerType)
 		p.ConsumeByte(SP)
 		line := p.ReadString(LF) // gets rid of the LF!
 		tag.objectType = ObjectType(line)
 
 		// read the tag
-		p.ConsumeString(tokenTag)
+		p.ConsumeString(markerTag)
 		p.ConsumeByte(SP)
 		line = p.ReadString(LF) // gets rid of the LF!
 		tag.tag = line
 
 		// read the tagger
-		p.ConsumeString(tokenTagger)
+		p.ConsumeString(markerTagger)
 		p.ConsumeByte(SP)
 		line = p.ReadString(LF) // gets rid of the LF!
-		tag.tagger = &WhoWhen{  // TODO TODO TODO TODO TODO !!!
-			Who{line, ""},
-			When{0, 0},
-		}
+		tag.tagger = parseWhoWhen(p, markerTagger)
 
 		// read the commit message
 		p.ConsumeByte(LF)
