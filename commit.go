@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"strings"
 )
 
 const (
@@ -67,23 +68,9 @@ func parseCommit(repo Repository, h *objectHeader, buf *bufio.Reader) (c *Commit
 			p.ConsumeByte(LF)
 		}
 
-		// read the author
-		p.ConsumeString(markerAuthor)
-		p.ConsumeByte(SP)
-		line := p.ReadString(LF) // gets rid of the LF!
-		c.author = &WhoWhen{
-			Who{line, ""},
-			When{0, 0},
-		} // TODO
+		c.author = parseWhoWhen(p, markerAuthor)
+		c.committer = parseWhoWhen(p, markerCommitter)
 
-		// read the committer
-		p.ConsumeString(markerCommitter)
-		p.ConsumeByte(SP)
-		line = p.ReadString(LF) // gets rid of the LF!
-		c.committer = &WhoWhen{
-			Who{line, ""},
-			When{0, 0},
-		} // TODO
 		// read the commit message
 		p.ConsumeByte(LF)
 		c.message = p.String()
@@ -91,4 +78,15 @@ func parseCommit(repo Repository, h *objectHeader, buf *bufio.Reader) (c *Commit
 	c.size = h.Size
 	c.repo = repo
 	return
+}
+
+func parseWhoWhen(p *dataParser, marker string) *WhoWhen {
+	p.ConsumeString(marker)
+	p.ConsumeByte(SP)
+	user := strings.Trim(p.ReadString(LT), string(SP))
+	email := p.ReadString(GT)
+	return &WhoWhen{
+		Who{user, email},
+		When{0, 0},
+	} // TODO
 }

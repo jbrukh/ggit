@@ -68,7 +68,7 @@ func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error)
 		p.ConsumeString(tokenTagger)
 		p.ConsumeByte(SP)
 		line = p.ReadString(LF) // gets rid of the LF!
-		tag.tagger = &WhoWhen{
+		tag.tagger = &WhoWhen{  // TODO TODO TODO TODO TODO !!!
 			Who{line, ""},
 			When{0, 0},
 		}
