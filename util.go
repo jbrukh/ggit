@@ -1,7 +1,6 @@
 package ggit
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"hash"
 )
@@ -50,13 +49,6 @@ func min(a, b int) int {
 	return b
 }
 
-func sgn(a int) int {
-	if a < 0 {
-		return -1
-	}
-	return 1
-}
-
 // The file mode of a tree entry implies an object type.
 func deduceObjectType(mode FileMode) ObjectType {
 	switch mode {
@@ -67,12 +59,4 @@ func deduceObjectType(mode FileMode) ObjectType {
 	}
 	// TODO
 	panic("unknown mode")
-}
-
-func nextToken(buf *bytes.Buffer, delim byte) (tok string, err error) {
-	line, e := buf.ReadBytes(delim)
-	if e != nil {
-		return "", e
-	}
-	return trimLastStr(line), nil
 }
