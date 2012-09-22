@@ -29,5 +29,8 @@ func Test_parseCommit(t *testing.T) {
 	assert(t, c.parents != nil && len(c.parents) != 0)
 	assert(t, c.parents[0].String() == testParentSha.String())
 	assert(t, c.author.Name() == "Jake Brukhman")
+	assert(t, c.author.Email() == "brukhman@gmail.com")
+	assert(t, c.author.Seconds() == 1348333582)
+	assert(t, c.author.Offset() == -240)
 
 }

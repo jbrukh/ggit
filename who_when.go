@@ -21,12 +21,12 @@ func (w *Who) Email() string {
 }
 
 type When struct {
-	timestamp int64
-	offset    int // timezone offset in minutes
+	seconds int64 // seconds since epoch
+	offset  int   // timezone offset in minutes
 }
 
-func (w *When) Timestamp() int64 {
-	return w.timestamp
+func (w *When) Seconds() int64 {
+	return w.seconds
 }
 
 func (w *When) Offset() int {
@@ -51,9 +51,30 @@ func parseWhoWhen(p *dataParser, marker string) *WhoWhen {
 	email := p.ReadString(GT)
 	p.ConsumeByte(SP)
 	seconds := p.ParseInt(SP, 10, 64)
+
+	// time zone
+	signStr := p.ConsumeStrings(signs)
+	var sign int64
+	if signStr == PLUS {
+		sign = 1
+	} else if signStr == MINUS {
+		sign = -1
+	} else {
+		panicErrf("expecting: +/- sign")
+	}
+
+	tzHours := p.ParseIntN(2, 10, 64)
+	tzMins := p.ParseIntN(2, 10, 64)
+	if tzMins < 0 || tzMins > 59 {
+		panicErrf("expecting 00 to 59 for tz minutes")
+	}
+
+	// time zone offset in signed minutes
+	tz := int(sign * (tzHours*int64(60) + tzMins))
+
 	ww := &WhoWhen{
 		Who{user, email},
-		When{seconds, 0},
-	} // TODO
+		When{seconds, tz},
+	}
 	return ww
 }

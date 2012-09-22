@@ -7,12 +7,19 @@ import (
 )
 
 const (
-	NUL = '\000'
-	SP  = ' '
-	LF  = '\n'
-	LT  = '<'
-	GT  = '>'
+	NUL   = '\000'
+	SP    = ' '
+	LF    = '\n'
+	LT    = '<'
+	GT    = '>'
+	PLUS  = "+"
+	MINUS = "-"
 )
+
+var signs []string = []string{
+	PLUS,
+	MINUS,
+}
 
 // the hash object used to build
 // hashes of our objects
@@ -41,6 +48,13 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func sgn(a int) int {
+	if a < 0 {
+		return -1
+	}
+	return 1
 }
 
 // The file mode of a tree entry implies an object type.
