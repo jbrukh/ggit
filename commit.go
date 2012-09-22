@@ -1,89 +1,94 @@
 package ggit
 
 import (
-    "bufio"
-    "fmt"
-    "io"
+	"bufio"
+	"fmt"
+	"io"
 )
 
 const (
-    markerTree      = "tree"
-    markerParent    = "parent"
-    markerAuthor    = "author"
-    markerCommitter = "committer"
+	markerTree      = "tree"
+	markerParent    = "parent"
+	markerAuthor    = "author"
+	markerCommitter = "committer"
 )
 
 type Commit struct {
-    author    *WhoWhen
-    committer *WhoWhen
-    message   string
-    tree      *ObjectId
-    parents   []*ObjectId
-    repo      Repository
-    size      int
+	author    *WhoWhen
+	committer *WhoWhen
+	message   string
+	tree      *ObjectId
+	parents   []*ObjectId
+	repo      Repository
+	size      int
 }
 
 func (c *Commit) Type() ObjectType {
-    return ObjectCommit
+	return ObjectCommit
 }
 
 func (c *Commit) Size() int {
-    return c.size
+	return c.size
 }
 
 func (c *Commit) String() string {
-    const FMT = "Commit{author=%s, committer=%s, tree=%s, parents=%v, message='%s'}"
-    return fmt.Sprintf(FMT, c.author, c.committer, c.tree, c.parents, c.message)
+	const FMT = "Commit{author=%s, committer=%s, tree=%s, parents=%v, message='%s'}"
+	return fmt.Sprintf(FMT, c.author, c.committer, c.tree, c.parents, c.message)
 }
 
 func (c *Commit) WriteTo(w io.Writer) (n int, err error) {
-    return io.WriteString(w, c.String())
+	return io.WriteString(w, c.String())
 }
 
 func (c *Commit) addParent(oid *ObjectId) {
-    if c.parents == nil {
-        c.parents = make([]*ObjectId, 0, 2)
-    }
-    c.parents = append(c.parents, oid)
+	if c.parents == nil {
+		c.parents = make([]*ObjectId, 0, 2)
+	}
+	c.parents = append(c.parents, oid)
 }
 
 func parseCommit(repo Repository, h *objectHeader, buf *bufio.Reader) (c *Commit, err error) {
-    c = new(Commit)
-    p := &dataParser{buf}
-    err = dataParse(func() {
+	c = new(Commit)
+	p := &dataParser{buf}
+	err = dataParse(func() {
 
-        // read the tree line
-        p.ConsumeString(markerTree)
-        p.ConsumeByte(SP)
-        c.tree = p.ParseObjectId()
-        p.ConsumeByte(LF)
+		// read the tree line
+		p.ConsumeString(markerTree)
+		p.ConsumeByte(SP)
+		c.tree = p.ParseObjectId()
+		p.ConsumeByte(LF)
 
-        // read an arbitrary number of parent lines
-        n := len(markerParent)
-        for p.PeekString(n) == markerParent {
-            p.ConsumeString(markerParent)
-            p.ConsumeByte(SP)
-            c.addParent(p.ParseObjectId())
-            p.ConsumeByte(LF)
-        }
+		// read an arbitrary number of parent lines
+		n := len(markerParent)
+		for p.PeekString(n) == markerParent {
+			p.ConsumeString(markerParent)
+			p.ConsumeByte(SP)
+			c.addParent(p.ParseObjectId())
+			p.ConsumeByte(LF)
+		}
 
-        // read the author
-        p.ConsumeString(markerAuthor)
-        p.ConsumeByte(SP)
-        line := p.ReadString(LF)                  // gets rid of the LF!
-        c.author = &WhoWhen{line, "", ""} // TODO
+		// read the author
+		p.ConsumeString(markerAuthor)
+		p.ConsumeByte(SP)
+		line := p.ReadString(LF) // gets rid of the LF!
+		c.author = &WhoWhen{
+			Who{line, ""},
+			When{0, 0},
+		} // TODO
 
-        // read the committer
-        p.ConsumeString(markerCommitter)
-        p.ConsumeByte(SP)
-        line = p.ReadString(LF)                      // gets rid of the LF!
-        c.committer = &WhoWhen{line, "", ""} // TODO
-
-        // read the commit message
-        p.ConsumeByte(LF)
-        c.message = p.String()
-    })
-    c.size = h.Size
-    c.repo = repo
-    return
+		// read the committer
+		p.ConsumeString(markerCommitter)
+		p.ConsumeByte(SP)
+		line = p.ReadString(LF) // gets rid of the LF!
+		c.committer = &WhoWhen{
+			Who{line, ""},
+			When{0, 0},
+		} // TODO
+		// read the commit message
+		p.ConsumeByte(LF)
+		c.message = p.String()
+	})
+	c.size = h.Size
+	c.repo = repo
+	return
 }
