@@ -32,5 +32,9 @@ func Test_parseCommit(t *testing.T) {
 	assert(t, c.author.Email() == "brukhman@gmail.com")
 	assert(t, c.author.Seconds() == 1348333582)
 	assert(t, c.author.Offset() == -240)
+	assert(t, c.committer.Name() == "Jake Brukhman")
+	assert(t, c.committer.Email() == "brukhman@gmail.com")
+	assert(t, c.committer.Seconds() == 1348333582)
+	assert(t, c.committer.Offset() == -240)
 
 }
