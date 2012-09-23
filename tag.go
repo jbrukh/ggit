@@ -62,8 +62,6 @@ func (p *objectParser) parseTag() *Tag {
 	tag.tag = p.ReadString(LF) // gets rid of the LF!
 
 	// read the tagger
-	p.ConsumeString(markerTagger)
-	p.ConsumeByte(SP)
 	tag.tagger = p.parseWhoWhen(markerTagger)
 	p.ConsumeByte(LF)
 
