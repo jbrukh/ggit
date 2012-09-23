@@ -3,7 +3,7 @@ package builtin
 import (
 	"flag"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 )
 
@@ -32,11 +32,14 @@ func All() []*Builtin {
 // Builtin describes a built-in command
 type Builtin struct {
 	// ExecFunc describes the function that executes the command.
-	Execute func(cmd *Builtin, args []string)
+	Execute func(cmd *Builtin, args []string, w io.Writer)
 
 	// Name is the name of the command, a string with no spaces, 
 	// usually consistng of lowercase letters.
 	Name string
+
+	// one line description of the command
+	Description string
 
 	// UsageLine is the one-line usage message.
 	UsageLine string
@@ -48,9 +51,8 @@ type Builtin struct {
 	FlagSet flag.FlagSet
 }
 
-func (c *Builtin) Usage() {
+func (c *Builtin) Usage(w io.Writer) {
 	// TODO: review
-	fmt.Fprintf(os.Stderr, "usage: %s\n\n", c.UsageLine)
-	fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(c.ManPage))
-	os.Exit(2)
+	fmt.Fprintf(w, "usage: %s %s\n\n", c.Name, c.UsageLine)
+	fmt.Fprintf(w, "%s\n", strings.TrimSpace(c.ManPage))
 }

@@ -2,46 +2,44 @@ package builtin
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
+	"io"
 	"os"
 )
 
-//
-// FLAGS, flags everywhere. Put them in your car, put them in your
-// wallet, put them in your cubicle, shove them up your ass.
-//
-var catFileFlags *flag.FlagSet = flag.NewFlagSet("cat-file", flag.ExitOnError)
-
 var (
-	isType  *bool
-	isPrint *bool
-	isSize  *bool
+	fType, fPrint, fSize bool
 )
 
-func init() {
-	isType = catFileFlags.Bool("t", false, "show object type")
-	isPrint = catFileFlags.Bool("p", false, "pretty-print object's contents")
-	isSize = catFileFlags.Bool("s", false, "show object size")
+var catFileBuiltin = &Builtin{
+	Execute:     catFile,
+	Name:        "cat-file",
+	Description: "Provide content or type and size information for repository objects",
+	UsageLine:   "(-t|-s|-p) <object>",
+	ManPage:     "TODO",
 }
 
-func CatFile(args []string) (err error) {
+func init() {
+	catFileBuiltin.FlagSet.BoolVar(&fType, "t", false, "show object type")
+	catFileBuiltin.FlagSet.BoolVar(&fPrint, "p", false, "pretty-print object's contents")
+	catFileBuiltin.FlagSet.BoolVar(&fSize, "s", false, "show object size")
 
-	catFileFlags.Parse(args[1:])
+	// add to command list
+	Add(catFileBuiltin)
+}
 
-	a := catFileFlags.Args()
-	if len(a) < 1 {
-		return errors.New("provide an object")
+func catFile(b *Builtin, args []string, w io.Writer) {
+	if len(args) != 1 {
+		b.Usage(w)
+		return
 	}
-	if len(a) > 1 {
-		return errors.New(fmt.Sprint("expecting a single argument, found ", len(a)))
-	}
-	id := a[0]
 
+	id := args[0]
 	var (
 		repo *api.DiskRepository
 		oid  *api.ObjectId
+		err  error
 	)
 
 	// get a proper id
@@ -56,24 +54,29 @@ func CatFile(args []string) (err error) {
 	defer repo.Close()
 
 	switch {
-	case *isPrint:
-		return doPrint(repo, oid)
-	case *isType:
-		return doType(repo, oid)
-	case *isSize:
-		return doSize(repo, oid)
+	case fPrint:
+		err = doPrint(repo, oid)
+	case fType:
+		err = doType(repo, oid)
+	case fSize:
+		err = doSize(repo, oid)
 	default:
-		return errors.New("unknown command")
+		panic("should not get here")
 	}
-	return
+
+	if err != nil {
+		fmt.Fprintln(w, err.Error())
+	}
 }
 
-func doPrint(repo *api.DiskRepository, oid *api.ObjectId) (err error) {
-	if obj, err := repo.ReadObject(oid); err == nil {
+func doPrint(repo *api.DiskRepository, oid *api.ObjectId) error {
+	if obj, err := repo.ReadObject(oid); err != nil {
+		return errors.New(err.Error())
+	} else {
 		obj.WriteTo(os.Stdout)
 		return err
 	}
-	return errors.New("could not find object: " + oid.String() + ": " + err.Error()) // TODO
+	return nil
 }
 
 func doType(repo *api.DiskRepository, oid *api.ObjectId) (err error) {

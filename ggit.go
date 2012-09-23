@@ -34,19 +34,17 @@ func main() {
 	cmd, ok := builtin.Get(name)
 	if ok {
 		cmd.FlagSet.Usage = func() {
-			cmd.Usage()
+			cmd.Usage(os.Stderr)
 		}
-
+		fmt.Println(args)
 		cmd.FlagSet.Parse(args[1:])
 		args = cmd.FlagSet.Args()
 
-		cmd.Execute(cmd, args)
-		return
-
+		cmd.Execute(cmd, args, os.Stdout)
+	} else {
+		fmt.Fprintf(os.Stderr, unknownCommandFormat, name)
+		//usage()
 	}
-
-	fmt.Fprintf(os.Stderr, unknownCommandFormat, name)
-	usage()
 }
 
 // ================================================================= //
