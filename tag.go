@@ -25,8 +25,7 @@ type Tag struct {
 
 func (t *Tag) String() string {
 	const FMT = "object %s\ntype %s\ntag %s\ntagger %s\nmessage %s"
-	//TODO
-	return fmt.Sprintf(FMT, t.object, t.objectType, t.tag, *(t.tagger), t.message)
+	return fmt.Sprintf(FMT, t.object, t.objectType, t.tag, t.tagger.String(), t.message)
 }
 
 func (t *Tag) Type() ObjectType {
