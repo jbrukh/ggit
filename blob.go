@@ -40,10 +40,14 @@ func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
 // and converts it to Blob
 func (p *objectParser) parseBlob() *Blob {
 	b := new(Blob)
+	p.ResetRead()
+
 	b.data = p.Bytes()
 	b.size = p.hdr.Size
 
-	// TODO check size
+	if p.read != p.hdr.Size {
+		panicErr("payload doesn't match prescibed size")
+	}
 
 	return b
 }

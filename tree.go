@@ -82,7 +82,7 @@ func (p *objectParser) parseTree() *Tree {
 	t.size = p.hdr.Size
 
 	if p.read != p.hdr.Size {
-		// panic
+		panicErr("payload doesn't match prescibed size")
 	}
 
 	return t

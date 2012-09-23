@@ -61,6 +61,8 @@ func (c *Commit) addParent(oid *ObjectId) {
 func (p *objectParser) parseCommit() *Commit {
 
 	c := new(Commit)
+	p.ResetRead()
+
 	// read the tree line
 	p.ConsumeString(markerTree)
 	p.ConsumeByte(SP)
@@ -88,7 +90,9 @@ func (p *objectParser) parseCommit() *Commit {
 
 	c.size = p.hdr.Size
 
-	// TODO check size
+	if p.read != p.hdr.Size {
+		panicErr("payload doesn't match prescibed size")
+	}
 
 	return c
 }
