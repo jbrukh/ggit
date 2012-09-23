@@ -59,7 +59,7 @@ func usage() {
 }
 
 func printUsage(w io.Writer) {
-	tmpl(w, api.UsageTemplate, api.Builtins())
+	tmpl(w, usageTemplate, builtin.All())
 }
 
 // ================================================================= //

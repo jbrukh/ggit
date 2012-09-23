@@ -1,4 +1,4 @@
-package api
+package builtin
 
 import (
 	"flag"
