@@ -1,43 +1,42 @@
 package api
 
-import (
-    "fmt"
-    "github.com/jbrukh/ggit"
-)
+// import (
+//     "fmt"
+//     "github.com/jbrukh/ggit"
+// )
 
-//
-// FLAGS, flags everywhere. Put them in your car, put them in your
-// wallet, put them in your cubicle, shove them up your ass.
-//
-/*
-var catIndexFlags *flag.FlagSet = flag.NewFlagSet("cat-index", flag.ExitOnError)
+// //
+// // FLAGS, flags everywhere. Put them in your car, put them in your
+// // wallet, put them in your cubicle, shove them up your ass.
+// //
 
-var (
-    isType  *bool
-    isPrint *bool
-    isSize  *bool
-)
+// var catIndexFlags *flag.FlagSet = flag.NewFlagSet("cat-index", flag.ExitOnError)
 
-func init() {
-    isType = catFileFlags.Bool("t", false, "show object type")
-    isPrint = catFileFlags.Bool("p", false, "pretty-print object's contents")
-    isSize = catFileFlags.Bool("s", false, "show object size")
-}
-*/
+// var (
+//     isType  *bool
+//     isPrint *bool
+//     isSize  *bool
+// )
 
-func CatIndex(args []string) (err error) {
+// func init() {
+//     isType = catFileFlags.Bool("t", false, "show object type")
+//     isPrint = catFileFlags.Bool("p", false, "pretty-print object's contents")
+//     isSize = catFileFlags.Bool("s", false, "show object size")
+// }
 
-    repo, e := ggit.Open(ggit.DEFAULT_GIT_DIR)
-    if e != nil {
-        return e
-    }
-    defer repo.Close()
+// func CatIndex(args []string) (err error) {
 
-    inx, e := repo.Index()
-    if e != nil {
-        return e
-    }
-    fmt.Print(inx)
+//     repo, e := ggit.Open(ggit.DEFAULT_GIT_DIR)
+//     if e != nil {
+//         return e
+//     }
+//     defer repo.Close()
 
-    return
-}
+//     inx, e := repo.Index()
+//     if e != nil {
+//         return e
+//     }
+//     fmt.Print(inx)
+
+//     return
+// }
