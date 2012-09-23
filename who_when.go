@@ -40,8 +40,20 @@ type WhoWhen struct {
 }
 
 func (ww *WhoWhen) String() string {
-	const format = "%s <%s>"                          // TODO
-	return fmt.Sprintf(format, ww.Name(), ww.Email()) // TODO
+	const format = "%s <%s> %d %s"
+	offset := ww.Offset()
+	hours := int(offset / 60)
+	minutes := fmt.Sprintf("%d", (offset - (hours * 60)))
+	if len(minutes) == 1 {
+		//pad with 0
+		minutes = "0" + minutes
+	}
+	zone := fmt.Sprintf("%d%s", hours, minutes)
+	if len(zone) == 4 {
+		//pad hour with 0
+		zone = string(zone[0]) + "0" + string(zone[1:])
+	}
+	return fmt.Sprintf(format, ww.Name(), ww.Email(), ww.Seconds(), zone)
 }
 
 func (p *objectParser) parseWhoWhen(marker string) *WhoWhen {
