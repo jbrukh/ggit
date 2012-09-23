@@ -83,8 +83,6 @@ func Test_dataParse(t *testing.T) {
 	}
 }
 
-
-
 func Test_ParseAtoi(t *testing.T) {
 	t1 := parserForString("-100\000")
 	t2 := parserForString("101\000")
@@ -162,4 +160,14 @@ func Test_ConsumeStrings(t *testing.T) {
 	assertPanic(t, func() {
 		t4.ConsumeStrings([]string{""})
 	})
+}
+
+func Test_Count(t *testing.T) {
+	t1 := parserForString("tree 4\000lalala")
+	assertPanicFree(t, func() {
+		t1.ReadString(NUL)
+	})
+	assert(t, t1.Count() == 7)
+	t1.ResetCount()
+	assert(t, t1.Count() == 0)
 }
