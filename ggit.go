@@ -4,7 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/jbrukh/ggit/api"
+	"github.com/jbrukh/ggit/builtin"
 	"io"
 	"os"
 )

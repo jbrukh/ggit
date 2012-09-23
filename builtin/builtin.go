@@ -11,16 +11,16 @@ import (
 var builtins = make(map[string]*Builtin)
 
 // add a builtin command
-func AddBuiltin(cmd *Builtin) {
+func Add(cmd *Builtin) {
 	builtins[cmd.Name] = cmd
 }
 
-func GetBuiltin(name string) (*Builtin, bool) {
+func Get(name string) (*Builtin, bool) {
 	b, ok := builtins[name]
 	return b, ok
 }
 
-func Builtins() []*Builtin {
+func All() []*Builtin {
 	b := make([]*Builtin, len(builtins))
 	for _, v := range builtins {
 		b = append(b, v)
