@@ -6,6 +6,8 @@ import (
 	"text/template"
 )
 
+const unknownCommandFormat = `ggit: '%s' is not a ggit command. See 'ggit --help'.`
+
 // tmpl executes the given template text on data, writing the result to w.
 func tmpl(w io.Writer, text string, data interface{}) {
 	t := template.New("top")
@@ -29,5 +31,3 @@ var helpTemplate = `{{if .Runnable}}usage: go {{.UsageLine}}
 
 {{end}}{{.Long | trim}}
 `
-
-var unknownCommandFormat = `ggit: '%s' is not a ggit command. See 'ggit --help'.`
