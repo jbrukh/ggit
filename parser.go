@@ -258,12 +258,3 @@ func (p *dataParser) ParseIntN(n int, base int, bitSize int) (i64 int64) {
 func (p *dataParser) ParseInt(delim byte, base int, bitSize int) (i64 int64) {
 	return parseInt(p.ReadString(delim), base, bitSize)
 }
-
-// TODO : consider moving this to special parser
-func (p *dataParser) ParseFileMode(delim byte) (mode FileMode) {
-	var ok bool
-	if mode, ok = assertFileMode(uint16(p.ParseInt(delim, 8, 32))); !ok {
-		panicErrf("expected: filemode")
-	}
-	return
-}

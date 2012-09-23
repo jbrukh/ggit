@@ -30,11 +30,11 @@ type Commit struct {
 	size      int
 }
 
-func (c Commit) Type() ObjectType {
+func (c *Commit) Type() ObjectType {
 	return ObjectCommit
 }
 
-func (c Commit) Size() int {
+func (c *Commit) Size() int {
 	return c.size
 }
 
@@ -43,7 +43,7 @@ func (c *Commit) String() string {
 	return fmt.Sprintf(FMT, c.author, c.committer, c.tree, c.parents, c.message)
 }
 
-func (c Commit) WriteTo(w io.Writer) (n int, err error) {
+func (c *Commit) WriteTo(w io.Writer) (n int, err error) {
 	return io.WriteString(w, c.String())
 }
 
@@ -59,6 +59,7 @@ func (c *Commit) addParent(oid *ObjectId) {
 // ================================================================= //
 
 func (p *objectParser) parseCommit() *Commit {
+
 	c := new(Commit)
 	// read the tree line
 	p.ConsumeString(markerTree)

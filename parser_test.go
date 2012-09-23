@@ -5,18 +5,6 @@ import (
 	"testing"
 )
 
-func Test_AssertEOF(t *testing.T) {
-	t1 := parserForString("")
-	assertPanicFree(t, func() {
-		t1.AssertEOF()
-	})
-
-	t2 := parserForString("1")
-	assertPanic(t, func() {
-		t2.AssertEOF()
-	})
-}
-
 func Test_ReadBytes(t *testing.T) {
 	t1 := parserForString("poop\000")           // simple case
 	t2 := parserForString("b")                  // empty token
@@ -95,12 +83,7 @@ func Test_dataParse(t *testing.T) {
 	}
 }
 
-func Test_ParseObjectId(t *testing.T) {
-	var oid *ObjectId
-	t1 := parserForString(testOidCrazy)
-	oid = t1.ParseObjectId()
-	assert(t, oid.String() == testOidCrazy)
-}
+
 
 func Test_ParseAtoi(t *testing.T) {
 	t1 := parserForString("-100\000")

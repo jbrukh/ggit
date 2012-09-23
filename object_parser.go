@@ -36,17 +36,13 @@ func newObjectParser(buf *bufio.Reader) *objectParser {
 }
 
 func (p *objectParser) ParseHeader() (*objectHeader, error) {
-	var (
-		hdr *objectHeader
-		err error
-	)
-	err = dataParse(func() {
-		h := new(objectHeader)
-		h.Type = ObjectType(p.ConsumeStrings(objectTypes))
+	err := dataParse(func() {
+		p.hdr = new(objectHeader)
+		p.hdr.Type = ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
-		h.Size = p.ParseAtoi(NUL)
+		p.hdr.Size = p.ParseAtoi(NUL)
 	})
-	return hdr, err
+	return p.hdr, err
 }
 
 func (p *objectParser) ParsePayload() (Object, error) {
@@ -54,7 +50,6 @@ func (p *objectParser) ParsePayload() (Object, error) {
 	if _, e := p.ParseHeader(); e != nil {
 		return nil, e
 	}
-
 	var (
 		obj Object
 		err error
