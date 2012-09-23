@@ -64,8 +64,6 @@ func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error)
 		tag.tag = p.ReadString(LF) // gets rid of the LF!
 
 		// read the tagger
-		p.ConsumeString(markerTagger)
-		p.ConsumeByte(SP)
 		tag.tagger = parseWhoWhen(p, markerTagger)
 		p.ConsumeByte(LF)
 
