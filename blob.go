@@ -1,7 +1,7 @@
 package ggit
 
 import (
-	"io"
+    "io"
 )
 
 // ================================================================= //
@@ -11,25 +11,25 @@ import (
 // Blob represents the deserialized version of a Git blob
 // object.
 type Blob struct {
-	data []byte
-	size int
-	repo Repository
+    data []byte
+    size int
+    repo Repository
 }
 
 func (b *Blob) String() string {
-	return string(b.data)
+    return string(b.data)
 }
 
 func (b *Blob) Type() ObjectType {
-	return ObjectBlob
+    return ObjectBlob
 }
 
 func (b *Blob) Size() int {
-	return b.size
+    return b.size
 }
 
 func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
-	return io.WriteString(w, b.String())
+    return io.WriteString(w, b.String())
 }
 
 // ================================================================= //
@@ -39,15 +39,15 @@ func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
 // parseBlob parses the payload of a binary blob object
 // and converts it to Blob
 func (p *objectParser) parseBlob() *Blob {
-	b := new(Blob)
-	p.ResetRead()
+    b := new(Blob)
+    p.ResetCount()
 
-	b.data = p.Bytes()
-	b.size = p.hdr.Size
+    b.data = p.Bytes()
+    b.size = p.hdr.Size
 
-	if p.read != p.hdr.Size {
-		panicErr("payload doesn't match prescibed size")
-	}
+    if p.Count() != p.hdr.Size {
+        panicErr("payload doesn't match prescibed size")
+    }
 
-	return b
+    return b
 }
