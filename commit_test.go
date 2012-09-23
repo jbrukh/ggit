@@ -12,18 +12,22 @@ func init() {
 	testParentSha, _ = NewObjectIdFromString("8e5c7a9c2f37f315375d26ae8148690f920d2b62")
 }
 
-const testCommit1 = `tree e98b3d7be9979411127f93a1b9027c1eb5fe83b4
+const testData = `tree e98b3d7be9979411127f93a1b9027c1eb5fe83b4
 parent 8e5c7a9c2f37f315375d26ae8148690f920d2b62
 author Jake Brukhman <brukhman@gmail.com> 1348333582 -0400
 committer Jake Brukhman <brukhman@gmail.com> 1348333582 -0400
 
 Structure for WhoWhen.`
+const testCommit1 = "commit " + string(len(testData)) + string(NUL) + testData
 
 func Test_parseCommit(t *testing.T) {
 	c1 := readerForString(testCommit1)
+	p := newObjectParser(c1)
 
-	c, err := parseCommit(nil, &objectHeader{ObjectCommit, len(testCommit1)}, c1)
+	parsed, err := p.ParsePayload()
 	assertf(t, err == nil, "failed due to error")
+
+	c, _ := parsed.(Commit)
 
 	assert(t, c.tree.String() == testTreeSha.String())
 	assert(t, c.parents != nil && len(c.parents) != 0)

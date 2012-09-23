@@ -66,7 +66,8 @@ func trimLastStr(b []byte) string {
 // ================================================================= //
 
 type dataParser struct {
-	buf *bufio.Reader
+	buf  *bufio.Reader
+	read int // bytes read TODO make 64
 }
 
 // dataParse allows you to call a number of parsing functions on your
@@ -94,6 +95,7 @@ func (p *dataParser) consume(n int) []byte {
 	if rd, e := p.buf.Read(b); e != nil || rd != n {
 		panicErrf("expected: %d byte(s)", n)
 	}
+	p.read += n
 	return b
 }
 
@@ -113,15 +115,9 @@ func (p *dataParser) consumeUntil(delim byte) []byte {
 	return trimLast(b)
 }
 
-func (p *dataParser) AssertEOF() {
-	if _, e := p.buf.Peek(1); e != nil {
-		if e != io.EOF {
-			panicErrf("expecting: EOF")
-		} else {
-			return
-		}
-	}
-	panicErrf("expecting: EOF")
+// ResetRead resets the read byte count
+func (p *dataParser) ResetRead() {
+	p.read = 0
 }
 
 func (p *dataParser) EOF() bool {
@@ -233,32 +229,14 @@ func (p *dataParser) Bytes() []byte {
 	if e != nil {
 		panicErr(e.Error())
 	}
-	return b.Bytes()
+	bts := b.Bytes()
+	p.read += len(bts)
+	return bts
 }
 
 // ================================================================= //
 // SPECIALIZED PARSING FUNCTIONS
 // ================================================================= //
-
-// ParseObjectId reads the next OID_HEXSZ bytes from the
-// Reader and places the resulting object id in oid.
-func (p *dataParser) ParseObjectId() *ObjectId {
-	hex := string(p.consume(OID_HEXSZ))
-	oid, e := NewObjectIdFromString(hex)
-	if e != nil {
-		panicErrf("expected: hex string of size %d", OID_HEXSZ)
-	}
-	return oid
-}
-
-func (p *dataParser) ParseObjectIdBytes() *ObjectId {
-	b := p.consume(OID_SZ)
-	oid, e := NewObjectIdFromBytes(b)
-	if e != nil {
-		panicErrf("expected: hash bytes %d long", OID_SZ)
-	}
-	return oid
-}
 
 func parseInt(str string, base int, bitSize int) (i64 int64) {
 	var e error

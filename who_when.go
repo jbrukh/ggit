@@ -44,7 +44,7 @@ func (ww *WhoWhen) String() string {
 	return fmt.Sprintf(format, ww.Name(), ww.Email()) // TODO
 }
 
-func parseWhoWhen(p *dataParser, marker string) *WhoWhen {
+func (p *objectParser) parseWhoWhen(marker string) *WhoWhen {
 	p.ConsumeString(marker)
 	p.ConsumeByte(SP)
 	user := strings.Trim(p.ReadString(LT), string(SP))

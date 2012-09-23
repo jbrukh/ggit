@@ -1,7 +1,6 @@
 package ggit
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 )
@@ -42,36 +41,43 @@ func (t *Tag) WriteTo(w io.Writer) (n int, err error) {
 	return io.WriteString(w, t.String())
 }
 
-func parseTag(repo Repository, h *objectHeader, buf *bufio.Reader) (*Tag, error) {
-	p := &dataParser{buf}
+func (p *objectParser) parseTag() *Tag {
 	tag := new(Tag)
-	err := dataParse(func() {
-		// read the object id
-		p.ConsumeString(markerObject)
-		p.ConsumeByte(SP)
-		tag.object = p.ParseObjectId()
-		p.ConsumeByte(LF)
+	// read the object id
+	p.ConsumeString(markerObject)
+	p.ConsumeByte(SP)
+	tag.object = p.ParseObjectId()
+	p.ConsumeByte(LF)
 
-		// read object type
-		p.ConsumeString(markerType)
-		p.ConsumeByte(SP)
-		tag.objectType = ObjectType(p.ConsumeStrings(objectTypes))
-		p.ConsumeByte(LF)
+	// read object type
+	p.ConsumeString(markerType)
+	p.ConsumeByte(SP)
+	tag.objectType = ObjectType(p.ConsumeStrings(objectTypes))
+	p.ConsumeByte(LF)
 
-		// read the tag name
-		p.ConsumeString(markerTag)
-		p.ConsumeByte(SP)
-		tag.tag = p.ReadString(LF) // gets rid of the LF!
+	// read the tag name
+	p.ConsumeString(markerTag)
+	p.ConsumeByte(SP)
+	tag.tag = p.ReadString(LF) // gets rid of the LF!
 
+<<<<<<< HEAD
 		// read the tagger
 		tag.tagger = parseWhoWhen(p, markerTagger)
 		p.ConsumeByte(LF)
+=======
+	// read the tagger
+	p.ConsumeString(markerTagger)
+	p.ConsumeByte(SP)
+	tag.tagger = p.parseWhoWhen(markerTagger)
+	p.ConsumeByte(LF)
+>>>>>>> Save drastic broken changes.
 
-		// read the commit message
-		p.ConsumeByte(LF)
-		tag.message = p.String()
-	})
-	tag.repo = repo
-	tag.size = h.Size
-	return tag, err
+	// read the commit message
+	p.ConsumeByte(LF)
+	tag.message = p.String()
+	tag.size = p.hdr.Size
+
+	// TODO: check size
+
+	return tag
 }

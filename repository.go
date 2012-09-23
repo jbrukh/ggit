@@ -64,25 +64,9 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
 	defer rz.Close()
 
 	file := bufio.NewReader(rz)
+	p := newObjectParser(file)
 
-	h, err := parseObjectHeader(file)
-	if err != nil {
-		return
-	}
-
-	switch h.Type {
-	case ObjectBlob:
-		return parseBlob(r, h, file)
-	case ObjectTree:
-		return parseTree(r, h, file)
-	case ObjectCommit:
-		return parseCommit(r, h, file)
-	case ObjectTag:
-		return parseTag(r, h, file)
-	default:
-		panic("unsupported type")
-	}
-	return
+	return p.ParsePayload()
 }
 
 func (r *DiskRepository) Index() (idx *Index, err error) {

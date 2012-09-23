@@ -47,7 +47,8 @@ func assertPanicFree(t *testing.T, f func()) {
 
 func parserForBytes(b []byte) *dataParser {
 	return &dataParser{
-		bufio.NewReader(bytes.NewBuffer(b)),
+		buf:  bufio.NewReader(bytes.NewBuffer(b)),
+		read: 0,
 	}
 }
 
