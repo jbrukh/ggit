@@ -55,7 +55,7 @@ func min(a, b int) int {
 // The file mode of a tree entry implies an object type.
 func deduceObjectType(mode FileMode) ObjectType {
 	switch mode {
-	case ModeDeleted, ModeFile, ModeExecutable:
+	case ModeNew, ModeBlob, ModeBlobExec:
 		return ObjectBlob
 	case ModeTree:
 		return ObjectTree
