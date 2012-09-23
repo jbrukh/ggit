@@ -170,4 +170,8 @@ func Test_Count(t *testing.T) {
 	assert(t, t1.Count() == 7)
 	t1.ResetCount()
 	assert(t, t1.Count() == 0)
+	assertPanicFree(t, func() {
+		t1.String()
+	})
+	assert(t, t1.Count() == 6)
 }
