@@ -9,6 +9,12 @@ import (
 	"os"
 )
 
+var fVersion bool
+
+func init() {
+	flag.BoolVar(&fVersion, "version", false, "")
+}
+
 // ================================================================= //
 // GGIT COMMAND
 // ================================================================= //
@@ -16,6 +22,12 @@ import (
 func main() {
 	flag.Usage = usage
 	flag.Parse()
+
+	if fVersion {
+		fmt.Println("ggit version", Version)
+		os.Exit(0)
+	}
+
 	args := flag.Args()
 	if len(args) < 1 {
 		usage()

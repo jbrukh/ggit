@@ -17,6 +17,7 @@ func tmpl(w io.Writer, text string, data interface{}) {
 
 var usageTemplate = `usage: ggit [--version] <command> [<args>]
 
-Available commands:{{range .}}
-   {{.Name}}: {{.Description | printf "%20s"}}{{end}}
+Available commands:
+{{range .}}
+   {{.Name | printf "%-11s"}} {{.Description }}{{end}}
 `
