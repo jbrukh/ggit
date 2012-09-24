@@ -43,7 +43,7 @@ func main() {
 		cmd.Execute(cmd, args, os.Stdout)
 	} else {
 		fmt.Fprintf(os.Stderr, unknownCommandFormat, name)
-		//usage()
+		usage()
 	}
 }
 

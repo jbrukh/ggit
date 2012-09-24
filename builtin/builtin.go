@@ -21,7 +21,7 @@ func Get(name string) (*Builtin, bool) {
 }
 
 func All() []*Builtin {
-	b := make([]*Builtin, len(builtins))
+	b := make([]*Builtin, 0, len(builtins))
 	for _, v := range builtins {
 		b = append(b, v)
 	}
