@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/jbrukh/ggit/api"
 	"github.com/jbrukh/ggit/builtin"
 	"io"
 	"os"
@@ -48,15 +49,22 @@ func main() {
 		cmd.FlagSet.Usage = func() {
 			cmd.Usage(os.Stderr)
 		}
-		fmt.Println(args)
 		cmd.FlagSet.Parse(args[1:])
 		args = cmd.FlagSet.Args()
 
-		cmd.Execute(cmd, args, os.Stdout)
+		path, e := findRepo()
+		if e != nil {
+			fmt.Println(msgNotARepo)
+		}
+		cmd.Execute(cmd, args, path, os.Stdout)
 	} else {
-		fmt.Fprintf(os.Stderr, unknownCommandFormat, name)
+		fmt.Fprintf(os.Stderr, fmtUnknownCommand, name)
 		usage()
 	}
+}
+
+func findRepo() (string, error) {
+	return api.DEFAULT_GIT_DIR, nil
 }
 
 // ================================================================= //
@@ -69,7 +77,7 @@ func usage() {
 }
 
 func printUsage(w io.Writer) {
-	tmpl(w, usageTemplate, builtin.All())
+	tmpl(w, tmplUsage, builtin.All())
 }
 
 // ================================================================= //

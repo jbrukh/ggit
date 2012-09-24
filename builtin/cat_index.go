@@ -1,42 +1,40 @@
 package builtin
 
-// import (
-//     "fmt"
-//     "github.com/jbrukh/ggit"
-// )
-
-// //
-// // FLAGS, flags everywhere. Put them in your car, put them in your
-// // wallet, put them in your cubicle, shove them up your ass.
-// //
-
-// var catIndexFlags *flag.FlagSet = flag.NewFlagSet("cat-index", flag.ExitOnError)
+import (
+	"fmt"
+	"github.com/jbrukh/ggit/api"
+	"io"
+	"os"
+)
 
 // var (
-//     isType  *bool
-//     isPrint *bool
-//     isSize  *bool
+// 	fType, fPrint, fSize bool
 // )
 
-// func init() {
-//     isType = catFileFlags.Bool("t", false, "show object type")
-//     isPrint = catFileFlags.Bool("p", false, "pretty-print object's contents")
-//     isSize = catFileFlags.Bool("s", false, "show object size")
-// }
+var catIndexBuiltin = &Builtin{
+	Execute:     catIndex,
+	Name:        "cat-index",
+	Description: "Provide a debug dump of the index file",
+	UsageLine:   "cat-index",
+	ManPage:     "TODO",
+}
 
-// func CatIndex(args []string) (err error) {
+func init() {
+	// add to command list
+	Add(catIndexBuiltin)
+}
 
-//     repo, e := ggit.Open(ggit.DEFAULT_GIT_DIR)
-//     if e != nil {
-//         return e
-//     }
-//     defer repo.Close()
+func catIndex(b *Builtin, args []string, path string, w io.Writer) {
+	repo, e := api.Open(path)
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "could not open repo: %s", path)
+		return
+	}
+	defer repo.Close()
 
-//     inx, e := repo.Index()
-//     if e != nil {
-//         return e
-//     }
-//     fmt.Print(inx)
-
-//     return
-// }
+	inx, e := repo.Index()
+	if e != nil {
+		return
+	}
+	fmt.Fprint(w, inx)
+}

@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/jbrukh/ggit/api"
 	"io"
 	"text/template"
 )
-
-const unknownCommandFormat = "ggit: '%s' is not a ggit command. See 'ggit --help'.\n"
 
 // tmpl executes the given template text on data, writing the result to w.
 func tmpl(w io.Writer, text string, data interface{}) {
@@ -15,7 +14,17 @@ func tmpl(w io.Writer, text string, data interface{}) {
 	}
 }
 
-var usageTemplate = `usage: ggit [--version] <command> [<args>]
+// formatted messages
+const (
+	fmtUnknownCommand = "ggit: '%s' is not a ggit command. See 'ggit --help'.\n"
+)
+
+// constant messages
+const (
+	msgNotARepo = "fatal: Not a git repository (or any of the parent directories): " + api.DEFAULT_GIT_DIR
+)
+
+var tmplUsage = `usage: ggit [--version] <command> [<args>]
 
 Available commands:
 {{range .}}

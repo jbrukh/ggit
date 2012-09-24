@@ -29,7 +29,7 @@ func init() {
 	Add(catFileBuiltin)
 }
 
-func catFile(b *Builtin, args []string, w io.Writer) {
+func catFile(b *Builtin, args []string, path string, w io.Writer) {
 	if len(args) != 1 {
 		b.Usage(w)
 		return
@@ -48,7 +48,7 @@ func catFile(b *Builtin, args []string, w io.Writer) {
 	}
 
 	// TODO: perhaps not open the repo before parsing args?
-	if repo, err = api.Open(api.DEFAULT_GIT_DIR); err != nil {
+	if repo, err = api.Open(path); err != nil {
 		return
 	}
 	defer repo.Close()

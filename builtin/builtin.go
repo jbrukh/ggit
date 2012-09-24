@@ -32,7 +32,7 @@ func All() []*Builtin {
 // Builtin describes a built-in command
 type Builtin struct {
 	// ExecFunc describes the function that executes the command.
-	Execute func(cmd *Builtin, args []string, w io.Writer)
+	Execute func(b *Builtin, args []string, path string, w io.Writer)
 
 	// Name is the name of the command, a string with no spaces, 
 	// usually consistng of lowercase letters.
