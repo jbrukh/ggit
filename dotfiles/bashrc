@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 PROJECT=$GOPATH/src/github.com/jbrukh/ggit
 cd $PROJECT
 
