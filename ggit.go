@@ -52,11 +52,11 @@ func main() {
 		cmd.FlagSet.Parse(args[1:])
 		args = cmd.FlagSet.Args()
 
-		path, e := findRepo()
+		repo, e := openRepo()
 		if e != nil {
-			fmt.Println(msgNotARepo)
+			fmt.Println(e.Error())
 		}
-		cmd.Execute(cmd, args, path, os.Stdout)
+		cmd.Execute(cmd, args, repo, os.Stdout)
 	} else {
 		fmt.Fprintf(os.Stderr, fmtUnknownCommand, name)
 		usage()
@@ -65,6 +65,18 @@ func main() {
 
 func findRepo() (string, error) {
 	return api.DEFAULT_GIT_DIR, nil
+}
+
+func openRepo() (repo api.Repository, err error) {
+	var path string
+	path, err = findRepo()
+	if err != nil {
+		return nil, err
+	}
+	if repo, err = api.Open(path); err != nil {
+		return nil, err
+	}
+	return
 }
 
 // ================================================================= //

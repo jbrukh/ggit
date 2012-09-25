@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/jbrukh/ggit/api"
 	"io"
-	"os"
 )
 
 // var (
@@ -24,14 +23,7 @@ func init() {
 	Add(catIndexBuiltin)
 }
 
-func catIndex(b *Builtin, args []string, path string, w io.Writer) {
-	repo, e := api.Open(path)
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "could not open repo: %s", path)
-		return
-	}
-	defer repo.Close()
-
+func catIndex(b *Builtin, args []string, repo api.Repository, w io.Writer) {
 	inx, e := repo.Index()
 	if e != nil {
 		return

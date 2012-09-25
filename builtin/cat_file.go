@@ -29,29 +29,18 @@ func init() {
 	Add(catFileBuiltin)
 }
 
-func catFile(b *Builtin, args []string, path string, w io.Writer) {
+func catFile(b *Builtin, args []string, repo api.Repository, w io.Writer) {
 	if len(args) != 1 {
 		b.Usage(w)
 		return
 	}
-
 	id := args[0]
-	var (
-		repo *api.DiskRepository
-		oid  *api.ObjectId
-		err  error
-	)
-
-	// get a proper id
-	if oid, err = api.NewObjectIdFromString(id); err != nil {
+	oid, err := api.NewObjectIdFromString(id)
+	if err != nil {
+		// TODO
+		fmt.Fprintln(w, "unknown object")
 		return
 	}
-
-	// TODO: perhaps not open the repo before parsing args?
-	if repo, err = api.Open(path); err != nil {
-		return
-	}
-	defer repo.Close()
 
 	switch {
 	case fPrint:
@@ -69,7 +58,7 @@ func catFile(b *Builtin, args []string, path string, w io.Writer) {
 	}
 }
 
-func doPrint(repo *api.DiskRepository, oid *api.ObjectId) error {
+func doPrint(repo api.Repository, oid *api.ObjectId) error {
 	if obj, err := repo.ReadObject(oid); err != nil {
 		return errors.New(err.Error())
 	} else {
@@ -79,7 +68,7 @@ func doPrint(repo *api.DiskRepository, oid *api.ObjectId) error {
 	return nil
 }
 
-func doType(repo *api.DiskRepository, oid *api.ObjectId) (err error) {
+func doType(repo api.Repository, oid *api.ObjectId) (err error) {
 	var obj api.Object
 	if obj, err = repo.ReadObject(oid); err != nil {
 		return err
@@ -89,7 +78,7 @@ func doType(repo *api.DiskRepository, oid *api.ObjectId) (err error) {
 }
 
 // commenting until I figure out what size means in this context
-func doSize(repo *api.DiskRepository, oid *api.ObjectId) (err error) {
+func doSize(repo api.Repository, oid *api.ObjectId) (err error) {
 	var obj api.Object
 	if obj, err = repo.ReadObject(oid); err != nil {
 		return err
