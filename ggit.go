@@ -64,7 +64,7 @@ func main() {
 }
 
 func findRepo() (string, error) {
-	return api.DEFAULT_GIT_DIR, nil
+	return api.DefaultGitDir, nil
 }
 
 func openRepo() (repo api.Repository, err error) {

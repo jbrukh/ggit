@@ -21,7 +21,7 @@ const (
 
 // constant messages
 const (
-	msgNotARepo = "fatal: Not a git repository (or any of the parent directories): " + api.DEFAULT_GIT_DIR
+	msgNotARepo = "fatal: Not a git repository (or any of the parent directories): " + api.DefaultGitDir
 )
 
 var tmplUsage = `usage: ggit [--version] <command> [<args>]

@@ -9,8 +9,11 @@ import (
 	"path"
 )
 
-const DEFAULT_GIT_DIR = ".git"
-const INDEX_FILE = "index"
+const (
+	DefaultGitDir  = ".git"
+	IndexFile      = "index"
+	PackedRefsFile = "packed-refs"
+)
 
 // A Backend supports storage of arbitrary Git
 // objects without particular regard of the technical
@@ -77,7 +80,7 @@ func (r *DiskRepository) Index() (idx *Index, err error) {
 // IndexFile returns an open git index file. It is up to the
 // caller to close this resource.
 func (r *DiskRepository) indexFile() (file *os.File, err error) {
-	path := path.Join(r.path, INDEX_FILE)
+	path := path.Join(r.path, IndexFile)
 	return os.Open(path)
 }
 
