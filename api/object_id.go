@@ -135,7 +135,7 @@ func hex2byte(ch byte) (byte, error) {
 
 // ParseObjectId reads the next OID_HEXSZ bytes from the
 // Reader and places the resulting object id in oid.
-func (p *objectParser) ParseObjectId() *ObjectId {
+func (p *objectIdParser) ParseObjectId() *ObjectId {
 	hex := string(p.consume(OID_HEXSZ))
 	oid, e := NewObjectIdFromString(hex)
 	if e != nil {
@@ -144,7 +144,7 @@ func (p *objectParser) ParseObjectId() *ObjectId {
 	return oid
 }
 
-func (p *objectParser) ParseObjectIdBytes() *ObjectId {
+func (p *objectIdParser) ParseObjectIdBytes() *ObjectId {
 	b := p.consume(OID_SZ)
 	oid, e := NewObjectIdFromBytes(b)
 	if e != nil {

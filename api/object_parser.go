@@ -20,16 +20,18 @@ type objectHeader struct {
 // ================================================================= //
 
 type objectParser struct {
-	dataParser
+	objectIdParser
 	hdr *objectHeader
 }
 
 func newObjectParser(buf *bufio.Reader) *objectParser {
 	op := &objectParser{
-		hdr: nil,
-		dataParser: dataParser{
-			buf: buf,
+		objectIdParser: objectIdParser{
+			dataParser{
+				buf: buf,
+			},
 		},
+		hdr: nil,
 	}
 	return op
 }
@@ -72,10 +74,20 @@ func (p *objectParser) ParsePayload() (Object, error) {
 }
 
 // ================================================================= //
+// GGIT OBJECT ID PARSER
+// ================================================================= //
+
+type objectIdParser struct {
+	dataParser
+}
+
+// ================================================================= //
 // GGIT REF PARSER
 // ================================================================= //
 
-type refParser dataParser
+type refParser struct {
+	objectIdParser
+}
 
 // ================================================================= //
 // GGIT INDEX PARSER
