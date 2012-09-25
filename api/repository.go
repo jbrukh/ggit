@@ -43,10 +43,6 @@ func Open(path string) (r *DiskRepository, err error) {
 	return
 }
 
-// closing operations for a repository
-func (r *DiskRepository) Close() {
-}
-
 func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
 	var (
 		f  *os.File
