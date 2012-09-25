@@ -13,7 +13,7 @@ var (
 )
 
 var catFileBuiltin = &Builtin{
-	Execute:     CatFile,
+	Execute:     catFile,
 	Name:        "cat-file",
 	Description: "Provide content or type and size information for repository objects",
 	UsageLine:   "(-t|-s|-p) <object>",
@@ -29,7 +29,7 @@ func init() {
 	Add(catFileBuiltin)
 }
 
-func CatFile(b *Builtin, args []string, repo api.Repository, w io.Writer) {
+func catFile(b *Builtin, args []string, repo api.Repository, w io.Writer) {
 	if len(args) != 1 {
 		b.Usage(w)
 		return

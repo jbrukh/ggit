@@ -11,7 +11,7 @@ import (
 // )
 
 var catIndexBuiltin = &Builtin{
-	Execute:     CatIndex,
+	Execute:     catIndex,
 	Name:        "cat-index",
 	Description: "Provide a debug dump of the index file",
 	UsageLine:   "cat-index",
@@ -23,7 +23,7 @@ func init() {
 	Add(catIndexBuiltin)
 }
 
-func CatIndex(b *Builtin, args []string, repo api.Repository, w io.Writer) {
+func catIndex(b *Builtin, args []string, repo api.Repository, w io.Writer) {
 	inx, e := repo.Index()
 	if e != nil {
 		return
