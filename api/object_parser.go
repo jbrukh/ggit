@@ -89,6 +89,16 @@ type refParser struct {
 	objectIdParser
 }
 
+func newRefParser(buf *bufio.Reader) *refParser {
+	return &refParser{
+		objectIdParser: objectIdParser{
+			dataParser{
+				buf: buf,
+			},
+		},
+	}
+}
+
 // ================================================================= //
 // GGIT INDEX PARSER
 // ================================================================= //

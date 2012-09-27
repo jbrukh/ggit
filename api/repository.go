@@ -27,11 +27,13 @@ type Backend interface {
 type Repository interface {
 	Backend
 	Index() (idx *Index, err error)
+	PackedRefs() (pr PackedRefs, err error)
 }
 
 // a representation of a git repository
 type DiskRepository struct {
 	path string
+	pr   PackedRefs
 }
 
 // open a reprository that is located at the given path
@@ -77,6 +79,21 @@ func (r *DiskRepository) Index() (idx *Index, err error) {
 	return toIndex(bufio.NewReader(file))
 }
 
+func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
+	if r.pr == nil {
+		file, e := r.packedRefsFile()
+		if e != nil {
+			return nil, e
+		}
+		defer file.Close()
+		p := newRefParser(bufio.NewReader(file))
+		if r.pr, e = p.ParsePackedRefs(); e != nil {
+			return nil, e
+		}
+	}
+	return r.pr, nil
+}
+
 // IndexFile returns an open git index file. It is up to the
 // caller to close this resource.
 func (r *DiskRepository) indexFile() (file *os.File, err error) {
@@ -89,6 +106,13 @@ func (r *DiskRepository) indexFile() (file *os.File, err error) {
 func (r *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error) {
 	hex := oid.String()
 	path := path.Join(r.path, "objects", hex[0:2], hex[2:])
+	return os.Open(path)
+}
+
+// packedRefsFile returns an open git packed refs file. It is the
+// responsibility of the caller to close it.
+func (r *DiskRepository) packedRefsFile() (file *os.File, err error) {
+	path := path.Join(r.path, PackedRefsFile)
 	return os.Open(path)
 }
 
