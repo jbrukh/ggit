@@ -28,6 +28,7 @@ type Repository interface {
 	Backend
 	Index() (idx *Index, err error)
 	PackedRefs() (pr PackedRefs, err error)
+	ReadRef(refPath string) (*RefEntry, error)
 }
 
 // a representation of a git repository
@@ -94,6 +95,28 @@ func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
 	return r.pr, nil
 }
 
+func (r *DiskRepository) ReadRef(refPath string) (re *RefEntry, err error) {
+	// TODO: validate ref
+	file, e := r.refFile(refPath)
+	if e != nil {
+		return nil, e
+	}
+	defer file.Close()
+	p := newRefParser(bufio.NewReader(file))
+	var oid *ObjectId
+	if oid, err = p.ParseRefFile(); e != nil {
+		return nil, e
+	}
+	return &RefEntry{
+		oid,
+		refPath,
+	}, nil
+}
+
+// ================================================================= //
+// PRIVATE METHODS
+// ================================================================= //
+
 // IndexFile returns an open git index file. It is up to the
 // caller to close this resource.
 func (r *DiskRepository) indexFile() (file *os.File, err error) {
@@ -113,6 +136,11 @@ func (r *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error) {
 // responsibility of the caller to close it.
 func (r *DiskRepository) packedRefsFile() (file *os.File, err error) {
 	path := path.Join(r.path, PackedRefsFile)
+	return os.Open(path)
+}
+
+func (r *DiskRepository) refFile(refPath string) (file *os.File, err error) {
+	path := path.Join(r.path, refPath)
 	return os.Open(path)
 }
 

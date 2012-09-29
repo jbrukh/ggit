@@ -24,9 +24,13 @@ func (p *objectParser) parseRef() *Ref {
 	return r
 }
 
-type PackedRef struct {
+type RefEntry struct {
 	oid     *ObjectId
 	refPath string
+}
+
+type PackedRef struct {
+	RefEntry
 
 	// if this is an annotated tag
 	// we may have the pointed to commit here
@@ -34,9 +38,17 @@ type PackedRef struct {
 	cid *ObjectId
 }
 
-func (p *PackedRef) String() string {
+func (p *RefEntry) String() string {
 	const format = "%s %s"
 	return fmt.Sprintf(format, p.oid, p.refPath)
+}
+
+func (p *PackedRef) String() string {
+	const format = "%s %s%s"
+	if p.cid != nil {
+		return fmt.Sprintf(format, p.cid, p.refPath, "^{}")
+	}
+	return fmt.Sprintf(format, p.oid, p.refPath, "")
 }
 
 type PackedRefs []*PackedRef
@@ -65,11 +77,21 @@ func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 				}
 			default:
 				r = append(r, &PackedRef{
-					oid:     p.ParseObjectId(),
-					refPath: p.ReadString(LF),
+					RefEntry: RefEntry{
+						oid:     p.ParseObjectId(),
+						refPath: p.ReadString(LF),
+					},
 				})
 			}
 		}
 	})
 	return r, err
+}
+
+func (p *refParser) ParseRefFile() (oid *ObjectId, err error) {
+	err = dataParse(func() {
+		oid = p.ParseObjectId()
+		p.ConsumeByte(LF)
+	})
+	return oid, err
 }

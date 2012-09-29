@@ -35,11 +35,11 @@ func main() {
 	}
 
 	// what builtin are we trying to call?
-	name := args[0]
+	name, args := args[0], args[1:]
 
 	// TODO make this into a command
 	if name == "help" {
-		help(args[1:])
+		help(args)
 		return
 	}
 
