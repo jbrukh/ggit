@@ -38,6 +38,10 @@ func (b *CatFileBuiltin) Info() *HelpInfo {
 }
 
 func (b *CatFileBuiltin) Execute(p *Params, args []string) {
+	fs := HelpInfo.FlagSet
+	fs.Parse(args)
+	args = fs.Args()
+
 	if len(args) != 1 {
 		b.HelpInfo.Usage(p.Werr)
 		return
@@ -84,7 +88,6 @@ func (b *CatFileBuiltin) ShowType(p *Params, oid *api.ObjectId) (err error) {
 	return
 }
 
-// commenting until I figure out what size means in this context
 func (b *CatFileBuiltin) ShowSize(p *Params, oid *api.ObjectId) (err error) {
 	var obj api.Object
 	if obj, err = p.Repo.ReadObject(oid); err != nil {
