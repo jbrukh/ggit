@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"compress/zlib"
 	"errors"
+
 	"io"
+
 	"os"
 	"path"
+	"path/filepath"
 )
 
 const (
@@ -29,6 +32,7 @@ type Repository interface {
 	Index() (idx *Index, err error)
 	PackedRefs() (pr PackedRefs, err error)
 	ReadRef(refPath string) (*RefEntry, error)
+	ReadRefs() ([]*RefEntry, error)
 }
 
 // a representation of a git repository
@@ -111,6 +115,45 @@ func (r *DiskRepository) ReadRef(refPath string) (re *RefEntry, err error) {
 		oid,
 		refPath,
 	}, nil
+}
+
+func (r *DiskRepository) ReadRefs() ([]*RefEntry, error) {
+	refs := make([]*RefEntry, 0)
+	dir := path.Join(r.path, "refs")
+
+	err := filepath.Walk(dir,
+		func(path string, f os.FileInfo, err error) error {
+			if !f.IsDir() {
+				file, e := os.Open(path)
+				if e != nil {
+					return e
+				}
+				p := newRefParser(bufio.NewReader(file))
+				var oid *ObjectId
+				if oid, err = p.ParseRefFile(); e != nil {
+					return e
+				}
+				re := &RefEntry{
+					oid,
+					trimPrefix(path, r.path+"/"),
+				}
+				refs = append(refs, re)
+			}
+			return nil
+		},
+	)
+	return refs, err
+}
+
+func trimPrefix(str, prefix string) string {
+	for _, v := range prefix {
+		if len(str) > 0 && uint8(v) == str[0] {
+			str = str[1:]
+		} else {
+			panic("prefix doesn't match")
+		}
+	}
+	return str
 }
 
 // ================================================================= //

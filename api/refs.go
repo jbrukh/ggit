@@ -44,11 +44,7 @@ func (p *RefEntry) String() string {
 }
 
 func (p *PackedRef) String() string {
-	const format = "%s %s%s"
-	if p.cid != nil {
-		return fmt.Sprintf(format, p.cid, p.refPath, "^{}")
-	}
-	return fmt.Sprintf(format, p.oid, p.refPath, "")
+	return p.RefEntry.String()
 }
 
 type PackedRefs []*PackedRef
@@ -76,11 +72,13 @@ func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 					r[l-1].cid = cid
 				}
 			default:
+				re := new(RefEntry)
+				re.oid = p.ParseObjectId()
+				p.ConsumeByte(SP)
+				re.refPath = p.ReadString(LF)
+
 				r = append(r, &PackedRef{
-					RefEntry: RefEntry{
-						oid:     p.ParseObjectId(),
-						refPath: p.ReadString(LF),
-					},
+					RefEntry: *re,
 				})
 			}
 		}
