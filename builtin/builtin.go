@@ -13,20 +13,20 @@ import (
 // ================================================================= //
 
 // the set of supported builtin commands for ggit
-var builtins = make(map[string]*Builtin)
+var builtins = make(map[string]Builtin)
 
 // add a builtin command
-func Add(cmd *Builtin) {
-	builtins[cmd.Name] = cmd
+func Add(b Builtin) {
+	builtins[b.Info().Name] = b
 }
 
-func Get(name string) (*Builtin, bool) {
+func Get(name string) (Builtin, bool) {
 	b, ok := builtins[name]
 	return b, ok
 }
 
-func All() []*Builtin {
-	b := make([]*Builtin, 0, len(builtins))
+func All() []Builtin {
+	b := make([]Builtin, 0, len(builtins))
 	for _, v := range builtins {
 		b = append(b, v)
 	}
@@ -44,10 +44,13 @@ type Params struct {
 	Werr io.Writer
 }
 
+type Builtin interface {
+	Info() *HelpInfo
+	Execute(p *Params, args []string)
+}
+
 // Builtin describes a built-in command
-type Builtin struct {
-	// ExecFunc describes the function that executes the command.
-	Execute func(p *Params, b *Builtin, args []string)
+type HelpInfo struct {
 
 	// Name is the name of the command, a string with no spaces, 
 	// usually consistng of lowercase letters.
@@ -66,8 +69,8 @@ type Builtin struct {
 	FlagSet flag.FlagSet
 }
 
-func (c *Builtin) Usage(w io.Writer) {
+func (info *HelpInfo) Usage(w io.Writer) {
 	// TODO: review
-	fmt.Fprintf(w, "usage: %s %s\n\n", c.Name, c.UsageLine)
-	fmt.Fprintf(w, "%s\n", strings.TrimSpace(c.ManPage))
+	fmt.Fprintf(w, "usage: %s %s\n\n", info.Name, info.UsageLine)
+	fmt.Fprintf(w, "%s\n", strings.TrimSpace(info.ManPage))
 }

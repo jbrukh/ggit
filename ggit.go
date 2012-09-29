@@ -46,12 +46,6 @@ func main() {
 	// get the builtin
 	cmd, ok := builtin.Get(name)
 	if ok {
-		cmd.FlagSet.Usage = func() {
-			cmd.Usage(os.Stderr)
-		}
-		cmd.FlagSet.Parse(args[1:])
-		args = cmd.FlagSet.Args()
-
 		repo, e := openRepo()
 		if e != nil {
 			fmt.Println(e.Error())
@@ -60,7 +54,7 @@ func main() {
 			repo,
 			os.Stdout,
 			os.Stderr,
-		}, cmd, args)
+		}, args)
 	} else {
 		fmt.Fprintf(os.Stderr, fmtUnknownCommand, name)
 		usage()
