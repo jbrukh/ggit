@@ -2,8 +2,6 @@ package builtin
 
 import (
 	"fmt"
-	"github.com/jbrukh/ggit/api"
-	"io"
 )
 
 // var (
@@ -23,10 +21,10 @@ func init() {
 	Add(catIndexBuiltin)
 }
 
-func catIndex(b *Builtin, args []string, repo api.Repository, w io.Writer) {
-	inx, e := repo.Index()
+func catIndex(p *Params, b *Builtin, args []string) {
+	inx, e := p.Repo.Index()
 	if e != nil {
 		return
 	}
-	fmt.Fprint(w, inx)
+	fmt.Fprint(p.Wout, inx)
 }

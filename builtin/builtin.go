@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+// ================================================================= //
+// 
+// ================================================================= //
+
 // the set of supported builtin commands for ggit
 var builtins = make(map[string]*Builtin)
 
@@ -30,10 +34,20 @@ func All() []*Builtin {
 	return b
 }
 
+// ================================================================= //
+// BUILTIN
+// ================================================================= //
+
+type Params struct {
+	Repo api.Repository
+	Wout io.Writer
+	Werr io.Writer
+}
+
 // Builtin describes a built-in command
 type Builtin struct {
 	// ExecFunc describes the function that executes the command.
-	Execute func(b *Builtin, args []string, repo api.Repository, w io.Writer)
+	Execute func(p *Params, b *Builtin, args []string)
 
 	// Name is the name of the command, a string with no spaces, 
 	// usually consistng of lowercase letters.

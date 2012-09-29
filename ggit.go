@@ -56,7 +56,11 @@ func main() {
 		if e != nil {
 			fmt.Println(e.Error())
 		}
-		cmd.Execute(cmd, args, repo, os.Stdout)
+		cmd.Execute(&builtin.Params{
+			repo,
+			os.Stdout,
+			os.Stderr,
+		}, cmd, args)
 	} else {
 		fmt.Fprintf(os.Stderr, fmtUnknownCommand, name)
 		usage()

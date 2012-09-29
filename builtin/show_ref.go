@@ -2,8 +2,6 @@ package builtin
 
 import (
 	"fmt"
-	"github.com/jbrukh/ggit/api"
-	"io"
 )
 
 // var (
@@ -23,13 +21,13 @@ func init() {
 	Add(showRefBuiltin)
 }
 
-func showRef(b *Builtin, args []string, repo api.Repository, w io.Writer) {
-	r, e := repo.PackedRefs()
+func showRef(p *Params, b *Builtin, args []string) {
+	r, e := p.Repo.PackedRefs()
 	if e != nil {
-		fmt.Fprint(w, "could not read packed refs")
+		fmt.Fprint(p.Wout, "could not read packed refs")
 		return
 	}
 	for _, v := range r {
-		fmt.Fprintf(w, "%s\n", v.String())
+		fmt.Fprintf(p.Wout, "%s\n", v.String())
 	}
 }

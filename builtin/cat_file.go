@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
-	"io"
 	"os"
 )
 
@@ -12,7 +11,7 @@ var (
 	fType, fPrint, fSize bool
 )
 
-var catFileBuiltin = &Builtin{
+var catFileInfo = &Builtin{
 	Execute:     catFile,
 	Name:        "cat-file",
 	Description: "Provide content or type and size information for repository objects",
@@ -21,40 +20,40 @@ var catFileBuiltin = &Builtin{
 }
 
 func init() {
-	catFileBuiltin.FlagSet.BoolVar(&fType, "t", false, "show object type")
-	catFileBuiltin.FlagSet.BoolVar(&fPrint, "p", false, "pretty-print object's contents")
-	catFileBuiltin.FlagSet.BoolVar(&fSize, "s", false, "show object size")
+	catFileInfo.FlagSet.BoolVar(&fType, "t", false, "show object type")
+	catFileInfo.FlagSet.BoolVar(&fPrint, "p", false, "pretty-print object's contents")
+	catFileInfo.FlagSet.BoolVar(&fSize, "s", false, "show object size")
 
 	// add to command list
-	Add(catFileBuiltin)
+	Add(catFileInfo)
 }
 
-func catFile(b *Builtin, args []string, repo api.Repository, w io.Writer) {
+func catFile(p *Params, b *Builtin, args []string) {
 	if len(args) != 1 {
-		b.Usage(w)
+		b.Usage(p.Werr)
 		return
 	}
 	id := args[0]
 	oid, err := api.NewObjectIdFromString(id)
 	if err != nil {
 		// TODO
-		fmt.Fprintln(w, "unknown object")
+		fmt.Fprintln(p.Werr, "unknown object")
 		return
 	}
 
 	switch {
 	case fPrint:
-		err = doPrint(repo, oid)
+		err = doPrint(p.Repo, oid)
 	case fType:
-		err = doType(repo, oid)
+		err = doType(p.Repo, oid)
 	case fSize:
-		err = doSize(repo, oid)
+		err = doSize(p.Repo, oid)
 	default:
 		panic("should not get here")
 	}
 
 	if err != nil {
-		fmt.Fprintln(w, err.Error())
+		fmt.Fprintln(p.Werr, err.Error())
 	}
 }
 
