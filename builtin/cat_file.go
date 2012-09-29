@@ -9,9 +9,9 @@ import (
 
 func init() {
 	fs := CatFile.HelpInfo.FlagSet
-	fs.BoolVar(&CatFile.ShowType, "t", false, "show object type")
-	fs.BoolVar(&CatFile.ShowSize, "p", false, "pretty-print object's contents")
-	fs.BoolVar(&CatFile.PrettyPrint, "s", false, "show object size")
+	fs.BoolVar(&CatFile.flagShowType, "t", false, "show object type")
+	fs.BoolVar(&CatFile.flagShowSize, "p", false, "pretty-print object's contents")
+	fs.BoolVar(&CatFile.flagPrettyPrint, "s", false, "show object size")
 
 	// add to command list
 	Add(CatFile)
@@ -19,9 +19,9 @@ func init() {
 
 type CatFileBuiltin struct {
 	HelpInfo
-	ShowType    bool
-	ShowSize    bool
-	PrettyPrint bool
+	flagShowType    bool
+	flagShowSize    bool
+	flagPrettyPrint bool
 }
 
 var CatFile = &CatFileBuiltin{
@@ -50,12 +50,12 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 	}
 
 	switch {
-	case b.PrettyPrint:
-		err = b.doPrint(p.Repo, oid)
-	case b.ShowType:
-		err = b.doType(p.Repo, oid)
-	case b.ShowSize:
-		err = b.doSize(p.Repo, oid)
+	case b.flagPrettyPrint:
+		err = b.PrettyPrint(p, oid)
+	case b.flagShowType:
+		err = b.ShowType(p, oid)
+	case b.flagShowSize:
+		err = b.ShowSize(p, oid)
 	default:
 		panic("should not get here")
 	}
@@ -65,8 +65,8 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 	}
 }
 
-func (b *CatFileBuiltin) doPrint(repo api.Repository, oid *api.ObjectId) error {
-	if obj, err := repo.ReadObject(oid); err != nil {
+func (b *CatFileBuiltin) PrettyPrint(p *Params, oid *api.ObjectId) error {
+	if obj, err := p.Repo.ReadObject(oid); err != nil {
 		return errors.New(err.Error())
 	} else {
 		obj.WriteTo(os.Stdout)
@@ -75,9 +75,9 @@ func (b *CatFileBuiltin) doPrint(repo api.Repository, oid *api.ObjectId) error {
 	return nil
 }
 
-func (b *CatFileBuiltin) doType(repo api.Repository, oid *api.ObjectId) (err error) {
+func (b *CatFileBuiltin) ShowType(p *Params, oid *api.ObjectId) (err error) {
 	var obj api.Object
-	if obj, err = repo.ReadObject(oid); err != nil {
+	if obj, err = p.Repo.ReadObject(oid); err != nil {
 		return err
 	}
 	fmt.Println(obj.Type())
@@ -85,9 +85,9 @@ func (b *CatFileBuiltin) doType(repo api.Repository, oid *api.ObjectId) (err err
 }
 
 // commenting until I figure out what size means in this context
-func (b *CatFileBuiltin) doSize(repo api.Repository, oid *api.ObjectId) (err error) {
+func (b *CatFileBuiltin) ShowSize(p *Params, oid *api.ObjectId) (err error) {
 	var obj api.Object
-	if obj, err = repo.ReadObject(oid); err != nil {
+	if obj, err = p.Repo.ReadObject(oid); err != nil {
 		return err
 	}
 	fmt.Println(obj.Size())
