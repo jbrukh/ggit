@@ -29,4 +29,6 @@ var tmplUsage = `usage: ggit [--version] <command> [<args>]
 Available commands:
 {{range .}}
    {{.Info.Name | printf "%-11s"}} {{.Info.Description }}{{end}}
+
+See 'ggit help <command>' for more information on a specific command.
 `
