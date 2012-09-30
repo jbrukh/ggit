@@ -67,7 +67,7 @@ func Test_ConsumePeekString(t *testing.T) {
 }
 
 func Test_dataParse(t *testing.T) {
-	err := dataParse(func() {
+	err := safeParse(func() {
 		// we only care about parseErr's
 		panic(errors.New("not a parseErr"))
 	})
@@ -75,7 +75,7 @@ func Test_dataParse(t *testing.T) {
 		t.Error("threw an error when not supposed to")
 	}
 
-	err = dataParse(func() {
+	err = safeParse(func() {
 		panicErr("this is a parse error")
 	})
 	if err == nil {

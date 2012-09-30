@@ -176,17 +176,6 @@ func (r *DiskRepository) PeelRef(symbolic string) (*ObjectId, error) {
 	return nil, nil // TODO
 }
 
-func trimPrefix(str, prefix string) string {
-	for _, v := range prefix {
-		if len(str) > 0 && uint8(v) == str[0] {
-			str = str[1:]
-		} else {
-			panic("prefix doesn't match")
-		}
-	}
-	return str
-}
-
 // ================================================================= //
 // PRIVATE METHODS
 // ================================================================= //

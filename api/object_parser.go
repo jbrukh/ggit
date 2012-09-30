@@ -37,7 +37,7 @@ func newObjectParser(buf *bufio.Reader) *objectParser {
 }
 
 func (p *objectParser) ParseHeader() (*objectHeader, error) {
-	err := dataParse(func() {
+	err := safeParse(func() {
 		p.hdr = new(objectHeader)
 		p.hdr.Type = ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
@@ -56,7 +56,7 @@ func (p *objectParser) ParsePayload() (Object, error) {
 		err error
 	)
 
-	err = dataParse(func() {
+	err = safeParse(func() {
 		switch p.hdr.Type {
 		case ObjectBlob:
 			obj = p.parseBlob()

@@ -69,6 +69,33 @@ func deduceObjectType(mode FileMode) ObjectType {
 }
 
 // ================================================================= //
+// HELPERS
+// ================================================================= //
+
+// trimLast throws away the last character of a byte slice
+func trimLast(b []byte) []byte {
+	if b == nil || len(b) == 0 {
+		return b
+	}
+	return b[:len(b)-1]
+}
+
+func trimLastStr(b []byte) string {
+	return string(trimLast(b))
+}
+
+func trimPrefix(str, prefix string) string {
+	for _, v := range prefix {
+		if len(str) > 0 && uint8(v) == str[0] {
+			str = str[1:]
+		} else {
+			panic("prefix doesn't match")
+		}
+	}
+	return str
+}
+
+// ================================================================= //
 // METHODS FOR TESTING
 // ================================================================= //
 

@@ -54,7 +54,7 @@ type PackedRefs []*PackedRef
 
 func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 	r := make(PackedRefs, 0)
-	err := dataParse(func() {
+	err := safeParse(func() {
 		for !p.EOF() {
 			c := p.PeekByte()
 			switch c {
@@ -90,7 +90,7 @@ func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 }
 
 func (p *refParser) ParseRefFile() (oid *ObjectId, err error) {
-	err = dataParse(func() {
+	err = safeParse(func() {
 		oid = p.ParseObjectId()
 		p.ConsumeByte(LF)
 	})

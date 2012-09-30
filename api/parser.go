@@ -46,22 +46,6 @@ func panicErrf(format string, items ...interface{}) {
 }
 
 // ================================================================= //
-// HELPERS
-// ================================================================= //
-
-// trimLast throws away the last character of a byte slice
-func trimLast(b []byte) []byte {
-	if b == nil || len(b) == 0 {
-		return b
-	}
-	return b[:len(b)-1]
-}
-
-func trimLastStr(b []byte) string {
-	return string(trimLast(b))
-}
-
-// ================================================================= //
 // DATA PARSER
 // ================================================================= //
 
@@ -70,11 +54,11 @@ type dataParser struct {
 	count int
 }
 
-// dataParse allows you to call a number of parsing functions on your
+// safeParse allows you to call a number of parsing functions on your
 // parser at once, without having to handle errors explicitly. If an
 // error occurs, the parser commands will panic with parseErr, which
 // this method will recover and return
-func dataParse(f func()) (err error) {
+func safeParse(f func()) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			if e, ok := r.(parseErr); ok {
