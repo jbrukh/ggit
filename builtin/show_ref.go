@@ -49,8 +49,8 @@ func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
 	//fmt.Println("getting ", args)
 	if len(args) > 0 {
 		// we want to see a particular ref
-		refstr := args[0]
-		b.WithSuffix(p, refstr)
+		pattern := args[0]
+		b.WithPattern(p, pattern)
 	} else {
 		if refs, e := p.Repo.Refs(); e != nil {
 			fmt.Fprintln(p.Werr, e.Error())
@@ -94,7 +94,7 @@ func matchRefs(full, partial string) bool {
 	return true
 }
 
-func (b *ShowRefBuiltin) WithSuffix(p *Params, pattern string) {
+func (b *ShowRefBuiltin) WithPattern(p *Params, pattern string) {
 	refs, e := p.Repo.Refs()
 	if e != nil {
 		fmt.Fprintln(p.Werr, e.Error())
