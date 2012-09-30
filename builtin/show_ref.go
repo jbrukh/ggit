@@ -73,13 +73,34 @@ func filterRefs(refs []api.Ref, f func(api.Ref) bool) []api.Ref {
 	return r
 }
 
-func (b *ShowRefBuiltin) WithSuffix(p *Params, suffix string) {
+// matchRefs performs the matching of a partial ref with a full (or longer)
+// ref. Matching occurs from the end and matches on completed parts of the
+// name. So for instance, refs/heads/master and master would match, but "ter"
+// would not match the former.
+func matchRefs(full, partial string) bool {
+	const SL = "/"
+	f, p := strings.Split(full, SL), strings.Split(partial, SL)
+	i, j := len(f), len(p)
+	if i == 0 || j == 0 || i < j { // partial must be shorter
+		return false
+	}
+	for j > 0 {
+		i--
+		j--
+		if f[i] != p[j] {
+			return false
+		}
+	}
+	return true
+}
+
+func (b *ShowRefBuiltin) WithSuffix(p *Params, pattern string) {
 	refs, e := p.Repo.Refs()
 	if e != nil {
 		fmt.Fprintln(p.Werr, e.Error())
 	}
 	filtered := filterRefs(refs, func(ref api.Ref) bool {
-		return strings.HasSuffix(ref.Name(), suffix)
+		return matchRefs(ref.Name(), pattern)
 	})
 	for _, v := range filtered {
 		fmt.Fprintln(p.Wout, v.String())
