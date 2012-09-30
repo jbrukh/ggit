@@ -99,7 +99,7 @@ func (r *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 }
 
 func (r *DiskRepository) Index() (idx *Index, err error) {
-	file, e := r.indexFile()
+	file, e := r.relativeFile(IndexFile)
 	if e != nil {
 		return nil, e
 	}
@@ -108,12 +108,12 @@ func (r *DiskRepository) Index() (idx *Index, err error) {
 }
 
 func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
-		file, e := r.packedRefsFile()
-		if e != nil {
-			return nil, e
-		}
-		defer file.Close()
-		p := newRefParser(bufio.NewReader(file))
+	file, e := r.relativeFile(PackedRefsFile)
+	if e != nil {
+		return nil, e
+	}
+	defer file.Close()
+	p := newRefParser(bufio.NewReader(file))
 	if pr, e = p.ParsePackedRefs(); e != nil {
 			return nil, e
 		}
@@ -228,25 +228,11 @@ func (r *DiskRepository) PeelRef(refpath string) (*ObjectId, error) {
 // PRIVATE METHODS
 // ================================================================= //
 
-// IndexFile returns an open git index file. It is up to the
-// caller to close this resource.
-func (r *DiskRepository) indexFile() (file *os.File, err error) {
-	path := path.Join(r.path, IndexFile)
-	return os.Open(path)
-}
-
 // turn an oid into a path relative to the
 // git directory of a repository
 func (r *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error) {
 	hex := oid.String()
 	path := path.Join(r.path, DefaultObjectsDir, hex[0:2], hex[2:])
-	return os.Open(path)
-}
-
-// packedRefsFile returns an open git packed refs file. It is the
-// responsibility of the caller to close it.
-func (r *DiskRepository) packedRefsFile() (file *os.File, err error) {
-	path := path.Join(r.path, PackedRefsFile)
 	return os.Open(path)
 }
 
