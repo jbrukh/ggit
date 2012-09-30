@@ -1,7 +1,6 @@
 package builtin
 
 import (
-	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
 	"io"
@@ -51,7 +50,6 @@ type Builtin interface {
 
 // Builtin describes a built-in command
 type HelpInfo struct {
-
 	// Name is the name of the command, a string with no spaces, 
 	// usually consistng of lowercase letters.
 	Name string
@@ -64,9 +62,6 @@ type HelpInfo struct {
 
 	// ManPage display's this command's man page.
 	ManPage string
-
-	// Flag is a set of flags specific to this command.
-	FlagSet flag.FlagSet
 }
 
 func (info *HelpInfo) Usage(w io.Writer) {

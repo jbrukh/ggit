@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"io"
 )
 
 // ================================================================= //
@@ -53,8 +52,8 @@ func (c *Commit) String() string {
 	return fmt.Sprintf(FMT, c.tree, parentsToString(c.parents), c.author, c.committer, c.message)
 }
 
-func (c *Commit) WriteTo(w io.Writer) (n int, err error) {
-	return io.WriteString(w, c.String())
+func (f *Formatter) FormatCommit(c *Commit) (int, error) {
+	return fmt.Fprint(f.W, c.String())
 }
 
 func (c *Commit) addParent(oid *ObjectId) {

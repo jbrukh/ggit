@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"hash"
 )
 
@@ -161,4 +162,8 @@ func (p *objectIdParser) ParseObjectIdBytes() *ObjectId {
 		panicErrf("expected: hash bytes %d long", OID_SZ)
 	}
 	return oid
+}
+
+func (f *Formatter) FormatObjectId(oid *ObjectId) {
+	fmt.Fprint(f.W, oid.String())
 }

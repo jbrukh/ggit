@@ -1,8 +1,8 @@
 package api
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 )
 
 // ================================================================= //
@@ -28,16 +28,23 @@ func (t *Tree) Size() int {
 	return t.size
 }
 
-func (t *Tree) WriteTo(w io.Writer) (n int, err error) {
+func (t *Tree) String() string {
+	b := bytes.NewBufferString("")
+	f := &Formatter{b}
+	f.FormatTree(t)
+	return b.String()
+}
+
+func (f *Formatter) FormatTree(t *Tree) (int, error) {
+	N := 0
 	for _, e := range t.entries {
-		s := fmt.Sprintf("%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)
-		N, err := io.WriteString(w, s)
+		n, err := fmt.Fprintf(f.W, "%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)
+		N += n
 		if err != nil {
-			break // TODO: is the error above shadowing err??
+			return N, err
 		}
-		n += N
 	}
-	return
+	return N, nil
 }
 
 // ================================================================= //

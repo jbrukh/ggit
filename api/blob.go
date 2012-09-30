@@ -1,7 +1,7 @@
 package api
 
 import (
-	"io"
+	"fmt"
 )
 
 // ================================================================= //
@@ -28,8 +28,8 @@ func (b *Blob) Size() int {
 	return b.size
 }
 
-func (b *Blob) WriteTo(w io.Writer) (n int, err error) {
-	return io.WriteString(w, b.String())
+func (f *Formatter) FormatBlob(b *Blob) (int, error) {
+	return fmt.Fprint(f.W, b.String())
 }
 
 // ================================================================= //

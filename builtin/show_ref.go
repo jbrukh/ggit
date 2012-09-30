@@ -1,18 +1,13 @@
 package builtin
 
 import (
+	"flag"
 	"fmt"
 )
 
-func init() {
-	fs := ShowRef.HelpInfo.FlagSet
-	fs.BoolVar(&ShowRef.flagQuiet, "quiet", false, "Do not print any results to stdout.")
-	// add to command list
-	Add(ShowRef)
-}
-
 type ShowRefBuiltin struct {
 	HelpInfo
+	flags     flag.FlagSet
 	flagQuiet bool
 }
 
@@ -25,14 +20,21 @@ var ShowRef = &ShowRefBuiltin{
 	},
 }
 
+//var flags flag.FlagSet
+
+func init() {
+	ShowRef.flags.BoolVar(&ShowRef.flagQuiet, "q", false, "Do not print any results to stdout.")
+	// add to command list
+	Add(ShowRef)
+}
+
 func (b *ShowRefBuiltin) Info() *HelpInfo {
 	return &b.HelpInfo
 }
 
 func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
-	fs := b.HelpInfo.FlagSet
-	fs.Parse(args)
-	args = fs.Args()
+	ShowRef.flags.Parse(args)
+	args = ShowRef.flags.Args()
 
 	//fmt.Println("getting ", args)
 	if len(args) > 0 {

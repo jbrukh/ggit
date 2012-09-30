@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"io"
 )
 
 const (
@@ -36,8 +35,8 @@ func (t *Tag) Size() int {
 	return t.size
 }
 
-func (t *Tag) WriteTo(w io.Writer) (n int, err error) {
-	return io.WriteString(w, t.String())
+func (f *Formatter) FormatTag(t *Tag) {
+	fmt.Fprint(f.W, t.String())
 }
 
 func (p *objectParser) parseTag() *Tag {
