@@ -40,14 +40,14 @@ func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
 	if len(args) > 0 {
 		// we want to see a particular ref
 		which := args[0]
-		ref, e := p.Repo.ReadRef(which)
+		ref, e := p.Repo.PeelRef(which)
 		if e != nil {
 			// nothing to show
 			return
 		}
-		fmt.Fprint(p.Wout, ref.String())
+		fmt.Fprintln(p.Wout, ref.String())
 	} else {
-		if refs, e := p.Repo.ReadRefs(); e != nil {
+		if refs, e := p.Repo.Refs(); e != nil {
 			fmt.Fprintln(p.Werr, e.Error())
 			return
 		} else {

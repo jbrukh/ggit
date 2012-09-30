@@ -32,9 +32,9 @@ type Repository interface {
 	Backend
 	Index() (idx *Index, err error)
 	PackedRefs() (pr PackedRefs, err error)
-	ReadRef(refPath string) (Ref, error)
-	ReadRefs() ([]Ref, error)
-	PeelRef(symbolic string) (*ObjectId, error)
+	Ref(refstr string) (Ref, error)
+	Refs() ([]Ref, error)
+	PeelRef(refpath string) (*ObjectId, error)
 }
 
 // a representation of a git repository
@@ -120,39 +120,33 @@ func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
 	return pr, nil
 }
 
-// ReadRef turns a path into a ggit Ref object. By path here
-// we mean a ggit refspec, a path relative to the git directory.
-func (r *DiskRepository) ReadRef(path string) (re Ref, err error) {
-	file, e := r.refFile(path)
-	if e != nil {
-		return nil, e
-	}
-	defer file.Close()
-
-	// a ref c
-	p := newRefParser(bufio.NewReader(file))
-	var oid *ObjectId
-	err = safeParse(func() {
-		// is it a symbolic ref?
-		if p.PeekString(4) == "ref:" {
-			p.ConsumeString("ref: ")
-			symbolic := p.ReadString(LF)
-			ref, e := r.ReadRef(symbolic)
-			if e != nil {
-				panicErr(e.Error())
-	}
-			re = &NamedRef{ref.ObjectId(), path}
-		} else {
-			// parse the object id
-			oid = p.ParseObjectId()
-			p.ConsumeByte(LF)
-			re = &NamedRef{oid, path}
-		}
-	})
-	return re, err
+func (r *DiskRepository) LooseRefs() ([]Ref, error) {
+	repoPath := r.path + "/"
+	dir := path.Join(repoPath, "refs")
+	refs := make([]Ref, 0)
+	err := filepath.Walk(dir,
+		func(path string, f os.FileInfo, err error) error {
+			if !f.IsDir() {
+				refpath := trimPrefix(path, repoPath)
+				oid, e := r.PeelRef(refpath)
+				if e != nil {
+					return e
+				}
+				refs = append(refs, &NamedRef{oid, refpath})
+			}
+			return nil
+		},
+	)
+	return refs, err
 }
 
-func (r *DiskRepository) ReadRefs() ([]Ref, error) {
+// ReadRef turns a path into a ggit Ref object. By path here
+// we mean a ggit refspec, a path relative to the git directory.
+func (r *DiskRepository) Ref(refstr string) (re Ref, err error) {
+	return nil, nil
+}
+
+func (r *DiskRepository) Refs() ([]Ref, error) {
 
 	// First, get all the packed refs.
 	pr, err := r.PackedRefs()
@@ -175,12 +169,12 @@ func (r *DiskRepository) ReadRefs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			// refs are files, so...
 			if !f.IsDir() {
-				refspec := trimPrefix(path, r.path+"/")
-				ref, e := r.ReadRef(refspec)
+				refpath := trimPrefix(path, r.path+"/")
+				oid, e := r.PeelRef(refpath)
 				if e != nil {
 					return e
 				}
-				refs[refspec] = ref
+				refs[refpath] = &NamedRef{oid, refpath}
 			}
 			return nil
 		},
@@ -190,8 +184,7 @@ func (r *DiskRepository) ReadRefs() ([]Ref, error) {
 	}
 
 	// collect the refs into a list
-	l := len(refs)
-	refList := make([]Ref, 0, l)
+	refList := make([]Ref, 0, len(refs))
 	for _, v := range refs {
 		refList = append(refList, v)
 	}
@@ -199,8 +192,36 @@ func (r *DiskRepository) ReadRefs() ([]Ref, error) {
 	return refList, nil
 }
 
-func (r *DiskRepository) PeelRef(symbolic string) (*ObjectId, error) {
-	return nil, nil // TODO
+func (r *DiskRepository) PeelRef(refpath string) (*ObjectId, error) {
+	const RefMarker = "ref:"
+	file, e := r.relativeFile(refpath)
+	if e != nil {
+		return nil, e
+	}
+	defer file.Close()
+
+	// a ref c
+	p := newRefParser(bufio.NewReader(file))
+	var (
+		oid *ObjectId
+		err error
+	)
+	err = safeParse(func() {
+		// is it a symbolic ref?
+		if p.PeekString(len(RefMarker)) == RefMarker {
+			p.ConsumeString(RefMarker)
+			p.ConsumeByte(SP)
+			symbolic := p.ReadString(LF)
+			oid, e = r.PeelRef(symbolic)
+			if e != nil {
+				panicErr(e.Error())
+			}
+		} else {
+			oid = p.ParseObjectId()
+			p.ConsumeByte(LF)
+		}
+	})
+	return oid, err
 }
 
 // ================================================================= //
@@ -229,8 +250,8 @@ func (r *DiskRepository) packedRefsFile() (file *os.File, err error) {
 	return os.Open(path)
 }
 
-func (r *DiskRepository) refFile(refPath string) (file *os.File, err error) {
-	path := path.Join(r.path, refPath)
+func (r *DiskRepository) relativeFile(relPath string) (file *os.File, err error) {
+	path := path.Join(r.path, relPath)
 	return os.Open(path)
 }
 
