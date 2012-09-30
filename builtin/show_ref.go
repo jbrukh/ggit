@@ -12,13 +12,14 @@ type ShowRefBuiltin struct {
 	flags     flag.FlagSet
 	flagQuiet bool
 	flagWhich bool
+	flagHeads bool
 }
 
 var ShowRef = &ShowRefBuiltin{
 	HelpInfo: HelpInfo{
 		Name:        "show-ref",
 		Description: "List references in a local repository",
-		UsageLine:   "show-ref [<refPath>]",
+		UsageLine:   "[--which] [<pattern>]",
 		ManPage:     "TODO",
 	},
 }
@@ -28,22 +29,26 @@ var ShowRef = &ShowRefBuiltin{
 func init() {
 	ShowRef.flags.BoolVar(&ShowRef.flagQuiet, "q", false, "Do not print any results to stdout.")
 	ShowRef.flags.BoolVar(&ShowRef.flagWhich, "which", false, "Show which refs are loose and which are packed.")
+	ShowRef.flags.BoolVar(&ShowRef.flagHeads, "heads", false, "Show only heads.")
+	ShowRef.flags.Usage = func() {}
 
 	// add to command list
 	Add(ShowRef)
-}
-
-func (b *ShowRefBuiltin) Info() *HelpInfo {
-	return &b.HelpInfo
 }
 
 func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
 	b.flags.Parse(args)
 	args = b.flags.Args()
 
-	if b.flagWhich {
+	switch {
+	case b.flagWhich:
 		b.Which(p)
-		return
+
+	case b.flagHeads:
+		b.Heads(p)
+
+	default:
+
 	}
 
 	//fmt.Println("getting ", args)
@@ -94,17 +99,27 @@ func matchRefs(full, partial string) bool {
 	return true
 }
 
-func (b *ShowRefBuiltin) WithPattern(p *Params, pattern string) {
+func refsWithFilter(p *Params, f func(ref api.Ref) bool) {
 	refs, e := p.Repo.Refs()
 	if e != nil {
 		fmt.Fprintln(p.Werr, e.Error())
 	}
-	filtered := filterRefs(refs, func(ref api.Ref) bool {
-		return matchRefs(ref.Name(), pattern)
-	})
+	filtered := filterRefs(refs, f)
 	for _, v := range filtered {
 		fmt.Fprintln(p.Wout, v.String())
 	}
+}
+
+func (b *ShowRefBuiltin) WithPattern(p *Params, pattern string) {
+	refsWithFilter(p, func(ref api.Ref) bool {
+		return matchRefs(ref.Name(), pattern)
+	})
+}
+
+func (b *ShowRefBuiltin) Heads(p *Params) {
+	refsWithFilter(p, func(ref api.Ref) bool {
+		return strings.HasPrefix(ref.Name(), "refs/heads")
+	})
 }
 
 func (b *ShowRefBuiltin) Which(p *Params) {

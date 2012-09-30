@@ -17,13 +17,9 @@ var LsObjects = &LsObjectsBuiltin{
 	HelpInfo: HelpInfo{
 		Name:        "ls-objects",
 		Description: "Provide a debug dump of all loose object ids", //TODO all object ids
-		UsageLine:   "ls-objects",
+		UsageLine:   "",
 		ManPage:     "TODO",
 	},
-}
-
-func (b *LsObjectsBuiltin) Info() *HelpInfo {
-	return &b.HelpInfo
 }
 
 func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {

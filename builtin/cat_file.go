@@ -33,10 +33,6 @@ func init() {
 	Add(CatFile)
 }
 
-func (b *CatFileBuiltin) Info() *HelpInfo {
-	return &b.HelpInfo
-}
-
 func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 	CatFile.flags.Parse(args)
 	args = CatFile.flags.Args()

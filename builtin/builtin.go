@@ -76,3 +76,8 @@ func (info *HelpInfo) Usage(w io.Writer) {
 	fmt.Fprintf(w, "usage: %s %s\n\n", info.Name, info.UsageLine)
 	fmt.Fprintf(w, "%s\n", strings.TrimSpace(info.ManPage))
 }
+
+// passing this method onto the individual builtins.
+func (info *HelpInfo) Info() *HelpInfo {
+	return info
+}

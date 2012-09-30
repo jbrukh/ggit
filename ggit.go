@@ -10,10 +10,15 @@ import (
 	"os"
 )
 
-var fVersion bool
+var (
+	flagVersion bool
+
+	Wout = os.Stdout
+	Werr = os.Stderr
+)
 
 func init() {
-	flag.BoolVar(&fVersion, "version", false, "")
+	flag.BoolVar(&flagVersion, "version", false, "")
 }
 
 // ================================================================= //
@@ -24,8 +29,9 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	if fVersion {
-		fmt.Println("ggit version", Version)
+	// --version
+	if flagVersion {
+		fmt.Fprintln(Wout, "ggit version", Version)
 		os.Exit(0)
 	}
 
@@ -36,12 +42,6 @@ func main() {
 
 	// what builtin are we trying to call?
 	name, args := args[0], args[1:]
-
-	// TODO make this into a command
-	if name == "help" {
-		help(args)
-		return
-	}
 
 	// get the builtin
 	cmd, ok := builtin.Get(name)
@@ -82,33 +82,10 @@ func openRepo() (repo api.Repository, err error) {
 // ================================================================= //
 
 func usage() {
-	printUsage(os.Stderr)
+	printUsage(Wout)
 	os.Exit(2)
 }
 
 func printUsage(w io.Writer) {
 	tmpl(w, tmplUsage, builtin.All())
-}
-
-// ================================================================= //
-// GGIT HELP
-// ================================================================= //
-
-// help implements the 'help' command
-func help(args []string) {
-	if len(args) == 0 {
-		printUsage(os.Stdout)
-		return
-	}
-
-	name := args[0]
-	println("TODO: look up help for: ", name)
-
-	// for _, cmd := range api.builtin {
-	// 	if cmd.Name() == name {
-	// 		tmpl(os.Stdout, helpTemplate, cmd)
-	// 		// not exit 2: succeeded at 'go help cmd'.
-	// 		return
-	// 	}
-	// }
 }

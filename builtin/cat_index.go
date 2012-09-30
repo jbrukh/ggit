@@ -17,13 +17,9 @@ var CatIndex = &CatIndexBuiltin{
 	HelpInfo: HelpInfo{
 		Name:        "cat-index",
 		Description: "Provide a debug dump of the index file",
-		UsageLine:   "cat-index",
+		UsageLine:   "",
 		ManPage:     "TODO",
 	},
-}
-
-func (b *CatIndexBuiltin) Info() *HelpInfo {
-	return &b.HelpInfo
 }
 
 func (b *CatIndexBuiltin) Execute(p *Params, args []string) {
