@@ -38,7 +38,7 @@ func (b *CatFileBuiltin) Info() *HelpInfo {
 }
 
 func (b *CatFileBuiltin) Execute(p *Params, args []string) {
-	fs := HelpInfo.FlagSet
+	fs := b.HelpInfo.FlagSet
 	fs.Parse(args)
 	args = fs.Args()
 

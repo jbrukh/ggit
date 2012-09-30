@@ -5,12 +5,15 @@ import (
 )
 
 func init() {
+	fs := ShowRef.HelpInfo.FlagSet
+	fs.BoolVar(&ShowRef.flagQuiet, "quiet", false, "Do not print any results to stdout.")
 	// add to command list
 	Add(ShowRef)
 }
 
 type ShowRefBuiltin struct {
 	HelpInfo
+	flagQuiet bool
 }
 
 var ShowRef = &ShowRefBuiltin{
@@ -27,6 +30,10 @@ func (b *ShowRefBuiltin) Info() *HelpInfo {
 }
 
 func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
+	fs := b.HelpInfo.FlagSet
+	fs.Parse(args)
+	args = fs.Args()
+
 	//fmt.Println("getting ", args)
 	if len(args) > 0 {
 		// we want to see a particular ref
