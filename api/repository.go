@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	DefaultGitDir  = ".git"
-	IndexFile      = "index"
-	PackedRefsFile = "packed-refs"
+	DefaultGitDir     = ".git"
+	DefaultObjectsDir = "objects"
+	IndexFile         = "index"
+	PackedRefsFile    = "packed-refs"
 )
 
 // A Backend supports storage of arbitrary Git
@@ -25,6 +26,7 @@ const (
 type Backend interface {
 	// Read an arbitrary object from the backend
 	ReadObject(oid *ObjectId) (o Object, err error)
+	ObjectIds() (oids []ObjectId, err error)
 }
 
 type Repository interface {
@@ -73,6 +75,57 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
 	p := newObjectParser(file)
 
 	return p.ParsePayload()
+}
+
+//find all objects and print their ids
+func (r *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
+	objectsRoot := path.Join(r.path, DefaultObjectsDir)
+	var (
+		//the objects dir - .git/objects/ for a disk repo by default.
+		objectsRootDir *os.File
+		//the children of .git/objects/, each of which can have many objects.
+		objectsDirs []string
+	)
+	if objectsRootDir, err = os.Open(objectsRoot); err != nil {
+		return
+	}
+	defer objectsRootDir.Close()
+	if objectsDirs, err = objectsRootDir.Readdirnames(0); err != nil {
+		return
+	}
+	oids = make([]ObjectId, 0, len(objectsDirs))
+	//look in each objectsDir and make ObjectIds out of the files there.
+	for i := range objectsDirs {
+		var (
+			objectsDir *os.File
+			objects    []string
+		)
+		path := path.Join(objectsRoot, objectsDirs[i])
+		if objectsDir, err = os.Open(path); err != nil {
+			return
+		}
+		defer objectsDir.Close()
+		if fi, e := os.Lstat(path); e != nil {
+			return nil, e
+		} else if !fi.IsDir() || len(fi.Name()) != 2 { //TODO confirm naming convention is first 2 chars only
+			continue
+		}
+		if objects, err = objectsDir.Readdirnames(0); err != nil {
+			return
+		}
+		for j := range objects {
+			var (
+				hash string
+				oid  *ObjectId
+			)
+			hash = objectsDirs[i] + objects[j]
+			if oid, err = NewObjectIdFromString(hash); err != nil {
+				return
+			}
+			oids = append(oids, *oid)
+		}
+	}
+	return
 }
 
 func (r *DiskRepository) Index() (idx *Index, err error) {
@@ -171,7 +224,7 @@ func (r *DiskRepository) indexFile() (file *os.File, err error) {
 // git directory of a repository
 func (r *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error) {
 	hex := oid.String()
-	path := path.Join(r.path, "objects", hex[0:2], hex[2:])
+	path := path.Join(r.path, DefaultObjectsDir, hex[0:2], hex[2:])
 	return os.Open(path)
 }
 
