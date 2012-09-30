@@ -29,7 +29,7 @@ func (b *LsObjectsBuiltin) Info() *HelpInfo {
 func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {
 	oids, e := p.Repo.ObjectIds()
 	if e != nil {
-		println("Error:", e.Error())
+		fmt.Fprintf(p.Werr, "Error: %s\n", e.Error())
 		return
 	}
 	for i := range oids {

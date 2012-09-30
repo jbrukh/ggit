@@ -48,6 +48,10 @@ func (p *PackedRef) String() string {
 
 type PackedRefs []*PackedRef
 
+// ================================================================= //
+// REF PARSING
+// ================================================================= //
+
 func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 	r := make(PackedRefs, 0)
 	err := dataParse(func() {
