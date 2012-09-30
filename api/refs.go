@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"strings"
 )
 
 // ================================================================= //
@@ -54,7 +55,94 @@ func (p *PackedRef) String() string {
 	return p.NamedRef.String()
 }
 
+// TODO: do we need this?
 type PackedRefs []*PackedRef
+
+// ================================================================= //
+// REF FILTERING
+// ================================================================= //
+
+type RefFilter func(Ref) bool
+
+func FilterRefs(refs []Ref, filters []RefFilter) []Ref {
+	r := make([]Ref, 0, len(refs))
+	for _, v := range refs {
+		keep := true
+		for _, f := range filters {
+			if !f(v) {
+				keep = false
+				break
+			}
+		}
+		if keep {
+			r = append(r, v)
+		}
+	}
+	return r
+}
+
+func RefFilterOr(filters []RefFilter) RefFilter {
+	return func(ref Ref) bool {
+		for _, f := range filters {
+			if f(ref) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func RefFilterAnd(filters []RefFilter) RefFilter {
+	return func(ref Ref) bool {
+		for _, f := range filters {
+			if !f(ref) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func RefFilterPattern(pattern string) RefFilter {
+	return func(ref Ref) bool {
+		return matchRefs(ref.Name(), pattern)
+	}
+}
+
+func refFilterPrefix(prefix string) RefFilter {
+	return func(ref Ref) bool {
+		return strings.HasPrefix(ref.Name(), prefix)
+	}
+}
+
+func RefFilterPrefix(prefix ...string) RefFilter {
+	f := make([]RefFilter, 0, len(prefix))
+	for _, p := range prefix {
+		f = append(f, refFilterPrefix(p))
+	}
+	return RefFilterOr(f)
+}
+
+// matchRefs performs the matching of a partial ref with a full (or longer)
+// ref. Matching occurs from the end and matches on completed parts of the
+// name. So for instance, refs/heads/master and master would match, but "ter"
+// would not match the former.
+func matchRefs(full, partial string) bool {
+	const SL = "/"
+	f, p := strings.Split(full, SL), strings.Split(partial, SL)
+	i, j := len(f), len(p)
+	if i == 0 || j == 0 || i < j { // partial must be shorter
+		return false
+	}
+	for j > 0 {
+		i--
+		j--
+		if f[i] != p[j] {
+			return false
+		}
+	}
+	return true
+}
 
 // ================================================================= //
 // REF PARSING
