@@ -13,7 +13,15 @@ import (
 type Ref interface {
 	ObjectId() *ObjectId
 	Name() string
+	String() string
 }
+
+// sort interface for sorting refs
+type refByName []Ref
+
+func (s refByName) Len() int           { return len(s) }
+func (s refByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s refByName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
 
 type NamedRef struct {
 	oid  *ObjectId

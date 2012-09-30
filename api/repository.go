@@ -4,12 +4,11 @@ import (
 	"bufio"
 	"compress/zlib"
 	"errors"
-
 	"io"
-
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 )
 
 const (
@@ -33,8 +32,8 @@ type Repository interface {
 	Backend
 	Index() (idx *Index, err error)
 	PackedRefs() (pr PackedRefs, err error)
-	ReadRef(refPath string) (*NamedRef, error)
-	ReadRefs() ([]*NamedRef, error)
+	ReadRef(refPath string) (Ref, error)
+	ReadRefs() ([]Ref, error)
 	PeelRef(symbolic string) (*ObjectId, error)
 }
 
@@ -127,7 +126,7 @@ func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
 	return pr, nil
 }
 
-func (r *DiskRepository) ReadRef(refPath string) (re *NamedRef, err error) {
+func (r *DiskRepository) ReadRef(refPath string) (re Ref, err error) {
 	// TODO: validate ref
 	file, e := r.refFile(refPath)
 	if e != nil {
@@ -145,31 +144,65 @@ func (r *DiskRepository) ReadRef(refPath string) (re *NamedRef, err error) {
 	}, nil
 }
 
-func (r *DiskRepository) ReadRefs() ([]*NamedRef, error) {
-	refs := make([]*NamedRef, 0)
+func (r *DiskRepository) ReadRefs() ([]Ref, error) {
+
+	// First, get all the packed refs.
+	pr, err := r.PackedRefs()
+	if err != nil {
+		return nil, err
+	}
+
+	// Refs will be stores in a map by their symbolic name.
+	refs := make(map[string]Ref)
+	for _, ref := range pr {
+		refs[ref.Name()] = ref
+	}
+
+	// Now let's walk loose refs and collect them to supercede
+	// the packed refs. It is worth it to note here that
+	// packed refs may contain outdated references because
+	// they are updated lazily.
 	dir := path.Join(r.path, "refs")
-	err := filepath.Walk(dir,
+	err = filepath.Walk(dir,
 		func(path string, f os.FileInfo, err error) error {
+			// refs are files, so...
 			if !f.IsDir() {
 				file, e := os.Open(path)
 				if e != nil {
 					return e
 				}
+				defer file.Close()
+
+				// parse the ref
 				p := newRefParser(bufio.NewReader(file))
 				var oid *ObjectId
 				if oid, err = p.ParseRefFile(); e != nil {
 					return e
 				}
+
+				// this ref automatically goes into the map
+				name := trimPrefix(path, r.path+"/")
 				re := &NamedRef{
 					oid,
-					trimPrefix(path, r.path+"/"),
+					name,
 				}
-				refs = append(refs, re)
+				refs[name] = re
 			}
 			return nil
 		},
 	)
-	return refs, err
+	if err != nil {
+		return nil, err
+	}
+
+	// collect the refs into a list
+	l := len(refs)
+	refList := make([]Ref, 0, l)
+	for _, v := range refs {
+		refList = append(refList, v)
+	}
+	sort.Sort(refByName(refList))
+	return refList, nil
 }
 
 func (r *DiskRepository) PeelRef(symbolic string) (*ObjectId, error) {

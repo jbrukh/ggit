@@ -25,18 +25,18 @@ func Get(name string) (Builtin, bool) {
 	return b, ok
 }
 
-type byName []Builtin
+type builtinByName []Builtin
 
-func (s byName) Len() int           { return len(s) }
-func (s byName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s byName) Less(i, j int) bool { return s[i].Info().Name < s[j].Info().Name }
+func (s builtinByName) Len() int           { return len(s) }
+func (s builtinByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s builtinByName) Less(i, j int) bool { return s[i].Info().Name < s[j].Info().Name }
 
 func All() []Builtin {
 	b := make([]Builtin, 0, len(builtins))
 	for _, v := range builtins {
 		b = append(b, v)
 	}
-	sort.Sort(byName(b))
+	sort.Sort(builtinByName(b))
 	return b
 }
 
