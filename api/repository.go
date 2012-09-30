@@ -80,51 +80,27 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
 //find all objects and print their ids
 func (r *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 	objectsRoot := path.Join(r.path, DefaultObjectsDir)
-	var (
-		//the objects dir - .git/objects/ for a disk repo by default.
-		objectsRootDir *os.File
-		//the children of .git/objects/, each of which can have many objects.
-		objectsDirs []string
-	)
-	if objectsRootDir, err = os.Open(objectsRoot); err != nil {
-		return
-	}
-	defer objectsRootDir.Close()
-	if objectsDirs, err = objectsRootDir.Readdirnames(0); err != nil {
-		return
-	}
-	oids = make([]ObjectId, 0, len(objectsDirs))
+	oids = make([]ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
-	for i := range objectsDirs {
-		var (
-			objectsDir *os.File
-			objects    []string
-		)
-		path := path.Join(objectsRoot, objectsDirs[i])
-		if objectsDir, err = os.Open(path); err != nil {
-			return
-		}
-		defer objectsDir.Close()
-		if fi, e := os.Lstat(path); e != nil {
-			return nil, e
-		} else if !fi.IsDir() || len(fi.Name()) != 2 { //TODO confirm naming convention is first 2 chars only
-			continue
-		}
-		if objects, err = objectsDir.Readdirnames(0); err != nil {
-			return
-		}
-		for j := range objects {
-			var (
-				hash string
-				oid  *ObjectId
-			)
-			hash = objectsDirs[i] + objects[j]
-			if oid, err = NewObjectIdFromString(hash); err != nil {
-				return
+	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
+			if info.IsDir() {
+				return nil
 			}
-			oids = append(oids, *oid)
-		}
-	}
+			switch parent := filepath.Base(filepath.Dir(path)); parent {
+			case "info":
+				return nil
+			case "pack":
+				return nil
+			default:
+				hash := parent + info.Name()
+				var oid *ObjectId
+				if oid, err = NewObjectIdFromString(hash); err != nil {
+					return err
+				}
+				oids = append(oids, *oid)
+			}
+			return nil
+		})
 	return
 }
 
