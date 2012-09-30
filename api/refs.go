@@ -5,32 +5,36 @@ import (
 )
 
 // ================================================================= //
-// REF OBJECT
+// REF OBJECTS
 // ================================================================= //
 
-type Ref struct {
-	oid *ObjectId
+// Ref is a representation of a ggit reference. A ref is a nice
+// name for an ObjectId. 
+type Ref interface {
+	ObjectId() *ObjectId
+	Name() string
 }
 
-// ================================================================= //
-// OBJECT PARSER METHODS OBJECT
-// ================================================================= //
-
-func (p *objectParser) parseRef() *Ref {
-	r := &Ref{
-		oid: p.ParseObjectId(),
-	}
-	p.ConsumeByte(LF)
-	return r
+type NamedRef struct {
+	oid  *ObjectId
+	name string
 }
 
-type RefEntry struct {
-	oid     *ObjectId
-	refPath string
+func (r *NamedRef) ObjectId() *ObjectId {
+	return r.oid
+}
+
+func (r *NamedRef) Name() string {
+	return r.name
+}
+
+func (p *NamedRef) String() string {
+	const format = "%s %s"
+	return fmt.Sprintf(format, p.oid, p.name)
 }
 
 type PackedRef struct {
-	RefEntry
+	NamedRef
 
 	// if this is an annotated tag
 	// we may have the pointed to commit here
@@ -38,13 +42,8 @@ type PackedRef struct {
 	cid *ObjectId
 }
 
-func (p *RefEntry) String() string {
-	const format = "%s %s"
-	return fmt.Sprintf(format, p.oid, p.refPath)
-}
-
 func (p *PackedRef) String() string {
-	return p.RefEntry.String()
+	return p.NamedRef.String()
 }
 
 type PackedRefs []*PackedRef
@@ -72,13 +71,13 @@ func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 					r[l-1].cid = cid
 				}
 			default:
-				re := new(RefEntry)
+				re := new(NamedRef)
 				re.oid = p.ParseObjectId()
 				p.ConsumeByte(SP)
-				re.refPath = p.ReadString(LF)
+				re.name = p.ReadString(LF)
 
 				r = append(r, &PackedRef{
-					RefEntry: *re,
+					NamedRef: *re,
 				})
 			}
 		}

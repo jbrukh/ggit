@@ -61,6 +61,16 @@ func (id *ObjectId) String() string {
 	return id.repr
 }
 
+// For Ref interface.
+func (id *ObjectId) ObjectId() *ObjectId {
+	return id
+}
+
+// For Ref interface.
+func (id *ObjectId) Name() string {
+	return id.String()
+}
+
 // computes the hex string representation of
 // the object id
 func computeRepr(bytes []byte) (hex string) {

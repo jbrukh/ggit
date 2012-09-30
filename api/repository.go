@@ -33,8 +33,9 @@ type Repository interface {
 	Backend
 	Index() (idx *Index, err error)
 	PackedRefs() (pr PackedRefs, err error)
-	ReadRef(refPath string) (*RefEntry, error)
-	ReadRefs() ([]*RefEntry, error)
+	ReadRef(refPath string) (*NamedRef, error)
+	ReadRefs() ([]*NamedRef, error)
+	PeelRef(symbolic string) (*ObjectId, error)
 }
 
 // a representation of a git repository
@@ -83,24 +84,24 @@ func (r *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 	oids = make([]ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
 	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
-			if info.IsDir() {
-				return nil
-			}
-			switch parent := filepath.Base(filepath.Dir(path)); parent {
-			case "info":
-				return nil
-			case "pack":
-				return nil
-			default:
-				hash := parent + info.Name()
-				var oid *ObjectId
-				if oid, err = NewObjectIdFromString(hash); err != nil {
-					return err
-				}
-				oids = append(oids, *oid)
-			}
+		if info.IsDir() {
 			return nil
-		})
+		}
+		switch parent := filepath.Base(filepath.Dir(path)); parent {
+		case "info":
+			return nil
+		case "pack":
+			return nil
+		default:
+			hash := parent + info.Name()
+			var oid *ObjectId
+			if oid, err = NewObjectIdFromString(hash); err != nil {
+				return err
+			}
+			oids = append(oids, *oid)
+		}
+		return nil
+	})
 	return
 }
 
@@ -114,21 +115,19 @@ func (r *DiskRepository) Index() (idx *Index, err error) {
 }
 
 func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
-	if r.pr == nil {
-		file, e := r.packedRefsFile()
-		if e != nil {
-			return nil, e
-		}
-		defer file.Close()
-		p := newRefParser(bufio.NewReader(file))
-		if r.pr, e = p.ParsePackedRefs(); e != nil {
-			return nil, e
-		}
+	file, e := r.packedRefsFile()
+	if e != nil {
+		return nil, e
 	}
-	return r.pr, nil
+	defer file.Close()
+	p := newRefParser(bufio.NewReader(file))
+	if pr, e = p.ParsePackedRefs(); e != nil {
+		return nil, e
+	}
+	return pr, nil
 }
 
-func (r *DiskRepository) ReadRef(refPath string) (re *RefEntry, err error) {
+func (r *DiskRepository) ReadRef(refPath string) (re *NamedRef, err error) {
 	// TODO: validate ref
 	file, e := r.refFile(refPath)
 	if e != nil {
@@ -140,16 +139,15 @@ func (r *DiskRepository) ReadRef(refPath string) (re *RefEntry, err error) {
 	if oid, err = p.ParseRefFile(); e != nil {
 		return nil, e
 	}
-	return &RefEntry{
+	return &NamedRef{
 		oid,
 		refPath,
 	}, nil
 }
 
-func (r *DiskRepository) ReadRefs() ([]*RefEntry, error) {
-	refs := make([]*RefEntry, 0)
+func (r *DiskRepository) ReadRefs() ([]*NamedRef, error) {
+	refs := make([]*NamedRef, 0)
 	dir := path.Join(r.path, "refs")
-
 	err := filepath.Walk(dir,
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
@@ -162,7 +160,7 @@ func (r *DiskRepository) ReadRefs() ([]*RefEntry, error) {
 				if oid, err = p.ParseRefFile(); e != nil {
 					return e
 				}
-				re := &RefEntry{
+				re := &NamedRef{
 					oid,
 					trimPrefix(path, r.path+"/"),
 				}
@@ -172,6 +170,10 @@ func (r *DiskRepository) ReadRefs() ([]*RefEntry, error) {
 		},
 	)
 	return refs, err
+}
+
+func (r *DiskRepository) PeelRef(symbolic string) (*ObjectId, error) {
+	return nil, nil // TODO
 }
 
 func trimPrefix(str, prefix string) string {
