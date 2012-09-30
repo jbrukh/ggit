@@ -83,24 +83,18 @@ func (r *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 	oids = make([]ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
 	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
-		if info.IsDir() {
-			return nil
-		}
-		switch parent := filepath.Base(filepath.Dir(path)); parent {
-		case "info":
-			return nil
-		case "pack":
-			return nil
-		default:
-			hash := parent + info.Name()
-			var oid *ObjectId
-			if oid, err = NewObjectIdFromString(hash); err != nil {
-				return err
+			if name := info.Name(); name == "info" || name == "pack" {
+				return filepath.SkipDir
+			} else if !info.IsDir() {
+				hash := filepath.Base(filepath.Dir(path)) + name
+				var oid *ObjectId
+				if oid, err = NewObjectIdFromString(hash); err != nil {
+					return err
+				}
+				oids = append(oids, *oid)
 			}
-			oids = append(oids, *oid)
-		}
-		return nil
-	})
+			return nil
+		})
 	return
 }
 
@@ -114,15 +108,15 @@ func (r *DiskRepository) Index() (idx *Index, err error) {
 }
 
 func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
-	file, e := r.packedRefsFile()
-	if e != nil {
-		return nil, e
-	}
-	defer file.Close()
-	p := newRefParser(bufio.NewReader(file))
+		file, e := r.packedRefsFile()
+		if e != nil {
+			return nil, e
+		}
+		defer file.Close()
+		p := newRefParser(bufio.NewReader(file))
 	if pr, e = p.ParsePackedRefs(); e != nil {
-		return nil, e
-	}
+			return nil, e
+		}
 	return pr, nil
 }
 
@@ -146,7 +140,7 @@ func (r *DiskRepository) ReadRef(path string) (re Ref, err error) {
 			ref, e := r.ReadRef(symbolic)
 			if e != nil {
 				panicErr(e.Error())
-			}
+	}
 			re = &NamedRef{ref.ObjectId(), path}
 		} else {
 			// parse the object id
