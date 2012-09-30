@@ -96,11 +96,3 @@ func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 	})
 	return r, err
 }
-
-func (p *refParser) ParseRefFile() (oid *ObjectId, err error) {
-	err = safeParse(func() {
-		oid = p.ParseObjectId()
-		p.ConsumeByte(LF)
-	})
-	return oid, err
-}

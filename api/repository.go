@@ -126,22 +126,36 @@ func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
 	return pr, nil
 }
 
-func (r *DiskRepository) ReadRef(refPath string) (re Ref, err error) {
-	// TODO: validate ref
-	file, e := r.refFile(refPath)
+// ReadRef turns a path into a ggit Ref object. By path here
+// we mean a ggit refspec, a path relative to the git directory.
+func (r *DiskRepository) ReadRef(path string) (re Ref, err error) {
+	file, e := r.refFile(path)
 	if e != nil {
 		return nil, e
 	}
 	defer file.Close()
+
+	// a ref c
 	p := newRefParser(bufio.NewReader(file))
 	var oid *ObjectId
-	if oid, err = p.ParseRefFile(); e != nil {
-		return nil, e
-	}
-	return &NamedRef{
-		oid,
-		refPath,
-	}, nil
+	err = safeParse(func() {
+		// is it a symbolic ref?
+		if p.PeekString(4) == "ref:" {
+			p.ConsumeString("ref: ")
+			symbolic := p.ReadString(LF)
+			ref, e := r.ReadRef(symbolic)
+			if e != nil {
+				panicErr(e.Error())
+			}
+			re = &NamedRef{ref.ObjectId(), path}
+		} else {
+			// parse the object id
+			oid = p.ParseObjectId()
+			p.ConsumeByte(LF)
+			re = &NamedRef{oid, path}
+		}
+	})
+	return re, err
 }
 
 func (r *DiskRepository) ReadRefs() ([]Ref, error) {
@@ -167,26 +181,12 @@ func (r *DiskRepository) ReadRefs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			// refs are files, so...
 			if !f.IsDir() {
-				file, e := os.Open(path)
+				refspec := trimPrefix(path, r.path+"/")
+				ref, e := r.ReadRef(refspec)
 				if e != nil {
 					return e
 				}
-				defer file.Close()
-
-				// parse the ref
-				p := newRefParser(bufio.NewReader(file))
-				var oid *ObjectId
-				if oid, err = p.ParseRefFile(); e != nil {
-					return e
-				}
-
-				// this ref automatically goes into the map
-				name := trimPrefix(path, r.path+"/")
-				re := &NamedRef{
-					oid,
-					name,
-				}
-				refs[name] = re
+				refs[refspec] = ref
 			}
 			return nil
 		},
