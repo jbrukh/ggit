@@ -35,9 +35,9 @@ func (t *Tag) Size() int {
 	return t.size
 }
 
-func (f *Formatter) FormatTag(t *Tag) {
-	fmt.Fprint(f.W, t.String())
-}
+// ================================================================= //
+// OBJECT PARSER
+// ================================================================= //
 
 func (p *objectParser) parseTag() *Tag {
 	tag := new(Tag)
@@ -74,4 +74,12 @@ func (p *objectParser) parseTag() *Tag {
 	}
 
 	return tag
+}
+
+// ================================================================= //
+// OBJECT FORMATTER
+// ================================================================= //
+
+func (f *Formatter) FormatTag(t *Tag) {
+	fmt.Fprint(f.W, t.String())
 }

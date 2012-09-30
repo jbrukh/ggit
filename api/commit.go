@@ -38,7 +38,7 @@ func (c *Commit) Size() int {
 }
 
 func (c *Commit) String() string {
-	const FMT = "tree %s\n%s\nauthor %s\ncommitter %s\n\n%s"
+	const format = "tree %s\n%s\nauthor %s\ncommitter %s\n\n%s"
 	parentsToString := func(p []*ObjectId) string {
 		s := ""
 		for i := 0; i < len(p); i++ {
@@ -49,11 +49,7 @@ func (c *Commit) String() string {
 		}
 		return s
 	}
-	return fmt.Sprintf(FMT, c.tree, parentsToString(c.parents), c.author, c.committer, c.message)
-}
-
-func (f *Formatter) FormatCommit(c *Commit) (int, error) {
-	return fmt.Fprint(f.W, c.String())
+	return fmt.Sprintf(format, c.tree, parentsToString(c.parents), c.author, c.committer, c.message)
 }
 
 func (c *Commit) addParent(oid *ObjectId) {
@@ -104,4 +100,12 @@ func (p *objectParser) parseCommit() *Commit {
 	}
 
 	return c
+}
+
+// ================================================================= //
+// OBJECT FORMATTER
+// ================================================================= //
+
+func (f *Formatter) FormatCommit(c *Commit) (int, error) {
+	return fmt.Fprint(f.W, c.String())
 }

@@ -28,10 +28,6 @@ func (b *Blob) Size() int {
 	return b.size
 }
 
-func (f *Formatter) FormatBlob(b *Blob) (int, error) {
-	return fmt.Fprint(f.W, b.String())
-}
-
 // ================================================================= //
 // OBJECT PARSER BLOB PARSING METHODS
 // ================================================================= //
@@ -50,4 +46,12 @@ func (p *objectParser) parseBlob() *Blob {
 	}
 
 	return b
+}
+
+// ================================================================= //
+// OBJECT FORMATTER
+// ================================================================= //
+
+func (f *Formatter) FormatBlob(b *Blob) (int, error) {
+	return fmt.Fprint(f.W, b.String())
 }

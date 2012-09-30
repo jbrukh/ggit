@@ -35,18 +35,6 @@ func (t *Tree) String() string {
 	return b.String()
 }
 
-func (f *Formatter) FormatTree(t *Tree) (int, error) {
-	N := 0
-	for _, e := range t.entries {
-		n, err := fmt.Fprintf(f.W, "%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)
-		N += n
-		if err != nil {
-			return N, err
-		}
-	}
-	return N, nil
-}
-
 // ================================================================= //
 // TREE ENTRY
 // ================================================================= //
@@ -64,7 +52,7 @@ func (e *TreeEntry) String() (s string) {
 }
 
 // ================================================================= //
-// TREE PARSING
+// OBJECT PARSER
 // ================================================================= //
 
 func (p *objectParser) parseTree() *Tree {
@@ -93,4 +81,20 @@ func (p *objectParser) parseTree() *Tree {
 	}
 
 	return t
+}
+
+// ================================================================= //
+// OBJECT FORMATTER
+// ================================================================= //
+
+func (f *Formatter) FormatTree(t *Tree) (int, error) {
+	N := 0
+	for _, e := range t.entries {
+		n, err := fmt.Fprintf(f.W, "%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)
+		N += n
+		if err != nil {
+			return N, err
+		}
+	}
+	return N, nil
 }
