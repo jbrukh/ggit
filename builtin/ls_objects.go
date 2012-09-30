@@ -2,31 +2,38 @@ package builtin
 
 import (
 	"fmt"
-	"github.com/jbrukh/ggit/api"
-	"io"
 )
-
-var lsObjectsBuiltin = &Builtin{
-	Execute:     lsObjects,
-	Name:        "ls-objects",
-	Description: "Provide a debug dump of all loose object ids", //TODO all object ids
-	UsageLine:   "ls-objects",
-	ManPage:     "TODO",
-}
 
 func init() {
 	// add to command list
-	Add(lsObjectsBuiltin)
+	Add(LsObjects)
 }
 
-func lsObjects(b *Builtin, args []string, repo api.Repository, w io.Writer) {
-	oids, e := repo.ObjectIds()
+type LsObjectsBuiltin struct {
+	HelpInfo
+}
+
+var LsObjects = &LsObjectsBuiltin{
+	HelpInfo: HelpInfo{
+		Name:        "ls-objects",
+		Description: "Provide a debug dump of all loose object ids", //TODO all object ids
+		UsageLine:   "ls-objects",
+		ManPage:     "TODO",
+	},
+}
+
+func (b *LsObjectsBuiltin) Info() *HelpInfo {
+	return &b.HelpInfo
+}
+
+func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {
+	oids, e := p.Repo.ObjectIds()
 	if e != nil {
 		println("Error:", e.Error())
 		return
 	}
 	for i := range oids {
 		oid := oids[i]
-		fmt.Fprintln(w, oid.String())
+		fmt.Fprintln(p.Wout, oid.String())
 	}
 }
