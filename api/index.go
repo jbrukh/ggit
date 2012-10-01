@@ -283,7 +283,7 @@ func parseIndexEntry(r *bufio.Reader) (entry *IndexEntry, err error) {
 	if e != nil {
 		return nil, e
 	}
-	name = trimLast(name) // get rid of NUL
+	name = trimLastByte(name) // get rid of NUL
 
 	// don't ask me how I figured this out after
 	// a 14 hour workday

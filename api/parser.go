@@ -97,7 +97,7 @@ func (p *dataParser) consumeUntil(delim byte) []byte {
 		panicErrf("expected delimiter: %v", delim)
 	}
 	p.count += len(b)
-	return trimLast(b)
+	return trimLastByte(b)
 }
 
 // ResetCount resets the read byte count

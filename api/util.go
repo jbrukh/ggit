@@ -73,7 +73,7 @@ func deduceObjectType(mode FileMode) ObjectType {
 // ================================================================= //
 
 // trimLast throws away the last character of a byte slice
-func trimLast(b []byte) []byte {
+func trimLastByte(b []byte) []byte {
 	if b == nil || len(b) == 0 {
 		return b
 	}
@@ -81,7 +81,14 @@ func trimLast(b []byte) []byte {
 }
 
 func trimLastStr(b []byte) string {
-	return string(trimLast(b))
+	return string(trimLastByte(b))
+}
+
+func trimLast(str string) string {
+	if str == "" {
+		return str
+	}
+	return str[:len(str)-1]
 }
 
 func trimPrefix(str, prefix string) string {

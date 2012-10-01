@@ -28,13 +28,20 @@ type Backend interface {
 	ObjectIds() (oids []ObjectId, err error)
 }
 
+// Repository. Currently, this interface is tracking
+// the interface of DiskRepository (for the most part).
+// However, in the scheme of things, a Repository
+// should be a more general interface. For instance,
+// a non-disk based repository may not care so much
+// about packed refs because performance is provided
+// in a different way for ref parsing.
 type Repository interface {
 	Backend
 	Index() (idx *Index, err error)
 	PackedRefs() (pr PackedRefs, err error)
 	Ref(refstr string) (Ref, error)
 	Refs() ([]Ref, error)
-	PeelRef(refpath string) (*ObjectId, error)
+	PathRef(refpath string) (*ObjectId, error)
 }
 
 // a representation of a git repository
@@ -83,18 +90,18 @@ func (r *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 	oids = make([]ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
 	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
-			if name := info.Name(); name == "info" || name == "pack" {
-				return filepath.SkipDir
-			} else if !info.IsDir() {
-				hash := filepath.Base(filepath.Dir(path)) + name
-				var oid *ObjectId
-				if oid, err = NewObjectIdFromString(hash); err != nil {
-					return err
-				}
-				oids = append(oids, *oid)
+		if name := info.Name(); name == "info" || name == "pack" {
+			return filepath.SkipDir
+		} else if !info.IsDir() {
+			hash := filepath.Base(filepath.Dir(path)) + name
+			var oid *ObjectId
+			if oid, err = NewObjectIdFromString(hash); err != nil {
+				return err
 			}
-			return nil
-		})
+			oids = append(oids, *oid)
+		}
+		return nil
+	})
 	return
 }
 
@@ -115,8 +122,8 @@ func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
 	defer file.Close()
 	p := newRefParser(bufio.NewReader(file))
 	if pr, e = p.ParsePackedRefs(); e != nil {
-			return nil, e
-		}
+		return nil, e
+	}
 	return pr, nil
 }
 
@@ -128,7 +135,7 @@ func (r *DiskRepository) LooseRefs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
 				refpath := trimPrefix(path, repoPath)
-				oid, e := r.PeelRef(refpath)
+				oid, e := r.PathRef(refpath)
 				if e != nil {
 					return e
 				}
@@ -141,9 +148,9 @@ func (r *DiskRepository) LooseRefs() ([]Ref, error) {
 }
 
 // ReadRef turns a path into a ggit Ref object. By path here
-// we mean a ggit refspec, a path relative to the git directory.
+// we mean a high-level symbolic ref, possibly with modifiers.
 func (r *DiskRepository) Ref(refstr string) (re Ref, err error) {
-	return nil, nil
+	return nil, nil // TODO
 }
 
 func (r *DiskRepository) Refs() ([]Ref, error) {
@@ -170,7 +177,7 @@ func (r *DiskRepository) Refs() ([]Ref, error) {
 			// refs are files, so...
 			if !f.IsDir() {
 				refpath := trimPrefix(path, r.path+"/")
-				oid, e := r.PeelRef(refpath)
+				oid, e := r.PathRef(refpath)
 				if e != nil {
 					return e
 				}
@@ -192,7 +199,7 @@ func (r *DiskRepository) Refs() ([]Ref, error) {
 	return refList, nil
 }
 
-func (r *DiskRepository) PeelRef(refpath string) (*ObjectId, error) {
+func (r *DiskRepository) PathRef(refpath string) (*ObjectId, error) {
 	const RefMarker = "ref:"
 	file, e := r.relativeFile(refpath)
 	if e != nil {
@@ -212,7 +219,7 @@ func (r *DiskRepository) PeelRef(refpath string) (*ObjectId, error) {
 			p.ConsumeString(RefMarker)
 			p.ConsumeByte(SP)
 			symbolic := p.ReadString(LF)
-			oid, e = r.PeelRef(symbolic)
+			oid, e = r.PathRef(symbolic)
 			if e != nil {
 				panicErr(e.Error())
 			}

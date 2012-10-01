@@ -37,6 +37,15 @@ func (c *Commit) Size() int {
 	return c.size
 }
 
+// FirstParent returns the first parent of the commit, or
+// nil if no such parent exists.
+func (c *Commit) FirstParent() *ObjectId {
+	if len(c.parents) > 0 {
+		return c.parents[0]
+	}
+	return nil
+}
+
 func (c *Commit) String() string {
 	const format = "tree %s\n%s\nauthor %s\ncommitter %s\n\n%s"
 	parentsToString := func(p []*ObjectId) string {

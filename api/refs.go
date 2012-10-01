@@ -1,9 +1,25 @@
 package api
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+var (
+	regexpCaret    *regexp.Regexp
+	regexpTilde    *regexp.Regexp
+	regexpHex      *regexp.Regexp
+	regexpShortHex *regexp.Regexp
+)
+
+func init() {
+	regexpCaret, _ = regexp.Compile("^[^\\^]+\\^+$")
+	regexpTilde, _ = regexp.Compile("^.+~[1-9][0-9]*$")
+	regexpHex, _ = regexp.Compile("^[0-9a-f]{40}$") // TODO: replace with const
+	regexpShortHex, _ = regexp.Compile("^[0-9a-f]{3,39}$")
+}
 
 // ================================================================= //
 // REF OBJECTS
@@ -64,7 +80,7 @@ type PackedRefs []*PackedRef
 
 type RefFilter func(Ref) bool
 
-func FilterRefs(refs []Ref, filters []RefFilter) []Ref {
+func FilterRefs(refs []Ref, filters []RefFilter) []Ref { // TODO: make []RefFilter => RefFilter
 	r := make([]Ref, 0, len(refs))
 	for _, v := range refs {
 		keep := true
@@ -129,6 +145,10 @@ func RefFilterPrefix(prefix ...string) RefFilter {
 // would not match the former.
 func matchRefs(full, partial string) bool {
 	const SL = "/"
+	if full == "" || partial == "" {
+		return false
+	}
+
 	f, p := strings.Split(full, SL), strings.Split(partial, SL)
 	i, j := len(f), len(p)
 	if i == 0 || j == 0 || i < j { // partial must be shorter
@@ -183,4 +203,35 @@ func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 		}
 	})
 	return r, err
+}
+
+// ================================================================= //
+// REF RESOLUTION
+// ================================================================= //
+
+func ResolveRef(repo Repository, refstr string) (*ObjectId, error) {
+	if regexpCaret.MatchString(refstr) {
+		oid, err := ResolveRef(repo, trimLast(refstr))
+		if err != nil {
+			return nil, err
+		}
+		obj, e := repo.ReadObject(oid)
+		if e != nil {
+			return nil, e
+		}
+		t := obj.Type()
+		if t == ObjectCommit {
+			oid = obj.(*Commit).FirstParent()
+			if oid == nil {
+				return nil, errors.New("no parent")
+			}
+		} else if t == ObjectTag {
+			oid = obj.(*Tag).Object()
+		}
+		return oid, nil
+	} else if regexpHex.MatchString(refstr) {
+		oid, _ := NewObjectIdFromString(refstr)
+		return oid, nil
+	}
+	return nil, errors.New("unknown reference")
 }
