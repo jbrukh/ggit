@@ -29,7 +29,7 @@ var ShowRef = &ShowRefBuiltin{
 	HelpInfo: HelpInfo{
 		Name:        "show-ref",
 		Description: "List references in a local repository",
-		UsageLine:   "[--which] [<pattern>]",
+		UsageLine:   "[--which] [-d] [--heads] [--tags] [<pattern>]",
 		ManPage:     "TODO",
 	},
 }
