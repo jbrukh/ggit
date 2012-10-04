@@ -43,6 +43,7 @@ func init() {
 	ShowRef.flags.BoolVar(&ShowRef.flagHeads, "heads", false, "Show only heads.")
 	ShowRef.flags.BoolVar(&ShowRef.flagTags, "tags", false, "Show only tags.")
 	ShowRef.flags.BoolVar(&ShowRef.flagHelp, "help", false, "Show help.")
+	ShowRef.flags.Usage = func() {}
 
 	// add to command list
 	Add(ShowRef)

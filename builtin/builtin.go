@@ -9,11 +9,17 @@ import (
 )
 
 // ================================================================= //
-// 
+// GGIT BUILTIN FRAMEWORK
 // ================================================================= //
 
 // the set of supported builtin commands for ggit
 var builtins = make(map[string]Builtin)
+
+type builtinByName []Builtin
+
+func (s builtinByName) Len() int           { return len(s) }
+func (s builtinByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s builtinByName) Less(i, j int) bool { return s[i].Info().Name < s[j].Info().Name }
 
 // add a builtin command
 func Add(b Builtin) {
@@ -24,12 +30,6 @@ func Get(name string) (Builtin, bool) {
 	b, ok := builtins[name]
 	return b, ok
 }
-
-type builtinByName []Builtin
-
-func (s builtinByName) Len() int           { return len(s) }
-func (s builtinByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s builtinByName) Less(i, j int) bool { return s[i].Info().Name < s[j].Info().Name }
 
 func All() []Builtin {
 	b := make([]Builtin, 0, len(builtins))
