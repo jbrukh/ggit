@@ -13,6 +13,7 @@ type ShowRefBuiltin struct {
 	flagWhich bool
 	flagHeads bool
 	flagTags  bool
+	flagHelp  bool
 }
 
 var ShowRef = &ShowRefBuiltin{
@@ -31,15 +32,21 @@ func init() {
 	ShowRef.flags.BoolVar(&ShowRef.flagWhich, "which", false, "Show which refs are loose and which are packed.")
 	ShowRef.flags.BoolVar(&ShowRef.flagHeads, "heads", false, "Show only heads.")
 	ShowRef.flags.BoolVar(&ShowRef.flagTags, "tags", false, "Show only tags.")
-	ShowRef.flags.Usage = func() {}
+	ShowRef.flags.BoolVar(&ShowRef.flagHelp, "help", false, "Show help.")
 
 	// add to command list
 	Add(ShowRef)
 }
 
+const (
+	prefixHeads = "refs/heads"
+	prefixTags  = "refs/tags"
+)
+
+var HeadsFilter = api.FilterRefPattern(prefixHeads)
+var TagsFilter = api.FilterRefPattern(prefixTags)
+
 func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
-	const HEADS = "refs/heads"
-	const TAGS = "refs/tags"
 	b.flags.Parse(args)
 	args = b.flags.Args()
 
@@ -48,30 +55,36 @@ func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
 		return
 	}
 
-	f := make([]api.RefFilter, 0)
+	if b.flagHelp {
+		b.Usage(p.Wout)
+		return
+	}
+
+	f := make([]api.Filter, 0)
 
 	if b.flagHeads && b.flagTags {
-		f = append(f, api.RefFilterPrefix(HEADS, TAGS))
+		f = append(f, api.FilterOr(HeadsFilter, TagsFilter))
 	} else if b.flagHeads {
-		f = append(f, api.RefFilterPrefix(HEADS))
+		f = append(f, HeadsFilter)
 	} else if b.flagTags {
-		f = append(f, api.RefFilterPrefix(TAGS))
+		f = append(f, TagsFilter)
 	}
 
 	if len(args) > 0 {
 		pattern := args[0]
-		f = append(f, api.RefFilterPattern(pattern))
+		f = append(f, api.FilterRefPattern(pattern))
 	}
 
 	b.filterRefs(p, f)
 }
 
-func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.RefFilter) {
+func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 	refs, e := p.Repo.Refs()
 	if e != nil {
 		fmt.Fprintln(p.Werr, e.Error())
 	}
-	filtered := api.FilterRefs(refs, filters)
+	f := api.FilterAnd(filters...)
+	filtered := api.FilterRefs(refs, f)
 	if !b.flagQuiet {
 		for _, v := range filtered {
 			fmt.Fprintln(p.Wout, v.String())

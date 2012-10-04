@@ -5,12 +5,12 @@ package api
 // filtered out. Each individual filter needs to
 // assert type of the parameter and create a
 // requisite typed Apply method.
-type filter func(interface{}) bool
+type Filter func(interface{}) bool
 
 // apply applies a filter to a slice of interface{}.
 // One should define a custom apply method for each
 // type they wish to filter.
-func apply(s []interface{}, f filter) []interface{} {
+func Apply(s []interface{}, f Filter) []interface{} {
 	r := make([]interface{}, 0)
 	for _, v := range s {
 		if f(v) {
@@ -20,9 +20,9 @@ func apply(s []interface{}, f filter) []interface{} {
 	return r
 }
 
-// filterOr combines a number of filters
+// FilterOr combines a number of filters
 // together using a logical OR.
-func filterOr(fs ...filter) filter {
+func FilterOr(fs ...Filter) Filter {
 	return func(i interface{}) bool {
 		for _, f := range fs {
 			if f(i) {
@@ -33,9 +33,9 @@ func filterOr(fs ...filter) filter {
 	}
 }
 
-// filterAnd combines a number of filters
+// FilterAnd combines a number of filters
 // together using a logical AND.
-func filterAnd(fs ...filter) filter {
+func FilterAnd(fs ...Filter) Filter {
 	return func(i interface{}) bool {
 		for _, f := range fs {
 			if !f(i) {
@@ -46,7 +46,7 @@ func filterAnd(fs ...filter) filter {
 	}
 }
 
-func filterNot(f filter) filter {
+func FilterNot(f Filter) Filter {
 	return func(i interface{}) bool {
 		return !f(i)
 	}

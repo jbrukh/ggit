@@ -78,7 +78,7 @@ type PackedRefs []*PackedRef
 // REF FILTERING
 // ================================================================= //
 
-func applyRefs(refs []Ref, f filter) []Ref {
+func FilterRefs(refs []Ref, f Filter) []Ref {
 	r := make([]Ref, 0)
 	for _, v := range refs {
 		if f(v) {
@@ -88,13 +88,13 @@ func applyRefs(refs []Ref, f filter) []Ref {
 	return r
 }
 
-func filterRefPattern(pattern string) filter {
+func FilterRefPattern(pattern string) Filter {
 	return func(ref interface{}) bool {
 		return matchRefs(ref.(Ref).Name(), pattern)
 	}
 }
 
-func filterRefPrefix(prefix string) filter {
+func FilterRefPrefix(prefix string) Filter {
 	return func(ref interface{}) bool {
 		return strings.HasPrefix(ref.(Ref).Name(), prefix)
 	}

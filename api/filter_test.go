@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func applyInt(s []int, f filter) []int {
+func applyInt(s []int, f Filter) []int {
 	r := make([]int, 0)
 	for _, v := range s {
 		if f(v) {
@@ -15,14 +15,14 @@ func applyInt(s []int, f filter) []int {
 	return r
 }
 
-var oddNumbers filter = func(i interface{}) bool {
+var oddNumbers Filter = func(i interface{}) bool {
 	if i.(int)%2 == 1 {
 		return true
 	}
 	return false
 }
 
-var evenNumbers filter = func(i interface{}) bool {
+var evenNumbers Filter = func(i interface{}) bool {
 	if i.(int)%2 == 0 {
 		return true
 	}
