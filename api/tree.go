@@ -30,8 +30,8 @@ func (t *Tree) Size() int {
 
 func (t *Tree) String() string {
 	b := bytes.NewBufferString("")
-	f := &Formatter{b}
-	f.FormatTree(t)
+	f := &Format{b}
+	f.Tree(t)
 	return b.String()
 }
 
@@ -84,7 +84,7 @@ func (p *objectParser) parseTree() *Tree {
 // OBJECT FORMATTER
 // ================================================================= //
 
-func (f *Formatter) FormatTree(t *Tree) (int, error) {
+func (f *Format) Tree(t *Tree) (int, error) {
 	N := 0
 	for _, e := range t.entries {
 		n, err := fmt.Fprintf(f.W, "%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)

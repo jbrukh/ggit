@@ -164,6 +164,6 @@ func (p *objectIdParser) ParseObjectIdBytes() *ObjectId {
 	return oid
 }
 
-func (f *Formatter) FormatObjectId(oid *ObjectId) {
-	fmt.Fprint(f.W, oid.String())
+func (f *Format) ObjectId(oid *ObjectId) (int, error) {
+	return fmt.Fprint(f.W, oid.String())
 }

@@ -112,7 +112,8 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 				switch t := v.(type) {
 				case *api.PackedRef:
 					if t.TargetOid() != nil {
-						fmt.Fprintln(p.Wout, t.StringDeref())
+						f := api.Format{p.Wout}
+						f.DerefTag(t)
 					} else {
 						// TODO: LOOK UP THE OBJECT ID
 					}

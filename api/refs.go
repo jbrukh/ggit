@@ -71,9 +71,9 @@ func (r *PackedRef) TargetOid() *ObjectId {
 	return r.targetOid
 }
 
-func (r *Format) DerefTag() string {
-	const format = "%s %s^{}"
-	return fmt.Sprintf(format, r.targetOid, r.name)
+func (f *Format) DerefTag(r *PackedRef) (int, error) {
+	const format = "%s %s^{}\n"
+	return fmt.Fprint(f.W, format, r.targetOid, r.name)
 }
 
 // TODO: do we need this?
