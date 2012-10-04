@@ -6,6 +6,14 @@ import (
 	"github.com/jbrukh/ggit/api"
 )
 
+// ================================================================= //
+// SHOW-REF
+// ================================================================= //
+
+// ShowRefBuiltin implements a command very similar
+// to git-show-ref. This allows one to display the
+// refs that are both available in the refs/ directory
+// as well as the packed refs file.
 type ShowRefBuiltin struct {
 	HelpInfo
 	flags     flag.FlagSet
@@ -25,7 +33,9 @@ var ShowRef = &ShowRefBuiltin{
 	},
 }
 
-//var flags flag.FlagSet
+// ================================================================= //
+// SHOW-REF FLAGS
+// ================================================================= //
 
 func init() {
 	ShowRef.flags.BoolVar(&ShowRef.flagQuiet, "q", false, "Do not print any results to stdout.")
@@ -38,6 +48,10 @@ func init() {
 	Add(ShowRef)
 }
 
+// ================================================================= //
+// CONSTANTS
+// ================================================================= //
+
 const (
 	prefixHeads = "refs/heads"
 	prefixTags  = "refs/tags"
@@ -45,6 +59,10 @@ const (
 
 var HeadsFilter = api.FilterRefPattern(prefixHeads)
 var TagsFilter = api.FilterRefPattern(prefixTags)
+
+// ================================================================= //
+// SHOW-REF FUNCTIONS
+// ================================================================= //
 
 func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
 	b.flags.Parse(args)
