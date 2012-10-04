@@ -58,8 +58,8 @@ const (
 	prefixTags  = "refs/tags"
 )
 
-var HeadsFilter = api.FilterRefPattern(prefixHeads)
-var TagsFilter = api.FilterRefPattern(prefixTags)
+var HeadsFilter = api.FilterRefPrefix(prefixHeads)
+var TagsFilter = api.FilterRefPrefix(prefixTags)
 
 // ================================================================= //
 // SHOW-REF FUNCTIONS
