@@ -78,65 +78,26 @@ type PackedRefs []*PackedRef
 // REF FILTERING
 // ================================================================= //
 
-type RefFilter func(Ref) bool
-
-func FilterRefs(refs []Ref, filters []RefFilter) []Ref { // TODO: make []RefFilter => RefFilter
-	r := make([]Ref, 0, len(refs))
+func applyRefs(refs []Ref, f filter) []Ref {
+	r := make([]Ref, 0)
 	for _, v := range refs {
-		keep := true
-		for _, f := range filters {
-			if !f(v) {
-				keep = false
-				break
-			}
-		}
-		if keep {
+		if f(v) {
 			r = append(r, v)
 		}
 	}
 	return r
 }
 
-func RefFilterOr(filters []RefFilter) RefFilter {
-	return func(ref Ref) bool {
-		for _, f := range filters {
-			if f(ref) {
-				return true
-			}
-		}
-		return false
+func filterRefPattern(pattern string) filter {
+	return func(ref interface{}) bool {
+		return matchRefs(ref.(Ref).Name(), pattern)
 	}
 }
 
-func RefFilterAnd(filters []RefFilter) RefFilter {
-	return func(ref Ref) bool {
-		for _, f := range filters {
-			if !f(ref) {
-				return false
-			}
-		}
-		return true
+func filterRefPrefix(prefix string) filter {
+	return func(ref interface{}) bool {
+		return strings.HasPrefix(ref.(Ref).Name(), prefix)
 	}
-}
-
-func RefFilterPattern(pattern string) RefFilter {
-	return func(ref Ref) bool {
-		return matchRefs(ref.Name(), pattern)
-	}
-}
-
-func refFilterPrefix(prefix string) RefFilter {
-	return func(ref Ref) bool {
-		return strings.HasPrefix(ref.Name(), prefix)
-	}
-}
-
-func RefFilterPrefix(prefix ...string) RefFilter {
-	f := make([]RefFilter, 0, len(prefix))
-	for _, p := range prefix {
-		f = append(f, refFilterPrefix(p))
-	}
-	return RefFilterOr(f)
 }
 
 // matchRefs performs the matching of a partial ref with a full (or longer)
