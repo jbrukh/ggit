@@ -95,7 +95,6 @@ func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
 		pattern := args[0]
 		f = append(f, api.FilterRefPattern(pattern))
 	}
-
 	b.filterRefs(p, f)
 }
 

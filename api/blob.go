@@ -52,6 +52,6 @@ func (p *objectParser) parseBlob() *Blob {
 // OBJECT FORMATTER
 // ================================================================= //
 
-func (f *Formatter) FormatBlob(b *Blob) (int, error) {
+func (f *Format) Blob(b *Blob) (int, error) {
 	return fmt.Fprint(f.W, string(b.data))
 }

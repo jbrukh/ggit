@@ -5,6 +5,6 @@ import (
 )
 
 // Formatter is the central hub for formatting ggit objects.
-type Formatter struct {
+type Format struct {
 	W io.Writer
 }

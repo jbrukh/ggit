@@ -84,6 +84,6 @@ func (p *objectParser) parseTag() *Tag {
 // OBJECT FORMATTER
 // ================================================================= //
 
-func (f *Formatter) FormatTag(t *Tag) {
-	fmt.Fprint(f.W, t.String())
+func (f *Format) Tag(t *Tag) (int, error) {
+	return fmt.Fprint(f.W, t.String())
 }

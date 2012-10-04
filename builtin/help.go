@@ -23,6 +23,8 @@ var Help = &HelpBuiltin{
 }
 
 func (b *HelpBuiltin) Execute(p *Params, args []string) {
+	println("hello!")
+
 	if len(args) < 1 {
 		b.Usage(p.Werr)
 		return
@@ -32,6 +34,6 @@ func (b *HelpBuiltin) Execute(p *Params, args []string) {
 	if ok {
 		cmd.Info().Usage(p.Wout)
 	} else {
-		fmt.Fprintf(p.Werr, "No manual entry for %s", name)
+		fmt.Fprintf(p.Werr, "No manual entry for poop %s\n", name)
 	}
 }

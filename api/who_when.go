@@ -40,6 +40,7 @@ type WhoWhen struct {
 }
 
 func (ww *WhoWhen) String() string {
+	// TODO: move this to Format
 	const format = "%s <%s> %d %s"
 	offset := ww.Offset()
 	hours := int(offset / 60)

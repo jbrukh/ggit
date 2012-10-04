@@ -115,6 +115,6 @@ func (p *objectParser) parseCommit() *Commit {
 // OBJECT FORMATTER
 // ================================================================= //
 
-func (f *Formatter) FormatCommit(c *Commit) (int, error) {
+func (f *Format) Commit(c *Commit) (int, error) {
 	return fmt.Fprint(f.W, c.String())
 }

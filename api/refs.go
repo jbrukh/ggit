@@ -71,7 +71,7 @@ func (r *PackedRef) TargetOid() *ObjectId {
 	return r.targetOid
 }
 
-func (r *PackedRef) StringDeref() string {
+func (r *Format) DerefTag() string {
 	const format = "%s %s^{}"
 	return fmt.Sprintf(format, r.targetOid, r.name)
 }
