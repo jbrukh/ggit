@@ -29,7 +29,7 @@ func (b *Blob) Size() int {
 }
 
 // ================================================================= //
-// OBJECT PARSER BLOB PARSING METHODS
+// OBJECT PARSER
 // ================================================================= //
 
 // parseBlob parses the payload of a binary blob object
@@ -53,5 +53,5 @@ func (p *objectParser) parseBlob() *Blob {
 // ================================================================= //
 
 func (f *Formatter) FormatBlob(b *Blob) (int, error) {
-	return fmt.Fprint(f.W, b.String())
+	return fmt.Fprint(f.W, string(b.data))
 }

@@ -73,13 +73,10 @@ func (p *objectParser) parseTree() *Tree {
 		}
 		t.entries = append(t.entries, entry)
 	}
-
 	t.size = p.hdr.Size
-
 	if p.Count() != p.hdr.Size {
 		panicErr("payload doesn't match prescibed size")
 	}
-
 	return t
 }
 
