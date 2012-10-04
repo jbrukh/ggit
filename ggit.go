@@ -91,11 +91,6 @@ func findRepo() (string, error) {
 	panic("shall not get here")
 }
 
-func exists(path string) bool {
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
-}
-
 // openRepo opens the repository, if any, which is
 // the enclosing repository of this directory.
 func openRepo() (repo api.Repository, err error) {
