@@ -22,6 +22,7 @@ type ShowRefBuiltin struct {
 	flagHeads bool
 	flagTags  bool
 	flagHelp  bool
+	flagDeref bool
 }
 
 var ShowRef = &ShowRefBuiltin{
@@ -43,6 +44,7 @@ func init() {
 	ShowRef.flags.BoolVar(&ShowRef.flagHeads, "heads", false, "Show only heads.")
 	ShowRef.flags.BoolVar(&ShowRef.flagTags, "tags", false, "Show only tags.")
 	ShowRef.flags.BoolVar(&ShowRef.flagHelp, "help", false, "Show help.")
+	ShowRef.flags.BoolVar(&ShowRef.flagDeref, "d", false, "Dereference tags into object IDs as well.")
 	ShowRef.flags.Usage = func() {}
 
 	// add to command list
@@ -105,8 +107,30 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 	f := api.FilterAnd(filters...)
 	filtered := api.FilterRefs(refs, f)
 	if !b.flagQuiet {
-		for _, v := range filtered {
-			fmt.Fprintln(p.Wout, v.String())
+		if b.flagDeref {
+			for _, v := range filtered {
+				fmt.Fprintln(p.Wout, v.String())
+				switch t := v.(type) {
+				case *api.PackedRef:
+					if t.TargetOid() != nil {
+						fmt.Fprintln(p.Wout, t.StringDeref())
+					} else {
+						// TODO: LOOK UP THE OBJECT ID
+					}
+				default:
+					obj, err := p.Repo.ReadObject(t.ObjectId())
+					if err == nil {
+						if obj.Type() == api.ObjectTag {
+							tag := obj.(*api.Tag)
+							fmt.Fprintf(p.Wout, "%s %s^{}\n", tag.Object(), t.Name())
+						}
+					}
+				}
+			}
+		} else { // just do the non-deref case separately, for performance
+			for _, v := range filtered {
+				fmt.Fprintln(p.Wout, v.String())
+			}
 		}
 	}
 }

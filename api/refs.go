@@ -53,9 +53,9 @@ func (r *NamedRef) Name() string {
 	return r.name
 }
 
-func (p *NamedRef) String() string {
+func (r *NamedRef) String() string {
 	const format = "%s %s"
-	return fmt.Sprintf(format, p.oid, p.name)
+	return fmt.Sprintf(format, r.oid, r.name)
 }
 
 type PackedRef struct {
@@ -64,11 +64,16 @@ type PackedRef struct {
 	// if this is an annotated tag
 	// we may have the pointed to commit here
 	// as an optimization
-	cid *ObjectId
+	targetOid *ObjectId
 }
 
-func (p *PackedRef) String() string {
-	return p.NamedRef.String()
+func (r *PackedRef) TargetOid() *ObjectId {
+	return r.targetOid
+}
+
+func (r *PackedRef) StringDeref() string {
+	const format = "%s %s^{}"
+	return fmt.Sprintf(format, r.targetOid, r.name)
 }
 
 // TODO: do we need this?
@@ -145,11 +150,11 @@ func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 				// this means the previous line is an annotated tag and the the current
 				// line contains the commit that tag points to
 				p.ConsumeByte('^')
-				cid := p.ParseObjectId()
+				targetOid := p.ParseObjectId()
 				p.ConsumeByte(LF)
 
 				if l := len(r); l > 0 {
-					r[l-1].cid = cid
+					r[l-1].targetOid = targetOid
 				}
 			default:
 				re := new(NamedRef)
