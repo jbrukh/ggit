@@ -63,6 +63,8 @@ func main() {
 }
 
 func findRepo() (string, error) {
+	// WARNING: this implementation has a massive bug because
+	// the first stat statement never returns an error. TODO
 	pth := "."
 	for {
 		_, err := os.Stat(path.Join(pth))
