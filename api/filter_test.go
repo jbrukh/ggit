@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -51,7 +50,7 @@ func Test_EvenNumbers(t *testing.T) {
 }
 
 func Test_NotOdd(t *testing.T) {
-	numbers := applyInt(numbers, filterNot(oddNumbers))
+	numbers := applyInt(numbers, FilterNot(oddNumbers))
 	assert(t, numbers[0] == 2)
 	assert(t, numbers[1] == 4)
 	assert(t, numbers[2] == 6)
@@ -61,7 +60,7 @@ func Test_NotOdd(t *testing.T) {
 }
 
 func Test_NotEven(t *testing.T) {
-	numbers := applyInt(numbers, filterNot(evenNumbers))
+	numbers := applyInt(numbers, FilterNot(evenNumbers))
 	assert(t, numbers[0] == 1)
 	assert(t, numbers[1] == 3)
 	assert(t, numbers[2] == 5)
@@ -71,7 +70,7 @@ func Test_NotEven(t *testing.T) {
 }
 
 func Test_Or(t *testing.T) {
-	numbers := applyInt(numbers, filterOr(evenNumbers, oddNumbers))
+	numbers := applyInt(numbers, FilterOr(evenNumbers, oddNumbers))
 	for i := 0; i < 10; i++ {
 		assert(t, numbers[i] == i+1)
 	}
