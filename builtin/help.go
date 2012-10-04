@@ -23,8 +23,6 @@ var Help = &HelpBuiltin{
 }
 
 func (b *HelpBuiltin) Execute(p *Params, args []string) {
-	println("hello!")
-
 	if len(args) < 1 {
 		b.Usage(p.Werr)
 		return
