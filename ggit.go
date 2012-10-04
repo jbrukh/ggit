@@ -8,6 +8,7 @@ import (
 	"github.com/jbrukh/ggit/builtin"
 	"io"
 	"os"
+	"path"
 )
 
 var (
@@ -62,15 +63,46 @@ func main() {
 }
 
 func findRepo() (string, error) {
-	return api.DefaultGitDir, nil
+	pth := "."
+	for {
+		_, err := os.Stat(path.Join(pth))
+		if err != nil {
+			// either the directory does not exist,
+			// or there was some sort of reading error
+			return "", err
+		} else {
+			gitDir := path.Join(pth, api.DefaultGitDir)
+			_, err := os.Stat(gitDir)
+			if os.IsNotExist(err) {
+				// directory exists, but gitDir does not
+				// go one more directory up
+				pth = path.Join(pth, "..")
+				continue
+			} else if err != nil {
+				// other errors -- cannot read the gitDir
+				return "", err
+			}
+			// git dir exists, return it
+			return gitDir, nil
+		}
+	}
+	panic("shall not get here")
 }
 
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
+
+// openRepo opens the repository, if any, which is
+// the enclosing repository of this directory.
 func openRepo() (repo api.Repository, err error) {
 	var path string
 	path, err = findRepo()
 	if err != nil {
 		return nil, err
 	}
+
 	if repo, err = api.Open(path); err != nil {
 		return nil, err
 	}
