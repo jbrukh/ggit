@@ -151,6 +151,7 @@ func (b *ShowRefBuiltin) Which(p *Params) {
 	}
 	for _, v := range refs {
 		fmtr.Ref(v)
+		fmtr.Lf()
 	}
 
 	fmt.Fprintln(p.Wout, "\nPacked refs:")
@@ -161,5 +162,6 @@ func (b *ShowRefBuiltin) Which(p *Params) {
 	}
 	for _, v := range prefs {
 		fmtr.Ref(v)
+		fmtr.Lf()
 	}
 }

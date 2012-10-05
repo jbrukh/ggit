@@ -67,7 +67,7 @@ func (f *Format) Ref(r Ref) (int, error) {
 }
 
 func (f *Format) Deref(r Ref) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s %s^{}\n", r.Target(), r.Name())
+	return fmt.Fprintf(f.Writer, "%s %s^{}", r.Target(), r.Name())
 }
 
 // ================================================================= //

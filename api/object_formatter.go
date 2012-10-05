@@ -15,5 +15,5 @@ func (f *Format) Lf() (int, error) {
 }
 
 func (f *Format) Printf(format string, items ...interface{}) (int, error) {
-	return fmt.Fprintf(f.Writer, format, items)
+	return fmt.Fprintf(f.Writer, format, items...)
 }
