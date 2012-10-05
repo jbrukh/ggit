@@ -2,6 +2,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
@@ -37,6 +38,7 @@ func main() {
 		path, err := findRepo()
 		if err != nil {
 			fmt.Fprintf(Werr, "Could not discern parent repo: %s\n", err.Error())
+			os.Exit(1)
 		}
 		fmt.Fprintln(Wout, path)
 		os.Exit(0)
@@ -61,7 +63,8 @@ func main() {
 	if ok {
 		repo, e := openRepo()
 		if e != nil {
-			fmt.Println(e.Error())
+			fmt.Fprintln(Werr, msgNotARepo)
+			os.Exit(1)
 		}
 		cmd.Execute(&builtin.Params{
 			repo,
@@ -75,32 +78,30 @@ func main() {
 }
 
 func findRepo() (string, error) {
-	// WARNING: this implementation has a massive bug because
-	// the first stat statement never returns an error. TODO
-	pth := "."
+	dir, e := os.Getwd()
+	if e != nil {
+		return "", e
+	}
+	var file string
 	for {
-		_, err := os.Stat(path.Join(pth))
-		if err != nil {
-			// either the directory does not exist,
-			// or there was some sort of reading error
-			return "", err
-		} else {
-			gitDir := path.Join(pth, api.DefaultGitDir)
-			_, err := os.Stat(gitDir)
-			if os.IsNotExist(err) {
-				// directory exists, but gitDir does not
-				// go one more directory up
-				pth = path.Join(pth, "..")
-				continue
-			} else if err != nil {
-				// other errors -- cannot read the gitDir
-				return "", err
+		// check this directory to see if it contains
+		// the git directory, usually .git
+		gitDir := path.Join(dir, api.DefaultGitDir)
+		if _, e = os.Stat(gitDir); os.IsNotExist(e) {
+			// try the directory up
+			dir, file = path.Split(dir)
+			if file == "" { // nothing more to go up
+				return "", errors.New("no repo found")
 			}
-			// git dir exists, return it
+		} else if e != nil {
+			// there is some other error
+			break
+		} else {
+			// no, error the git dir exists
 			return gitDir, nil
 		}
 	}
-	panic("shall not get here")
+	return "", e
 }
 
 // openRepo opens the repository, if any, which is

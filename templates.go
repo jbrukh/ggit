@@ -24,7 +24,7 @@ const (
 	msgNotARepo = "fatal: Not a git repository (or any of the parent directories): " + api.DefaultGitDir
 )
 
-var tmplUsage = `usage: ggit [--version] <command> [<args>]
+var tmplUsage = `usage: ggit [--show-repo] [--version] <command> [<args>]
 
 Available commands:
 {{range .}}
