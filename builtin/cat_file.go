@@ -66,29 +66,30 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 }
 
 func (b *CatFileBuiltin) PrettyPrint(p *Params, oid *api.ObjectId) error {
-	if obj, err := p.Repo.ReadObject(oid); err != nil {
+	if o, err := p.Repo.ReadObject(oid); err != nil {
 		return errors.New(err.Error())
 	} else {
-		fmt.Fprint(p.Wout, obj.String())
+		f := api.Format{p.Wout}
+		f.Object(o)
 		return err
 	}
 	return nil
 }
 
 func (b *CatFileBuiltin) ShowType(p *Params, oid *api.ObjectId) (err error) {
-	var obj api.Object
-	if obj, err = p.Repo.ReadObject(oid); err != nil {
+	var o api.Object
+	if o, err = p.Repo.ReadObject(oid); err != nil {
 		return err
 	}
-	fmt.Fprintln(p.Wout, obj.Type())
+	fmt.Fprintln(p.Wout, o.Type())
 	return
 }
 
 func (b *CatFileBuiltin) ShowSize(p *Params, oid *api.ObjectId) (err error) {
-	var obj api.Object
-	if obj, err = p.Repo.ReadObject(oid); err != nil {
+	var o api.Object
+	if o, err = p.Repo.ReadObject(oid); err != nil {
 		return err
 	}
-	fmt.Fprintln(p.Wout, obj.Size())
+	fmt.Fprintln(p.Wout, o.Size())
 	return
 }

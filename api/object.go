@@ -8,7 +8,18 @@ type Object interface {
 
 	// Size returns the size of the payload of this object.
 	Size() int
+}
 
-	// Some default representation of this object.
-	String() string
+func (f *Format) Object(o Object) (int, error) {
+	switch t := o.(type) {
+	case *Blob:
+		return f.Blob(t)
+	case *Tree:
+		return f.Tree(t)
+	case *Commit:
+		return f.Commit(t)
+	case *Tag:
+		return f.Tag(t)
+	}
+	panic("unknown object")
 }

@@ -22,11 +22,6 @@ type Tag struct {
 	objectType ObjectType
 }
 
-func (t *Tag) String() string {
-	const FMT = "object %s\ntype %s\ntag %s\ntagger %s\n\n%s"
-	return fmt.Sprintf(FMT, t.object, t.objectType, t.tag, t.tagger.String(), t.message)
-}
-
 func (t *Tag) Type() ObjectType {
 	return ObjectTag
 }
@@ -85,5 +80,6 @@ func (p *objectParser) parseTag() *Tag {
 // ================================================================= //
 
 func (f *Format) Tag(t *Tag) (int, error) {
-	return fmt.Fprint(f.Writer, t.String())
+	return fmt.Fprintf(f.Writer, "object %s\ntype %s\ntag %s\ntagger %s\n\n%s",
+		t.object, t.objectType, t.tag, t.tagger.String(), t.message)
 }

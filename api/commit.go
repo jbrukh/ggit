@@ -46,22 +46,6 @@ func (c *Commit) FirstParent() *ObjectId {
 	return nil
 }
 
-func (c *Commit) String() string {
-	// TODO: move this to goddamn formatter
-	const format = "tree %s\n%s\nauthor %s\ncommitter %s\n\n%s"
-	parentsToString := func(p []*ObjectId) string {
-		s := ""
-		for i := 0; i < len(p); i++ {
-			if i > 0 {
-				s = s + "\n"
-			}
-			s = fmt.Sprintf("%sparent %s", s, p[i])
-		}
-		return s
-	}
-	return fmt.Sprintf(format, c.tree, parentsToString(c.parents), c.author, c.committer, c.message)
-}
-
 func (c *Commit) addParent(oid *ObjectId) {
 	if c.parents == nil {
 		c.parents = make([]*ObjectId, 0, 2)
@@ -116,6 +100,21 @@ func (p *objectParser) parseCommit() *Commit {
 // OBJECT FORMATTER
 // ================================================================= //
 
+// TODO: the return values of this method are broken
 func (f *Format) Commit(c *Commit) (int, error) {
-	return fmt.Fprint(f.Writer, c.String())
+	// tree
+	fmt.Fprintf(f.Writer, "tree %\n", c.tree)
+
+	// parents
+	for _, p := range c.parents {
+		fmt.Fprintf(f.Writer, "parent %s\n", p)
+	}
+
+	// author
+	fmt.Fprintf(f.Writer, "author %\n", c.author)
+	fmt.Fprintf(f.Writer, "committer %\n", c.committer)
+
+	// commit message
+	fmt.Fprintf(f.Writer, "\n%s", c.message)
+	return 0, nil // TODO TODO
 }

@@ -16,10 +16,6 @@ type Blob struct {
 	repo Repository
 }
 
-func (b *Blob) String() string {
-	return string(b.data)
-}
-
 func (b *Blob) Type() ObjectType {
 	return ObjectBlob
 }

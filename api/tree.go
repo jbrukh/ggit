@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"fmt"
 )
 
@@ -26,13 +25,6 @@ func (t *Tree) Type() ObjectType {
 
 func (t *Tree) Size() int {
 	return t.size
-}
-
-func (t *Tree) String() string {
-	b := bytes.NewBufferString("")
-	f := &Format{b}
-	f.Tree(t)
-	return b.String()
 }
 
 // ================================================================= //
