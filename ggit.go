@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	flagVersion  bool
-	flagShowRepo bool
+	flagVersion     bool
+	flagWhichGitDir bool
 
 	Wout = os.Stdout
 	Werr = os.Stderr
@@ -22,7 +22,7 @@ var (
 
 func init() {
 	flag.BoolVar(&flagVersion, "version", false, "")
-	flag.BoolVar(&flagShowRepo, "show-repo", false, "show the path of the enclosing repo")
+	flag.BoolVar(&flagWhichGitDir, "which-git-dir", false, "show the path of the enclosing repo")
 }
 
 // ================================================================= //
@@ -34,7 +34,7 @@ func main() {
 	flag.Parse()
 
 	// --show-repo
-	if flagShowRepo {
+	if flagWhichGitDir {
 		path, err := findRepo()
 		if err != nil {
 			fmt.Fprintf(Werr, "Could not discern parent repo: %s\n", err.Error())
