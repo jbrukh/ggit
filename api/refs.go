@@ -29,8 +29,8 @@ func init() {
 // name for an ObjectId. 
 type Ref interface {
 	ObjectId() *ObjectId
+	Target() *ObjectId
 	Name() string
-	String() string
 }
 
 // sort interface for sorting refs
@@ -40,44 +40,35 @@ func (s refByName) Len() int           { return len(s) }
 func (s refByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s refByName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
 
-type NamedRef struct {
-	oid  *ObjectId
-	name string
+type ref struct {
+	oid       *ObjectId
+	name      string
+	targetOid *ObjectId // if tag, this is the commit the tag points to
 }
 
-func (r *NamedRef) ObjectId() *ObjectId {
+func (r *ref) ObjectId() *ObjectId {
 	return r.oid
 }
 
-func (r *NamedRef) Name() string {
+func (r *ref) Name() string {
 	return r.name
 }
 
-func (r *NamedRef) String() string {
-	const format = "%s %s"
-	return fmt.Sprintf(format, r.oid, r.name)
-}
-
-type PackedRef struct {
-	NamedRef
-
-	// if this is an annotated tag
-	// we may have the pointed to commit here
-	// as an optimization
-	targetOid *ObjectId
-}
-
-func (r *PackedRef) TargetOid() *ObjectId {
+func (r *ref) Target() *ObjectId {
 	return r.targetOid
 }
 
-func (f *Format) DerefTag(r *PackedRef) (int, error) {
-	const format = "%s %s^{}\n"
-	return fmt.Fprint(f.W, format, r.targetOid, r.name)
+// ================================================================= //
+// TAG FORMATTING
+// ================================================================= //
+
+func (f *Format) Ref(r Ref) (int, error) {
+	return fmt.Fprintf(f.Writer, "%s %s", r.ObjectId(), r.Name())
 }
 
-// TODO: do we need this?
-type PackedRefs []*PackedRef
+func (f *Format) Deref(r Ref) (int, error) {
+	return fmt.Fprintf(f.Writer, "%s %s^{}\n", r.Target(), r.Name())
+}
 
 // ================================================================= //
 // REF FILTERING
@@ -134,8 +125,8 @@ func matchRefs(full, partial string) bool {
 // REF PARSING
 // ================================================================= //
 
-func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
-	r := make(PackedRefs, 0)
+func (p *refParser) ParsePackedRefs() ([]Ref, error) {
+	r := make([]Ref, 0)
 	err := safeParse(func() {
 		for !p.EOF() {
 			c := p.PeekByte()
@@ -154,17 +145,15 @@ func (p *refParser) ParsePackedRefs() (PackedRefs, error) {
 				p.ConsumeByte(LF)
 
 				if l := len(r); l > 0 {
-					r[l-1].targetOid = targetOid
+					r[l-1].(*ref).targetOid = targetOid
 				}
 			default:
-				re := new(NamedRef)
+				re := new(ref)
 				re.oid = p.ParseObjectId()
 				p.ConsumeByte(SP)
 				re.name = p.ReadString(LF)
 
-				r = append(r, &PackedRef{
-					NamedRef: *re,
-				})
+				r = append(r, re)
 			}
 		}
 	})

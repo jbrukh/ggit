@@ -85,5 +85,5 @@ func (p *objectParser) parseTag() *Tag {
 // ================================================================= //
 
 func (f *Format) Tag(t *Tag) (int, error) {
-	return fmt.Fprint(f.W, t.String())
+	return fmt.Fprint(f.Writer, t.String())
 }

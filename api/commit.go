@@ -47,6 +47,7 @@ func (c *Commit) FirstParent() *ObjectId {
 }
 
 func (c *Commit) String() string {
+	// TODO: move this to goddamn formatter
 	const format = "tree %s\n%s\nauthor %s\ncommitter %s\n\n%s"
 	parentsToString := func(p []*ObjectId) string {
 		s := ""
@@ -116,5 +117,5 @@ func (p *objectParser) parseCommit() *Commit {
 // ================================================================= //
 
 func (f *Format) Commit(c *Commit) (int, error) {
-	return fmt.Fprint(f.W, c.String())
+	return fmt.Fprint(f.Writer, c.String())
 }

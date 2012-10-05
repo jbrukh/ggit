@@ -53,5 +53,5 @@ func (p *objectParser) parseBlob() *Blob {
 // ================================================================= //
 
 func (f *Format) Blob(b *Blob) (int, error) {
-	return fmt.Fprint(f.W, string(b.data))
+	return fmt.Fprintf(f.Writer, string(b.data))
 }

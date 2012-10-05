@@ -87,7 +87,7 @@ func (p *objectParser) parseTree() *Tree {
 func (f *Format) Tree(t *Tree) (int, error) {
 	N := 0
 	for _, e := range t.entries {
-		n, err := fmt.Fprintf(f.W, "%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)
+		n, err := fmt.Fprintf(f.Writer, "%.6o %s %-43s %s\n", e.mode, e.otype, e.oid, e.name)
 		N += n
 		if err != nil {
 			return N, err

@@ -25,29 +25,43 @@ const (
 type Backend interface {
 	// Read an arbitrary object from the backend
 	ReadObject(oid *ObjectId) (o Object, err error)
+
+	// TODO: while this is ok for now, this debug
+	// method should not be part of the backend interface
 	ObjectIds() (oids []ObjectId, err error)
 }
 
 // Repository. Currently, this interface is tracking
 // the interface of DiskRepository (for the most part).
 // However, in the scheme of things, a Repository
-// should be a more general interface. For instance,
-// a non-disk based repository may not care so much
-// about packed refs because performance is provided
-// in a different way for ref parsing.
+// should be a more general interface.
 type Repository interface {
 	Backend
+
+	// TODO: this needs to be replaced with
+	// higher level index operations
 	Index() (idx *Index, err error)
-	PackedRefs() (pr PackedRefs, err error)
-	Ref(refstr string) (Ref, error)
+
+	// TODO: loose or packed refs may be irrelevant
+	// at this level of abstractions, probably should
+	// remove from here. For instance, packed refs
+	// are meant to compensate for lots of disk reads
+	// but such optimization may be irrelevant for
+	// repos with distributed cache backends.
+	LooseRefs() (pr []Ref, err error)
+	PackedRefs() (pr []Ref, err error)
+
+	// Refs returns a list of all refs in the repository.
+	// TODO: perhaps replace with a visitor of refs?
 	Refs() ([]Ref, error)
-	PathRef(refpath string) (*ObjectId, error)
+
+	RevParse(name string) (Object, error)
 }
 
 // a representation of a git repository
 type DiskRepository struct {
 	path string
-	pr   PackedRefs
+	pr   []Ref
 }
 
 // open a reprository that is located at the given path
@@ -114,7 +128,7 @@ func (r *DiskRepository) Index() (idx *Index, err error) {
 	return toIndex(bufio.NewReader(file))
 }
 
-func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
+func (r *DiskRepository) PackedRefs() (pr []Ref, err error) {
 	file, e := r.relativeFile(PackedRefsFile)
 	if e != nil {
 		return nil, e
@@ -128,6 +142,7 @@ func (r *DiskRepository) PackedRefs() (pr PackedRefs, err error) {
 }
 
 func (r *DiskRepository) LooseRefs() ([]Ref, error) {
+	// TODO: figure out a way to decouple this logic
 	repoPath := r.path + "/"
 	dir := path.Join(repoPath, "refs")
 	refs := make([]Ref, 0)
@@ -135,22 +150,16 @@ func (r *DiskRepository) LooseRefs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
 				refpath := trimPrefix(path, repoPath)
-				oid, e := r.PathRef(refpath)
+				oid, e := r.pathRef(refpath)
 				if e != nil {
 					return e
 				}
-				refs = append(refs, &NamedRef{oid, refpath})
+				refs = append(refs, &ref{oid, refpath, nil})
 			}
 			return nil
 		},
 	)
 	return refs, err
-}
-
-// ReadRef turns a path into a ggit Ref object. By path here
-// we mean a high-level symbolic ref, possibly with modifiers.
-func (r *DiskRepository) Ref(refstr string) (re Ref, err error) {
-	return nil, nil // TODO
 }
 
 func (r *DiskRepository) Refs() ([]Ref, error) {
@@ -177,11 +186,11 @@ func (r *DiskRepository) Refs() ([]Ref, error) {
 			// refs are files, so...
 			if !f.IsDir() {
 				refpath := trimPrefix(path, r.path+"/")
-				oid, e := r.PathRef(refpath)
+				oid, e := r.pathRef(refpath)
 				if e != nil {
 					return e
 				}
-				refs[refpath] = &NamedRef{oid, refpath}
+				refs[refpath] = &ref{oid, refpath, nil}
 			}
 			return nil
 		},
@@ -199,7 +208,7 @@ func (r *DiskRepository) Refs() ([]Ref, error) {
 	return refList, nil
 }
 
-func (r *DiskRepository) PathRef(refpath string) (*ObjectId, error) {
+func (r *DiskRepository) pathRef(refpath string) (*ObjectId, error) {
 	const RefMarker = "ref:"
 	file, e := r.relativeFile(refpath)
 	if e != nil {
@@ -219,7 +228,7 @@ func (r *DiskRepository) PathRef(refpath string) (*ObjectId, error) {
 			p.ConsumeString(RefMarker)
 			p.ConsumeByte(SP)
 			symbolic := p.ReadString(LF)
-			oid, e = r.PathRef(symbolic)
+			oid, e = r.pathRef(symbolic)
 			if e != nil {
 				panicErr(e.Error())
 			}
@@ -229,6 +238,11 @@ func (r *DiskRepository) PathRef(refpath string) (*ObjectId, error) {
 		}
 	})
 	return oid, err
+}
+
+func (r *DiskRepository) RevParse(name string) (Object, error) {
+	// TODO: implement
+	return nil, nil
 }
 
 // ================================================================= //

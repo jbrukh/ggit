@@ -105,38 +105,43 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 	}
 	f := api.FilterAnd(filters...)
 	filtered := api.FilterRefs(refs, f)
+
+	// formatter
+	fmtr := api.Format{p.Wout}
+
 	if !b.flagQuiet {
 		if b.flagDeref {
-			for _, v := range filtered {
-				fmt.Fprintln(p.Wout, v.String())
-				switch t := v.(type) {
-				case *api.PackedRef:
-					if t.TargetOid() != nil {
-						f := api.Format{p.Wout}
-						f.DerefTag(t)
-					} else {
-						// TODO: LOOK UP THE OBJECT ID
-					}
-				default:
-					obj, err := p.Repo.ReadObject(t.ObjectId())
+			for _, r := range filtered {
+				fmtr.Ref(r)
+				fmtr.Lf()
+				if r.Target() != nil {
+					fmtr.Deref(r)
+					fmtr.Lf()
+				} else {
+					obj, err := p.Repo.ReadObject(r.ObjectId())
 					if err == nil {
 						if obj.Type() == api.ObjectTag {
 							tag := obj.(*api.Tag)
-							fmt.Fprintf(p.Wout, "%s %s^{}\n", tag.Object(), t.Name())
+							fmtr.Printf("%s %s^{}\n", tag.Object(), r.Name()) // TODO
 						}
 					}
 				}
 			}
 		} else { // just do the non-deref case separately, for performance
-			for _, v := range filtered {
-				fmt.Fprintln(p.Wout, v.String())
+			for _, r := range filtered {
+				fmtr.Ref(r)
+				fmtr.Lf()
 			}
 		}
 	}
 }
 
+/*
+TODO: remove this method, it is mainly for debugging
+*/
 func (b *ShowRefBuiltin) Which(p *Params) {
 	repo := p.Repo.(*api.DiskRepository)
+	fmtr := api.Format{p.Wout}
 
 	fmt.Fprintln(p.Wout, "Loose refs:")
 	refs, e := repo.LooseRefs()
@@ -145,7 +150,7 @@ func (b *ShowRefBuiltin) Which(p *Params) {
 		return
 	}
 	for _, v := range refs {
-		fmt.Fprintln(p.Wout, v.String())
+		fmtr.Ref(v)
 	}
 
 	fmt.Fprintln(p.Wout, "\nPacked refs:")
@@ -155,6 +160,6 @@ func (b *ShowRefBuiltin) Which(p *Params) {
 		return
 	}
 	for _, v := range prefs {
-		fmt.Fprintln(p.Wout, v.String())
+		fmtr.Ref(v)
 	}
 }
