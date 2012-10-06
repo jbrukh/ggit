@@ -59,7 +59,6 @@ func (c *Commit) addParent(oid *ObjectId) {
 // ================================================================= //
 
 func (p *objectParser) parseCommit() *Commit {
-
 	c := new(Commit)
 	p.ResetCount()
 
@@ -78,9 +77,11 @@ func (p *objectParser) parseCommit() *Commit {
 		p.ConsumeByte(LF)
 	}
 
+	// parse author
 	c.author = p.parseWhoWhen(markerAuthor)
 	p.ConsumeByte(LF)
 
+	// parse committer
 	c.committer = p.parseWhoWhen(markerCommitter)
 	p.ConsumeByte(LF)
 
@@ -89,11 +90,9 @@ func (p *objectParser) parseCommit() *Commit {
 	c.message = p.String()
 
 	c.size = p.hdr.Size
-
 	if p.Count() != p.hdr.Size {
 		panicErr("payload doesn't match prescibed size")
 	}
-
 	return c
 }
 
