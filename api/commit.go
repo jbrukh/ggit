@@ -131,7 +131,7 @@ func ParentCommit(repo Repository, oid *ObjectId, n int) (*ObjectId, error) {
 	if n == 0 {
 		return oid, nil
 	}
-	o, err := repo.ReadObject(oid)
+	o, err := ObjectFromOid(repo, oid)
 	if err != nil {
 		return nil, err
 	}

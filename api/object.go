@@ -10,6 +10,10 @@ type Object interface {
 	Size() int
 }
 
+// ================================================================= //
+// FORMATTING
+// ================================================================= //
+
 func (f *Format) Object(o Object) (int, error) {
 	switch t := o.(type) {
 	case *Blob:
@@ -22,4 +26,12 @@ func (f *Format) Object(o Object) (int, error) {
 		return f.Tag(t)
 	}
 	panic("unknown object")
+}
+
+// ================================================================= //
+// OPERATIONS
+// ================================================================= //
+
+func ObjectFromOid(repo Repository, oid *ObjectId) (Object, error) {
+	return repo.ObjectFromOid(oid)
 }

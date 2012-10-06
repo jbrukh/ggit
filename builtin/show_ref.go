@@ -118,7 +118,7 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 					fmtr.Deref(r)
 					fmtr.Lf()
 				} else {
-					obj, err := p.Repo.ReadObject(r.ObjectId())
+					obj, err := api.ObjectFromOid(p.Repo, r.ObjectId())
 					if err == nil {
 						if obj.Type() == api.ObjectTag {
 							tag := obj.(*api.Tag)

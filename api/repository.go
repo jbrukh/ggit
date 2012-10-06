@@ -18,29 +18,14 @@ const (
 	PackedRefsFile    = "packed-refs"
 )
 
-// A Backend supports storage of arbitrary Git
-// objects without particular regard of the technical
-// specifics. The backend can deliver a RawObject
-// by id (it is a read-only key-value store.)
-type Backend interface {
-	// Read an arbitrary object from the backend
-	ReadObject(oid *ObjectId) (o Object, err error)
-
-	// TODO: while this is ok for now, this debug
-	// method should not be part of the backend interface
-	ObjectIds() (oids []ObjectId, err error)
-}
-
 // Repository. Currently, this interface is tracking
 // the interface of DiskRepository (for the most part).
 // However, in the scheme of things, a Repository
 // should be a more general interface.
 type Repository interface {
-	Backend
-
 	// TODO: this needs to be replaced with
 	// higher level index operations
-	Index() (idx *Index, err error)
+	Index() (*Index, error)
 
 	// TODO: loose or packed refs may be irrelevant
 	// at this level of abstractions, probably should
@@ -48,12 +33,19 @@ type Repository interface {
 	// are meant to compensate for lots of disk reads
 	// but such optimization may be irrelevant for
 	// repos with distributed cache backends.
-	LooseRefs() (pr []Ref, err error)
-	PackedRefs() (pr []Ref, err error)
+	LooseRefs() ([]Ref, error)
+	PackedRefs() ([]Ref, error)
+
+	// TODO: while this is ok for now, this debug
+	// method should not be part of the backend interface
+	ObjectIds() ([]ObjectId, error)
 
 	// Refs returns a list of all refs in the repository.
 	// TODO: perhaps replace with a visitor of refs?
 	Refs() ([]Ref, error)
+
+	ObjectFromOid(oid *ObjectId) (Object, error)
+	ObjectFromRef(spec string) (Object, error)
 
 	RevParse(name string) (Object, error)
 }
@@ -76,7 +68,7 @@ func Open(path string) (r *DiskRepository, err error) {
 	return
 }
 
-func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
+func (r *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error) {
 	var (
 		f  *os.File
 		e  error
@@ -96,6 +88,11 @@ func (r *DiskRepository) ReadObject(oid *ObjectId) (obj Object, err error) {
 	p := newObjectParser(file)
 
 	return p.ParsePayload()
+}
+
+func (r *DiskRepository) ObjectFromRef(spec string) (obj Object, err error) {
+	// TODO: validate the ref
+	return nil, nil
 }
 
 //find all objects and print their ids
@@ -222,6 +219,7 @@ func (r *DiskRepository) pathRef(refpath string) (*ObjectId, error) {
 		oid *ObjectId
 		err error
 	)
+	// TODO: figure out a better way to structure the parsers
 	err = safeParse(func() {
 		// is it a symbolic ref?
 		if p.PeekString(len(RefMarker)) == RefMarker {

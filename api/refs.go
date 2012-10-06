@@ -165,13 +165,15 @@ func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 // REF RESOLUTION
 // ================================================================= //
 
+// TODO: this doesn't belong here, this is actually the beginning of
+// the rev_parser.
 func ResolveRef(repo Repository, refstr string) (*ObjectId, error) {
 	if regexpCaret.MatchString(refstr) {
 		oid, err := ResolveRef(repo, trimLast(refstr))
 		if err != nil {
 			return nil, err
 		}
-		obj, e := repo.ReadObject(oid)
+		obj, e := ObjectFromOid(repo, oid)
 		if e != nil {
 			return nil, e
 		}
@@ -190,4 +192,12 @@ func ResolveRef(repo Repository, refstr string) (*ObjectId, error) {
 		return oid, nil
 	}
 	return nil, errors.New("unknown reference")
+}
+
+// ================================================================= //
+// OPERATIONS
+// ================================================================= //
+
+func ObjectFromRef(repo Repository, spec string) (Object, error) {
+	return repo.ObjectFromRef(spec)
 }
