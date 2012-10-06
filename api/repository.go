@@ -46,7 +46,7 @@ type Repository interface {
 	Refs() ([]Ref, error)
 
 	ObjectFromOid(oid *ObjectId) (Object, error)
-	ObjectFromRef(spec string) (Object, error)
+	OidFromRef(spec string) (*ObjectId, error)
 
 	RevParse(name string) (Object, error)
 }
@@ -87,16 +87,16 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 	return p.ParsePayload()
 }
 
-func (repo *DiskRepository) ObjectFromRef(spec string) (obj Object, err error) {
+func (repo *DiskRepository) OidFromRef(spec string) (oid *ObjectId, err error) {
 	r, err := repo.Ref(spec)
 	if err != nil {
 		return nil, err
 	}
 	symbolic, target := r.Target()
 	if symbolic {
-		return repo.ObjectFromRef(target.(string))
+		return repo.OidFromRef(target.(string))
 	}
-	return repo.ObjectFromOid(target.(*ObjectId))
+	return target.(*ObjectId), nil
 }
 
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
@@ -174,14 +174,12 @@ func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
 	err := filepath.Walk(dir,
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
-				refpath := trimPrefix(path, repoPath)
-
-				// TODO!!!!!!!
-				oid, e := repo.pathRef(refpath)
+				spec := trimPrefix(path, repoPath)
+				oid, e := repo.OidFromRef(spec)
 				if e != nil {
 					return e
 				}
-				refs = append(refs, &ref{refpath, oid, "", nil})
+				refs = append(refs, &ref{name: spec, oid: oid})
 			}
 			return nil
 		},
@@ -212,12 +210,12 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			// refs are files, so...
 			if !f.IsDir() {
-				refpath := trimPrefix(path, repo.path+"/")
-				oid, e := repo.pathRef(refpath)
+				spec := trimPrefix(path, repo.path+"/")
+				oid, e := repo.OidFromRef(spec)
 				if e != nil {
 					return e
 				}
-				refs[refpath] = &ref{refpath, oid, "", nil}
+				refs[spec] = &ref{name: spec, oid: oid}
 			}
 			return nil
 		},
@@ -233,38 +231,6 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 	}
 	sort.Sort(refByName(refList))
 	return refList, nil
-}
-
-func (repo *DiskRepository) pathRef(spec string) (*ObjectId, error) {
-	const RefMarker = "ref:"
-	file, e := repo.relativeFile(spec)
-	if e != nil {
-		return nil, e
-	}
-	defer file.Close()
-
-	p := newRefParser(bufio.NewReader(file), "")
-	var (
-		oid *ObjectId
-		err error
-	)
-	// TODO: figure out a better way to structure the parsers
-	err = safeParse(func() {
-		// is it a symbolic ref?
-		if p.PeekString(len(RefMarker)) == RefMarker {
-			p.ConsumeString(RefMarker)
-			p.ConsumeByte(SP)
-			symbolic := p.ReadString(LF)
-			oid, e = repo.pathRef(symbolic)
-			if e != nil {
-				panicErr(e.Error())
-			}
-		} else {
-			oid = p.ParseObjectId()
-			p.ConsumeByte(LF)
-		}
-	})
-	return oid, err
 }
 
 func (repo *DiskRepository) RevParse(name string) (Object, error) {

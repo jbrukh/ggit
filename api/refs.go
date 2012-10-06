@@ -199,6 +199,6 @@ func (p *refParser) parseRef() (r Ref, err error) {
 // OPERATIONS
 // ================================================================= //
 
-func ObjectFromRef(repo Repository, spec string) (Object, error) {
-	return repo.ObjectFromRef(spec)
+func OidFromRef(repo Repository, spec string) (*ObjectId, error) {
+	return repo.OidFromRef(spec)
 }
