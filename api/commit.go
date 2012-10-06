@@ -26,7 +26,6 @@ type Commit struct {
 	message   string
 	tree      *ObjectId
 	parents   []*ObjectId
-	repo      Repository // TODO: remove this from here
 	size      int
 }
 

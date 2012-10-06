@@ -1,8 +1,9 @@
 package api
 
 import (
-	"testing"
+	"bytes"
 	"fmt"
+	"testing"
 )
 
 const testTagText = `object a53e5437def11c1eed3a4be1d45fba42e7582b03
@@ -26,7 +27,7 @@ func Test_parseTag(t *testing.T) {
 	tag, ok := parseTag(t, testTag)
 	assert(t, ok)
 	assert(t, tag.tag == "tattoo")
-	assert(t, tag.object.String() == "a53e5437def11c1eed3a4be1d45fba42e7582b03" )
+	assert(t, tag.object.String() == "a53e5437def11c1eed3a4be1d45fba42e7582b03")
 	assert(t, tag.message == "this is not a tag. it is a flying spaghetti monster.")
 	assert(t, tag.tagger.Email() == "michael.a.bosworth@gmail.com")
 	assert(t, tag.tagger.Name() == "Michael Bosworth")
@@ -34,10 +35,13 @@ func Test_parseTag(t *testing.T) {
 	assert(t, tag.tagger.Offset() == int(-240))
 }
 
-func Test_tagString(t * testing.T) {
+func Test_tagString(t *testing.T) {
 	tag, ok := parseTag(t, testTag)
 	assert(t, ok)
-	s := tag.String()
+	b := bytes.NewBufferString("")
+	f := Format{b}
+	f.Tag(tag)
+	s := b.String()
 	tagData := withHeader(s)
 	var thereAndBackAgain *Tag
 	thereAndBackAgain, ok = parseTag(t, tagData)

@@ -12,7 +12,6 @@ const (
 )
 
 type Tag struct {
-	repo Repository
 	//commit-SHA1
 	object     *ObjectId
 	tag        string

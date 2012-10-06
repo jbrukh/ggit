@@ -13,7 +13,6 @@ import (
 type Blob struct {
 	data []byte
 	size int
-	repo Repository
 }
 
 func (b *Blob) Type() ObjectType {

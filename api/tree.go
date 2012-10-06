@@ -10,7 +10,6 @@ import (
 
 type Tree struct {
 	entries []*TreeEntry
-	repo    Repository
 	size    int
 }
 
@@ -50,7 +49,6 @@ func (e *TreeEntry) String() (s string) {
 func (p *objectParser) parseTree() *Tree {
 	t := &Tree{
 		entries: make([]*TreeEntry, 0), // TODO
-		repo:    nil,
 	}
 	p.ResetCount()
 	for !p.EOF() {
