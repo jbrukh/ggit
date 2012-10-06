@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 )
@@ -38,10 +37,9 @@ func Test_parseTag(t *testing.T) {
 func Test_tagString(t *testing.T) {
 	tag, ok := parseTag(t, testTag)
 	assert(t, ok)
-	b := bytes.NewBufferString("")
-	f := Format{b}
+	f := NewStrFormat()
 	f.Tag(tag)
-	s := b.String()
+	s := f.String()
 	tagData := withHeader(s)
 	var thereAndBackAgain *Tag
 	thereAndBackAgain, ok = parseTag(t, tagData)
