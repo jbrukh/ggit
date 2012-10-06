@@ -57,24 +57,23 @@ type DiskRepository struct {
 }
 
 // open a reprository that is located at the given path
-func Open(path string) (r *DiskRepository, err error) {
+func Open(path string) (*DiskRepository, error) {
 	// check that repo is valid
 	if !validateRepo(path) {
 		return nil, errors.New("not a valid repo")
 	}
-	r = &DiskRepository{
+	return &DiskRepository{
 		path: path,
-	}
-	return
+	}, nil
 }
 
-func (r *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error) {
+func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error) {
 	var (
 		f  *os.File
 		e  error
 		rz io.ReadCloser
 	)
-	if f, e = r.objectFile(oid); e != nil {
+	if f, e = repo.objectFile(oid); e != nil {
 		return nil, e
 	}
 	defer f.Close() // just in case
@@ -90,14 +89,18 @@ func (r *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error) {
 	return p.ParsePayload()
 }
 
-func (r *DiskRepository) ObjectFromRef(spec string) (obj Object, err error) {
+func (repo *DiskRepository) ObjectFromRef(spec string) (obj Object, err error) {
 	// TODO: validate the ref
 	return nil, nil
 }
 
+func (repo *DiskRepository) Ref(spec string) (Ref, error) {
+	return nil, nil
+}
+
 //find all objects and print their ids
-func (r *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
-	objectsRoot := path.Join(r.path, DefaultObjectsDir)
+func (repo *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
+	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
 	oids = make([]ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
 	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
@@ -116,8 +119,8 @@ func (r *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 	return
 }
 
-func (r *DiskRepository) Index() (idx *Index, err error) {
-	file, e := r.relativeFile(IndexFile)
+func (repo *DiskRepository) Index() (idx *Index, err error) {
+	file, e := repo.relativeFile(IndexFile)
 	if e != nil {
 		return nil, e
 	}
@@ -125,8 +128,8 @@ func (r *DiskRepository) Index() (idx *Index, err error) {
 	return toIndex(bufio.NewReader(file))
 }
 
-func (r *DiskRepository) PackedRefs() (pr []Ref, err error) {
-	file, e := r.relativeFile(PackedRefsFile)
+func (repo *DiskRepository) PackedRefs() (pr []Ref, err error) {
+	file, e := repo.relativeFile(PackedRefsFile)
 	if e != nil {
 		return nil, e
 	}
@@ -138,9 +141,9 @@ func (r *DiskRepository) PackedRefs() (pr []Ref, err error) {
 	return pr, nil
 }
 
-func (r *DiskRepository) LooseRefs() ([]Ref, error) {
+func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
 	// TODO: figure out a way to decouple this logic
-	repoPath := r.path + "/"
+	repoPath := repo.path + "/"
 	dir := path.Join(repoPath, "refs")
 	refs := make([]Ref, 0)
 	err := filepath.Walk(dir,
@@ -149,7 +152,7 @@ func (r *DiskRepository) LooseRefs() ([]Ref, error) {
 				refpath := trimPrefix(path, repoPath)
 
 				// TODO!!!!!!!
-				oid, e := r.pathRef(refpath)
+				oid, e := repo.pathRef(refpath)
 				if e != nil {
 					return e
 				}
@@ -161,10 +164,10 @@ func (r *DiskRepository) LooseRefs() ([]Ref, error) {
 	return refs, err
 }
 
-func (r *DiskRepository) Refs() ([]Ref, error) {
+func (repo *DiskRepository) Refs() ([]Ref, error) {
 
 	// First, get all the packed refs.
-	pr, err := r.PackedRefs()
+	pr, err := repo.PackedRefs()
 	if err != nil {
 		return nil, err
 	}
@@ -179,13 +182,13 @@ func (r *DiskRepository) Refs() ([]Ref, error) {
 	// the packed refs. It is worth it to note here that
 	// packed refs may contain outdated references because
 	// they are updated lazily.
-	dir := path.Join(r.path, "refs")
+	dir := path.Join(repo.path, "refs")
 	err = filepath.Walk(dir,
 		func(path string, f os.FileInfo, err error) error {
 			// refs are files, so...
 			if !f.IsDir() {
-				refpath := trimPrefix(path, r.path+"/")
-				oid, e := r.pathRef(refpath)
+				refpath := trimPrefix(path, repo.path+"/")
+				oid, e := repo.pathRef(refpath)
 				if e != nil {
 					return e
 				}
@@ -207,9 +210,9 @@ func (r *DiskRepository) Refs() ([]Ref, error) {
 	return refList, nil
 }
 
-func (r *DiskRepository) pathRef(spec string) (*ObjectId, error) {
+func (repo *DiskRepository) pathRef(spec string) (*ObjectId, error) {
 	const RefMarker = "ref:"
-	file, e := r.relativeFile(spec)
+	file, e := repo.relativeFile(spec)
 	if e != nil {
 		return nil, e
 	}
@@ -227,7 +230,7 @@ func (r *DiskRepository) pathRef(spec string) (*ObjectId, error) {
 			p.ConsumeString(RefMarker)
 			p.ConsumeByte(SP)
 			symbolic := p.ReadString(LF)
-			oid, e = r.pathRef(symbolic)
+			oid, e = repo.pathRef(symbolic)
 			if e != nil {
 				panicErr(e.Error())
 			}
@@ -239,7 +242,7 @@ func (r *DiskRepository) pathRef(spec string) (*ObjectId, error) {
 	return oid, err
 }
 
-func (r *DiskRepository) RevParse(name string) (Object, error) {
+func (repo *DiskRepository) RevParse(name string) (Object, error) {
 	// TODO: implement
 	return nil, nil
 }
@@ -250,14 +253,14 @@ func (r *DiskRepository) RevParse(name string) (Object, error) {
 
 // turn an oid into a path relative to the
 // git directory of a repository
-func (r *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error) {
+func (repo *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error) {
 	hex := oid.String()
-	path := path.Join(r.path, DefaultObjectsDir, hex[0:2], hex[2:])
+	path := path.Join(repo.path, DefaultObjectsDir, hex[0:2], hex[2:])
 	return os.Open(path)
 }
 
-func (r *DiskRepository) relativeFile(relPath string) (file *os.File, err error) {
-	path := path.Join(r.path, relPath)
+func (repo *DiskRepository) relativeFile(relPath string) (file *os.File, err error) {
+	path := path.Join(repo.path, relPath)
 	return os.Open(path)
 }
 
