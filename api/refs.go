@@ -10,11 +10,24 @@ import (
 // ================================================================= //
 
 // Ref is a representation of a ggit reference. A ref is a nice
-// name for an ObjectId. 
+// name for an ObjectId. More precisely, a ref is a path relative
+// to the git directory (without duplicate path separators, ".", or
+// "..").
 type Ref interface {
-	ObjectId() *ObjectId
-	Target() *ObjectId
+	// Name returns the string name of this ref. This is
+	// a simple path relative to the git directory, which
+	// may or may not be HEAD, MERGE_HEAD, etc.
 	Name() string
+
+	// Target returns the target reference, whether an oid
+	// or another string ref. If the ref is symbolic then
+	// "symbolic" is true.
+	Target() (symbolic bool, o interface{})
+
+	// If this ref is a tag, then this field may contain
+	// the target commit of the tag, if such an optimization
+	// is available. Otherwise, this field is nil.
+	Commit() *ObjectId
 }
 
 // sort interface for sorting refs
@@ -25,21 +38,28 @@ func (s refByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s refByName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
 
 type ref struct {
-	oid       *ObjectId
-	name      string
-	targetOid *ObjectId // if tag, this is the commit the tag points to
+	name   string
+	oid    *ObjectId
+	spec   string
+	commit *ObjectId // if tag, this is the commit the tag points to
 }
 
-func (r *ref) ObjectId() *ObjectId {
-	return r.oid
+func (r *ref) Target() (bool, interface{}) {
+	if r.oid != nil {
+		return false, r.oid
+	}
+	if r.spec != "" {
+		return true, r.spec
+	}
+	panic("does not have an object reference")
 }
 
 func (r *ref) Name() string {
 	return r.name
 }
 
-func (r *ref) Target() *ObjectId {
-	return r.targetOid
+func (r *ref) Commit() *ObjectId {
+	return r.commit
 }
 
 // ================================================================= //
@@ -47,12 +67,21 @@ func (r *ref) Target() *ObjectId {
 // ================================================================= //
 
 func (f *Format) Ref(r Ref) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s %s", r.ObjectId(), r.Name())
+	_, rf := r.Target() // symbolic or oid
+	return fmt.Fprintf(f.Writer, "%s %s", rf, r.Name())
 }
+
+// func (f *Format) OidRef(r Ref) (int, error) {
+// 	symbolic, rf := r.Ref()
+// 	if !symbolic {
+// 		return fmt.Fprintf(f.Writer, "%s %s", rf, r.Name())
+// 	}
+// 	return 0, errors.New("not an oid ref")
+// }
 
 // TODO: come up with a better name for this
 func (f *Format) Deref(r Ref) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s %s^{}", r.Target(), r.Name())
+	return fmt.Fprintf(f.Writer, "%s %s^{}", r.Commit(), r.Name())
 }
 
 // ================================================================= //
@@ -126,11 +155,11 @@ func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 				// this means the previous line is an annotated tag and the the current
 				// line contains the commit that tag points to
 				p.ConsumeByte('^')
-				targetOid := p.ParseObjectId()
+				commit := p.ParseObjectId()
 				p.ConsumeByte(LF)
 
 				if l := len(r); l > 0 {
-					r[l-1].(*ref).targetOid = targetOid
+					r[l-1].(*ref).commit = commit
 				}
 			default:
 				re := new(ref)

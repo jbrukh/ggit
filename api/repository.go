@@ -147,11 +147,13 @@ func (r *DiskRepository) LooseRefs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
 				refpath := trimPrefix(path, repoPath)
+
+				// TODO!!!!!!!
 				oid, e := r.pathRef(refpath)
 				if e != nil {
 					return e
 				}
-				refs = append(refs, &ref{oid, refpath, nil})
+				refs = append(refs, &ref{refpath, oid, "", nil})
 			}
 			return nil
 		},
@@ -187,7 +189,7 @@ func (r *DiskRepository) Refs() ([]Ref, error) {
 				if e != nil {
 					return e
 				}
-				refs[refpath] = &ref{oid, refpath, nil}
+				refs[refpath] = &ref{refpath, oid, "", nil}
 			}
 			return nil
 		},
@@ -205,15 +207,14 @@ func (r *DiskRepository) Refs() ([]Ref, error) {
 	return refList, nil
 }
 
-func (r *DiskRepository) pathRef(refpath string) (*ObjectId, error) {
+func (r *DiskRepository) pathRef(spec string) (*ObjectId, error) {
 	const RefMarker = "ref:"
-	file, e := r.relativeFile(refpath)
+	file, e := r.relativeFile(spec)
 	if e != nil {
 		return nil, e
 	}
 	defer file.Close()
 
-	// a ref c
 	p := newRefParser(bufio.NewReader(file))
 	var (
 		oid *ObjectId

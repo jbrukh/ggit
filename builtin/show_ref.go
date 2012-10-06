@@ -114,11 +114,12 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 			for _, r := range filtered {
 				fmtr.Ref(r)
 				fmtr.Lf()
-				if r.Target() != nil {
+				if r.Commit() != nil {
 					fmtr.Deref(r)
 					fmtr.Lf()
 				} else {
-					obj, err := api.ObjectFromOid(p.Repo, r.ObjectId())
+					_, oid := r.Target() // better not be symbolic
+					obj, err := api.ObjectFromOid(p.Repo, oid.(*api.ObjectId))
 					if err == nil {
 						if obj.Type() == api.ObjectTag {
 							tag := obj.(*api.Tag)
