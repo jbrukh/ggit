@@ -59,13 +59,14 @@ func (r *ref) Target() *ObjectId {
 }
 
 // ================================================================= //
-// TAG FORMATTING
+// REF FORMATTING
 // ================================================================= //
 
 func (f *Format) Ref(r Ref) (int, error) {
 	return fmt.Fprintf(f.Writer, "%s %s", r.ObjectId(), r.Name())
 }
 
+// TODO: come up with a better name for this
 func (f *Format) Deref(r Ref) (int, error) {
 	return fmt.Fprintf(f.Writer, "%s %s^{}", r.Target(), r.Name())
 }

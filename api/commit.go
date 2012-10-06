@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -25,7 +26,7 @@ type Commit struct {
 	message   string
 	tree      *ObjectId
 	parents   []*ObjectId
-	repo      Repository
+	repo      Repository // TODO: remove this from here
 	size      int
 }
 
@@ -39,6 +40,7 @@ func (c *Commit) Size() int {
 
 // FirstParent returns the first parent of the commit, or
 // nil if no such parent exists.
+// TODO: remove this
 func (c *Commit) FirstParent() *ObjectId {
 	if len(c.parents) > 0 {
 		return c.parents[0]
@@ -117,4 +119,29 @@ func (f *Format) Commit(c *Commit) (int, error) {
 	// commit message
 	fmt.Fprintf(f.Writer, "\n%s", c.message)
 	return 0, nil // TODO TODO
+}
+
+// ================================================================= //
+// COMMIT OPERATIONS
+// ================================================================= //
+
+// ParentCommit selects the n-th parent commit of the given oid, which
+// should point to a commit object. If n == 0, then this is considered
+// to be the oid itself.
+func ParentCommit(repo Repository, oid *ObjectId, n int) (*ObjectId, error) {
+	if n == 0 {
+		return oid, nil
+	}
+	o, err := repo.ReadObject(oid)
+	if err != nil {
+		return nil, err
+	}
+	if o.Type() != ObjectCommit {
+		return nil, errors.New("wrong object type")
+	}
+	p := o.(*Commit).parents
+	if n > len(p) {
+		return nil, fmt.Errorf("Parent %d doesn't exit", n)
+	}
+	return p[n], nil
 }
