@@ -78,21 +78,25 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 		return nil, e
 	}
 	defer f.Close() // just in case
-
 	if rz, e = zlib.NewReader(f); e != nil {
 		return nil, e
 	}
 	defer rz.Close()
-
 	file := bufio.NewReader(rz)
 	p := newObjectParser(file)
-
 	return p.ParsePayload()
 }
 
 func (repo *DiskRepository) ObjectFromRef(spec string) (obj Object, err error) {
-	// TODO: validate the ref
-	return nil, nil
+	r, err := repo.Ref(spec)
+	if err != nil {
+		return nil, err
+	}
+	symbolic, target := r.Target()
+	if symbolic {
+		return repo.ObjectFromRef(target.(string))
+	}
+	return repo.ObjectFromOid(target.(*ObjectId))
 }
 
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
