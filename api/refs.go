@@ -1,25 +1,9 @@
 package api
 
 import (
-	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 )
-
-var (
-	regexpCaret    *regexp.Regexp
-	regexpTilde    *regexp.Regexp
-	regexpHex      *regexp.Regexp
-	regexpShortHex *regexp.Regexp
-)
-
-func init() {
-	regexpCaret, _ = regexp.Compile("^[^\\^]+\\^+$")
-	regexpTilde, _ = regexp.Compile("^.+~[1-9][0-9]*$")
-	regexpHex, _ = regexp.Compile("^[0-9a-f]{40}$") // TODO: replace with const
-	regexpShortHex, _ = regexp.Compile("^[0-9a-f]{3,39}$")
-}
 
 // ================================================================= //
 // REF OBJECTS
@@ -159,39 +143,6 @@ func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 		}
 	})
 	return r, err
-}
-
-// ================================================================= //
-// REF RESOLUTION
-// ================================================================= //
-
-// TODO: this doesn't belong here, this is actually the beginning of
-// the rev_parser.
-func ResolveRef(repo Repository, refstr string) (*ObjectId, error) {
-	if regexpCaret.MatchString(refstr) {
-		oid, err := ResolveRef(repo, trimLast(refstr))
-		if err != nil {
-			return nil, err
-		}
-		obj, e := ObjectFromOid(repo, oid)
-		if e != nil {
-			return nil, e
-		}
-		t := obj.Type()
-		if t == ObjectCommit {
-			oid = obj.(*Commit).FirstParent()
-			if oid == nil {
-				return nil, errors.New("no parent")
-			}
-		} else if t == ObjectTag {
-			oid = obj.(*Tag).Object()
-		}
-		return oid, nil
-	} else if regexpHex.MatchString(refstr) {
-		oid, _ := NewObjectIdFromString(refstr)
-		return oid, nil
-	}
-	return nil, errors.New("unknown reference")
 }
 
 // ================================================================= //
