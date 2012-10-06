@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/zlib"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -95,7 +96,27 @@ func (repo *DiskRepository) ObjectFromRef(spec string) (obj Object, err error) {
 }
 
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
-	return nil, nil
+	file, e := repo.relativeFile(spec)
+	if e == nil {
+		defer file.Close()
+		p := newRefParser(bufio.NewReader(file), spec)
+		return p.parseRef()
+	}
+
+	if os.IsNotExist(e) {
+		// we can check packed refs now
+		// TODO: we can optimize this with a trie
+		refs, err := repo.PackedRefs()
+		if err != nil {
+			return nil, err
+		}
+		refs = FilterRefs(refs, FilterRefPattern(spec))
+		if len(refs) != 1 {
+			return nil, fmt.Errorf("Ambiguous or missing ref: %s", spec)
+		}
+		return refs[0], nil
+	}
+	return nil, e
 }
 
 //find all objects and print their ids
@@ -134,7 +155,7 @@ func (repo *DiskRepository) PackedRefs() (pr []Ref, err error) {
 		return nil, e
 	}
 	defer file.Close()
-	p := newRefParser(bufio.NewReader(file))
+	p := newRefParser(bufio.NewReader(file), "")
 	if pr, e = p.ParsePackedRefs(); e != nil {
 		return nil, e
 	}
@@ -218,7 +239,7 @@ func (repo *DiskRepository) pathRef(spec string) (*ObjectId, error) {
 	}
 	defer file.Close()
 
-	p := newRefParser(bufio.NewReader(file))
+	p := newRefParser(bufio.NewReader(file), "")
 	var (
 		oid *ObjectId
 		err error

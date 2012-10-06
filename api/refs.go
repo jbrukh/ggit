@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+const (
+	markerRef = "ref:"
+)
+
 // ================================================================= //
 // REF OBJECTS
 // ================================================================= //
@@ -169,6 +173,23 @@ func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 
 				r = append(r, re)
 			}
+		}
+	})
+	return r, err
+}
+
+func (p *refParser) parseRef() (r Ref, err error) {
+	err = safeParse(func() {
+		// is it a symbolic ref?
+		if p.PeekString(len(markerRef)) == markerRef {
+			p.ConsumeString(markerRef)
+			p.ConsumeByte(SP)
+			spec := p.ReadString(LF)
+			r = &ref{name: p.name, spec: spec}
+		} else {
+			oid := p.ParseObjectId()
+			p.ConsumeByte(LF)
+			r = &ref{name: p.name, oid: oid}
 		}
 	})
 	return r, err

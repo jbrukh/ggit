@@ -87,15 +87,17 @@ type objectIdParser struct {
 
 type refParser struct {
 	objectIdParser
+	name string
 }
 
-func newRefParser(buf *bufio.Reader) *refParser {
+func newRefParser(buf *bufio.Reader, name string) *refParser {
 	return &refParser{
 		objectIdParser: objectIdParser{
 			dataParser{
 				buf: buf,
 			},
 		},
+		name: name,
 	}
 }
 
