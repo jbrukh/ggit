@@ -202,3 +202,11 @@ func (p *refParser) parseRef() (r Ref, err error) {
 func OidFromRef(repo Repository, spec string) (*ObjectId, error) {
 	return repo.OidFromRef(spec)
 }
+
+func ObjectFromRef(repo Repository, spec string) (Object, error) {
+	oid, err := repo.OidFromRef(spec)
+	if err != nil {
+		return nil, err
+	}
+	return repo.ObjectFromOid(oid)
+}

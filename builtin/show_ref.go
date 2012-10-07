@@ -102,6 +102,7 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 	refs, e := p.Repo.Refs()
 	if e != nil {
 		fmt.Fprintln(p.Werr, e.Error())
+		return
 	}
 	f := api.FilterAnd(filters...)
 	filtered := api.FilterRefs(refs, f)
