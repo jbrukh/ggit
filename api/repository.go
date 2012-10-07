@@ -45,8 +45,11 @@ type Repository interface {
 	// TODO: perhaps replace with a visitor of refs?
 	Refs() ([]Ref, error)
 
+	// Ref convert a string ref into a Ref object. The
+	// returned object may be a symbolic or concrete ref.
+	Ref(spec string) (Ref, error)
+
 	ObjectFromOid(oid *ObjectId) (Object, error)
-	OidFromRef(spec string) (*ObjectId, error)
 
 	RevParse(name string) (Object, error)
 }
@@ -85,18 +88,6 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 	file := bufio.NewReader(rz)
 	p := newObjectParser(file)
 	return p.ParsePayload()
-}
-
-func (repo *DiskRepository) OidFromRef(spec string) (oid *ObjectId, err error) {
-	r, err := repo.Ref(spec)
-	if err != nil {
-		return nil, err
-	}
-	symbolic, target := r.Target()
-	if symbolic {
-		return repo.OidFromRef(target.(string))
-	}
-	return target.(*ObjectId), nil
 }
 
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
@@ -175,7 +166,7 @@ func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
 				spec := trimPrefix(path, repoPath)
-				oid, e := repo.OidFromRef(spec)
+				oid, e := OidFromRef(repo, spec)
 				if e != nil {
 					return e
 				}
@@ -211,7 +202,7 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 			// refs are files, so...
 			if !f.IsDir() {
 				spec := trimPrefix(path, repo.path+"/")
-				oid, e := repo.OidFromRef(spec)
+				oid, e := OidFromRef(repo, spec)
 				if e != nil {
 					return e
 				}

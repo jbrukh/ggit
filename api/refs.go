@@ -200,11 +200,42 @@ func (p *refParser) parseRef() (r Ref, err error) {
 // ================================================================= //
 
 func OidFromRef(repo Repository, spec string) (*ObjectId, error) {
-	return repo.OidFromRef(spec)
+	r, err := OidRefFromRef(repo, spec)
+	if err != nil {
+		return nil, err
+	}
+	_, oid := r.Target()
+	return oid.(*ObjectId), nil
+}
+
+func OidRefFromRef(repo Repository, spec string) (Ref, error) {
+	r, err := repo.Ref(spec)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		symbolic bool
+		target   interface{}
+	)
+
+	// TODO: make a limit
+	for {
+		symbolic, target = r.Target()
+		if symbolic {
+			r, err = repo.Ref(target.(string))
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
+	}
+	return &ref{name: spec, oid: target.(*ObjectId)}, nil
 }
 
 func ObjectFromRef(repo Repository, spec string) (Object, error) {
-	oid, err := repo.OidFromRef(spec)
+	oid, err := OidFromRef(repo, spec)
 	if err != nil {
 		return nil, err
 	}

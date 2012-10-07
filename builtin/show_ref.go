@@ -23,6 +23,7 @@ type ShowRefBuiltin struct {
 	flagTags  bool
 	flagHelp  bool
 	flagDeref bool
+	flagHead  bool
 }
 
 var ShowRef = &ShowRefBuiltin{
@@ -45,6 +46,8 @@ func init() {
 	ShowRef.flags.BoolVar(&ShowRef.flagTags, "tags", false, "Show only tags.")
 	ShowRef.flags.BoolVar(&ShowRef.flagHelp, "help", false, "Show help.")
 	ShowRef.flags.BoolVar(&ShowRef.flagDeref, "d", false, "Dereference tags into object IDs as well.")
+	ShowRef.flags.BoolVar(&ShowRef.flagHead, "head", false, "Show the head reference.")
+
 	ShowRef.flags.Usage = func() {}
 
 	// add to command list
@@ -106,6 +109,12 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 	}
 	f := api.FilterAnd(filters...)
 	filtered := api.FilterRefs(refs, f)
+
+	if b.flagHead {
+		if r, err := api.OidRefFromRef(p.Repo, "HEAD"); err == nil {
+			filtered = append([]api.Ref{r}, filtered...)
+		}
+	}
 
 	// formatter
 	fmtr := api.Format{p.Wout}
