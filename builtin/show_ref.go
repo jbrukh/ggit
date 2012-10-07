@@ -115,34 +115,35 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 			filtered = append([]api.Ref{r}, filtered...)
 		}
 	}
-
 	// formatter
 	fmtr := api.Format{p.Wout}
 
-	if !b.flagQuiet {
-		if b.flagDeref {
-			for _, r := range filtered {
-				fmtr.Ref(r)
+	if b.flagQuiet {
+		return
+	}
+
+	if b.flagDeref {
+		for _, r := range filtered {
+			fmtr.Ref(r)
+			fmtr.Lf()
+			if r.Commit() != nil {
+				fmtr.Deref(r)
 				fmtr.Lf()
-				if r.Commit() != nil {
-					fmtr.Deref(r)
-					fmtr.Lf()
-				} else {
-					_, oid := r.Target() // better not be symbolic
-					obj, err := api.ObjectFromOid(p.Repo, oid.(*api.ObjectId))
-					if err == nil {
-						if obj.Type() == api.ObjectTag {
-							tag := obj.(*api.Tag)
-							fmtr.Printf("%s %s^{}\n", tag.Object(), r.Name()) // TODO
-						}
+			} else {
+				_, oid := r.Target() // better not be symbolic
+				obj, err := api.ObjectFromOid(p.Repo, oid.(*api.ObjectId))
+				if err == nil {
+					if obj.Type() == api.ObjectTag {
+						tag := obj.(*api.Tag)
+						fmtr.Printf("%s %s^{}\n", tag.Object(), r.Name()) // TODO
 					}
 				}
 			}
-		} else { // just do the non-deref case separately, for performance
-			for _, r := range filtered {
-				fmtr.Ref(r)
-				fmtr.Lf()
-			}
+		}
+	} else { // just do the non-deref case separately, for performance
+		for _, r := range filtered {
+			fmtr.Ref(r)
+			fmtr.Lf()
 		}
 	}
 }
