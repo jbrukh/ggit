@@ -1,7 +1,8 @@
 package api
 
 import (
-//"errors"
+	"errors"
+	"strconv"
 )
 
 type revParser struct {
@@ -44,7 +45,27 @@ type revParser struct {
 // }
 
 func (r *revParser) parseNumber() (int, error) {
-	return 0, nil // TODO
+	c := r.spec[r.inx]
+	if c != '^' && c != '~' {
+		return 0, errors.New("not expecting a number")
+	}
+
+	i := r.inx + 1
+	for i < len(r.spec) {
+		println("i: ", i)
+		if !isDigit(r.spec[i]) {
+			break
+		}
+		i++
+	}
+
+	n := r.spec[r.inx+1 : i]
+	println("text: ", n)
+	if n == "" {
+		return 1, nil
+	}
+
+	return strconv.Atoi(n)
 }
 
 func isDigit(c byte) bool {
