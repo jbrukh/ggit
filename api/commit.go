@@ -143,3 +143,29 @@ func ParentCommit(repo Repository, oid *ObjectId, n int) (*ObjectId, error) {
 	}
 	return p[n], nil
 }
+
+// CommitFromObject returns the commit being referred to; that is, if
+// the object is a commit object, it is converted and returned. If the
+// object is a tag, then the target of the tag is returned. Other object
+// types cause an error to be returned.
+func CommitFromObject(repo Repository, o Object) (*Commit, error) {
+	switch t := o.(type) {
+	case *Commit:
+		return t, nil
+	case *Tag:
+		obj, err := ObjectFromOid(repo, t.Object())
+		if err != nil {
+			return nil, err
+		}
+		return obj.(*Commit), nil
+	}
+	return nil, errors.New("not a commit or tag")
+}
+
+func CommitFromRef(repo Repository, spec string) (*Commit, error) {
+	o, err := ObjectFromRef(repo, spec)
+	if err != nil {
+		return nil, err
+	}
+	return CommitFromObject(repo, o)
+}
