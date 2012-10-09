@@ -37,3 +37,7 @@ func (f *Format) Object(o Object) (int, error) {
 func ObjectFromOid(repo Repository, oid *ObjectId) (Object, error) {
 	return repo.ObjectFromOid(oid)
 }
+
+func ObjectFromShortOid(repo Repository, short string) (Object, error) {
+	return repo.ObjectFromShortOid(short)
+}

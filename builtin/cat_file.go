@@ -1,7 +1,6 @@
 package builtin
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
@@ -42,54 +41,22 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 		return
 	}
 	id := args[0]
-	oid, err := api.OidFromString(id)
+	o, err := api.ObjectFromShortOid(p.Repo, id)
 	if err != nil {
-		b.HelpInfo.Usage(p.Werr)
+		fmt.Fprintln(p.Werr, err)
 		return
 	}
 
 	switch {
 	case b.flagPrettyPrint:
-		err = b.PrettyPrint(p, oid)
+		f := api.Format{p.Wout}
+		f.Object(o)
 	case b.flagShowType:
-		err = b.ShowType(p, oid)
+		fmt.Fprintln(p.Wout, o.Type())
 	case b.flagShowSize:
-		err = b.ShowSize(p, oid)
+		fmt.Fprintln(p.Wout, o.Size())
 	default:
 		b.HelpInfo.Usage(p.Werr)
 		return
 	}
-
-	if err != nil {
-		fmt.Fprintln(p.Werr, err.Error())
-	}
-}
-
-func (b *CatFileBuiltin) PrettyPrint(p *Params, oid *api.ObjectId) error {
-	if o, err := api.ObjectFromOid(p.Repo, oid); err != nil {
-		return errors.New(err.Error())
-	} else {
-		f := api.Format{p.Wout}
-		f.Object(o)
-		return err
-	}
-	return nil
-}
-
-func (b *CatFileBuiltin) ShowType(p *Params, oid *api.ObjectId) (err error) {
-	var o api.Object
-	if o, err = api.ObjectFromOid(p.Repo, oid); err != nil {
-		return err
-	}
-	fmt.Fprintln(p.Wout, o.Type())
-	return
-}
-
-func (b *CatFileBuiltin) ShowSize(p *Params, oid *api.ObjectId) (err error) {
-	var o api.Object
-	if o, err = api.ObjectFromOid(p.Repo, oid); err != nil {
-		return err
-	}
-	fmt.Fprintln(p.Wout, o.Size())
-	return
 }

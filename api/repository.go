@@ -97,6 +97,16 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 	if l < 4 || l > OID_HEXSZ {
 		return nil, fmt.Errorf("fatal: Not a valid object name %s", short)
 	}
+
+	// don't bother with directories if we know the full SHA
+	if l == OID_HEXSZ {
+		oid, err := OidFromString(short)
+		if err != nil {
+			return nil, fmt.Errorf("fatal: Not a valid object name %s", short)
+		}
+		return repo.ObjectFromOid(oid)
+	}
+
 	head, tail := short[:2], short[2:]
 	root := path.Join(DefaultGitDir, DefaultObjectsDir, head)
 	var matching []*ObjectId
