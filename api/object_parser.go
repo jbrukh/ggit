@@ -46,7 +46,7 @@ func (p *objectParser) ParseHeader() (*objectHeader, error) {
 	return p.hdr, err
 }
 
-func (p *objectParser) ParsePayload() (Object, error) {
+func (p *objectParser) ParsePayload(oid *ObjectId) (Object, error) {
 	// parse header if it wasn't parsed already
 	if _, e := p.ParseHeader(); e != nil {
 		return nil, e
@@ -59,13 +59,13 @@ func (p *objectParser) ParsePayload() (Object, error) {
 	err = safeParse(func() {
 		switch p.hdr.Type {
 		case ObjectBlob:
-			obj = p.parseBlob()
+			obj = p.parseBlob(oid)
 		case ObjectTree:
-			obj = p.parseTree()
+			obj = p.parseTree(oid)
 		case ObjectCommit:
-			obj = p.parseCommit()
+			obj = p.parseCommit(oid)
 		case ObjectTag:
-			obj = p.parseTag()
+			obj = p.parseTag(oid)
 		default:
 			panic("unsupported type")
 		}

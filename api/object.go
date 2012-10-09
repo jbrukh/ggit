@@ -8,6 +8,8 @@ type Object interface {
 
 	// Size returns the size of the payload of this object.
 	Size() int
+
+	ObjectId() *ObjectId
 }
 
 // ================================================================= //

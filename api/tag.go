@@ -19,6 +19,7 @@ type Tag struct {
 	message    string
 	size       int
 	objectType ObjectType
+	oid        *ObjectId
 }
 
 func (t *Tag) Type() ObjectType {
@@ -29,6 +30,10 @@ func (t *Tag) Size() int {
 	return t.size
 }
 
+func (t *Tag) ObjectId() *ObjectId {
+	return t.oid
+}
+
 func (t *Tag) Object() *ObjectId {
 	return t.object
 }
@@ -37,8 +42,9 @@ func (t *Tag) Object() *ObjectId {
 // OBJECT PARSER
 // ================================================================= //
 
-func (p *objectParser) parseTag() *Tag {
+func (p *objectParser) parseTag(oid *ObjectId) *Tag {
 	tag := new(Tag)
+	tag.oid = oid
 	p.ResetCount()
 
 	// read the object id

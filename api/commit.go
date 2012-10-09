@@ -27,6 +27,7 @@ type Commit struct {
 	tree      *ObjectId
 	parents   []*ObjectId
 	size      int
+	oid       *ObjectId
 }
 
 func (c *Commit) Type() ObjectType {
@@ -35,6 +36,10 @@ func (c *Commit) Type() ObjectType {
 
 func (c *Commit) Size() int {
 	return c.size
+}
+
+func (c *Commit) ObjectId() *ObjectId {
+	return c.oid
 }
 
 func (c *Commit) addParent(oid *ObjectId) {
@@ -48,8 +53,9 @@ func (c *Commit) addParent(oid *ObjectId) {
 // OBJECT PARSER COMMIT PARSING METHODS
 // ================================================================= //
 
-func (p *objectParser) parseCommit() *Commit {
+func (p *objectParser) parseCommit(oid *ObjectId) *Commit {
 	c := new(Commit)
+	c.oid = oid
 	p.ResetCount()
 
 	// read the tree line

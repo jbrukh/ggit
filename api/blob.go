@@ -13,6 +13,7 @@ import (
 type Blob struct {
 	data []byte
 	size int
+	oid  *ObjectId
 }
 
 func (b *Blob) Type() ObjectType {
@@ -23,14 +24,20 @@ func (b *Blob) Size() int {
 	return b.size
 }
 
+func (b *Blob) ObjectId() *ObjectId {
+	return b.oid
+}
+
 // ================================================================= //
 // OBJECT PARSER
 // ================================================================= //
 
 // parseBlob parses the payload of a binary blob object
 // and converts it to Blob
-func (p *objectParser) parseBlob() *Blob {
+func (p *objectParser) parseBlob(oid *ObjectId) *Blob {
 	b := new(Blob)
+	b.oid = oid
+
 	p.ResetCount()
 
 	b.data = p.Bytes()

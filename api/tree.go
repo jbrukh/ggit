@@ -11,6 +11,7 @@ import (
 type Tree struct {
 	entries []*TreeEntry
 	size    int
+	oid     *ObjectId
 }
 
 // TODO: is this necessary?
@@ -24,6 +25,10 @@ func (t *Tree) Type() ObjectType {
 
 func (t *Tree) Size() int {
 	return t.size
+}
+
+func (t *Tree) ObjectId() *ObjectId {
+	return t.oid
 }
 
 // ================================================================= //
@@ -46,9 +51,10 @@ func (e *TreeEntry) String() (s string) {
 // OBJECT PARSER
 // ================================================================= //
 
-func (p *objectParser) parseTree() *Tree {
+func (p *objectParser) parseTree(oid *ObjectId) *Tree {
 	t := &Tree{
 		entries: make([]*TreeEntry, 0), // TODO
+		oid:     oid,
 	}
 	p.ResetCount()
 	for !p.EOF() {

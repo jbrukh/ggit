@@ -87,7 +87,7 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 	defer rz.Close()
 	file := bufio.NewReader(rz)
 	p := newObjectParser(file)
-	return p.ParsePayload()
+	return p.ParsePayload(oid)
 }
 
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
