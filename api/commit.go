@@ -37,16 +37,6 @@ func (c *Commit) Size() int {
 	return c.size
 }
 
-// FirstParent returns the first parent of the commit, or
-// nil if no such parent exists.
-// TODO: remove this
-func (c *Commit) FirstParent() *ObjectId {
-	if len(c.parents) > 0 {
-		return c.parents[0]
-	}
-	return nil
-}
-
 func (c *Commit) addParent(oid *ObjectId) {
 	if c.parents == nil {
 		c.parents = make([]*ObjectId, 0, 2)
@@ -123,25 +113,32 @@ func (f *Format) Commit(c *Commit) (int, error) {
 // COMMIT OPERATIONS
 // ================================================================= //
 
-// ParentCommit selects the n-th parent commit of the given oid, which
-// should point to a commit object. If n == 0, then this is considered
-// to be the oid itself.
-func ParentCommit(repo Repository, oid *ObjectId, n int) (*ObjectId, error) {
+func CommitNthParent(repo Repository, c *Commit, n int) (rc *Commit, err error) {
 	if n == 0 {
-		return oid, nil
+		return c, nil
 	}
-	o, err := ObjectFromOid(repo, oid)
-	if err != nil {
-		return nil, err
+	l := len(c.parents)
+	if 0 < n && n < l {
+		oid := c.parents[n]
+		return CommitFromOid(repo, oid)
 	}
-	if o.Type() != ObjectCommit {
-		return nil, errors.New("wrong object type")
+	return nil, fmt.Errorf("cannot find parent n=%d", n)
+}
+
+// CommitNthAncestor will look up a chain of n objects by 
+// following the first parent. If n == 0, then the parameterized
+// commit is returned. If along the way, a commit is found
+// to not have a first parent, an error is returned.
+func CommitNthAncestor(repo Repository, c *Commit, n int) (rc *Commit, err error) {
+	rc = c
+	for i := 0; i < n; i++ {
+		if len(rc.parents) > 0 {
+			return CommitFromOid(repo, rc.parents[0])
+		} else {
+			return nil, errors.New("no first parent")
+		}
 	}
-	p := o.(*Commit).parents
-	if n > len(p) {
-		return nil, fmt.Errorf("Parent %d doesn't exit", n)
-	}
-	return p[n], nil
+	return rc, nil
 }
 
 // CommitFromObject returns the commit being referred to; that is, if
@@ -162,6 +159,22 @@ func CommitFromObject(repo Repository, o Object) (*Commit, error) {
 	return nil, errors.New("not a commit or tag")
 }
 
+// CommitFromOid takes an oid and turns it into a commit object. If the
+// oid points at a commit, the Commit object is returned. If the oid 
+// points at an annotated tag, then the target commit is returned. If
+// the oid points to another type of object, an error is returned.
+func CommitFromOid(repo Repository, oid *ObjectId) (*Commit, error) {
+	o, err := ObjectFromOid(repo, oid)
+	if err != nil {
+		return nil, err
+	}
+	return CommitFromObject(repo, o)
+}
+
+// CommitFromRef turns a full reference to be converted to the commit
+// object. If the reference is a reference to a commit, the commit
+// object is returned. If the reference is a tag, then the target commit
+// of the tag is returned.
 func CommitFromRef(repo Repository, spec string) (*Commit, error) {
 	o, err := ObjectFromRef(repo, spec)
 	if err != nil {

@@ -5,10 +5,19 @@ import (
 )
 
 func Test_parseNumber(t *testing.T) {
-	p := &revParser{
-		spec: "~1",
+	test := func(str string, exp int) {
+		p := &revParser{
+			spec: str,
+		}
+		i, err := p.parseNumber()
+		assert(t, err == nil && i == exp)
 	}
 
-	i, err := p.parseNumber()
-	assert(t, err == nil && i == 1)
+	test("~~", 1)
+	test("~1", 1)
+	test("~1001~1", 1001)
+	test("^^", 1)
+	test("^1", 1)
+	test("^1001^1", 1001)
+
 }
