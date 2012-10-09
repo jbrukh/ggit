@@ -10,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 const (
@@ -50,6 +51,7 @@ type Repository interface {
 	Ref(spec string) (Ref, error)
 
 	ObjectFromOid(oid *ObjectId) (Object, error)
+	ObjectFromShortOid(short string) (Object, error)
 
 	RevParse(name string) (Object, error)
 }
@@ -88,6 +90,38 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 	file := bufio.NewReader(rz)
 	p := newObjectParser(file, oid)
 	return p.ParsePayload()
+}
+
+func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
+	l := len(short)
+	if l < 4 || l > OID_HEXSZ {
+		return nil, fmt.Errorf("fatal: Not a valid object name %s", short)
+	}
+	head, tail := short[:2], short[2:]
+	root := path.Join(DefaultGitDir, DefaultObjectsDir, head)
+	var matching []*ObjectId
+	e := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		// root doesn't exist, or there was a problem reading it
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			name := info.Name()
+			if strings.HasPrefix(name, tail) {
+				if oid, err := OidFromString(head + name); err == nil {
+					matching = append(matching, oid)
+				}
+			}
+		}
+		return nil
+	})
+	if e != nil {
+		return nil, e
+	}
+	if len(matching) != 1 {
+		return nil, fmt.Errorf("fatal: Ambiguous object name %s", short)
+	}
+	return repo.ObjectFromOid(matching[0])
 }
 
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
