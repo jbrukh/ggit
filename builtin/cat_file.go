@@ -42,7 +42,7 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 		return
 	}
 	id := args[0]
-	oid, err := api.NewObjectIdFromString(id)
+	oid, err := api.OidFromString(id)
 	if err != nil {
 		b.HelpInfo.Usage(p.Werr)
 		return

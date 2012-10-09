@@ -9,8 +9,8 @@ var testTreeSha *ObjectId
 var testParentSha *ObjectId
 
 func init() {
-	testTreeSha, _ = NewObjectIdFromString("e98b3d7be9979411127f93a1b9027c1eb5fe83b4")
-	testParentSha, _ = NewObjectIdFromString("8e5c7a9c2f37f315375d26ae8148690f920d2b62")
+	testTreeSha, _ = OidFromString("e98b3d7be9979411127f93a1b9027c1eb5fe83b4")
+	testParentSha, _ = OidFromString("8e5c7a9c2f37f315375d26ae8148690f920d2b62")
 }
 
 const testData = `tree e98b3d7be9979411127f93a1b9027c1eb5fe83b4
@@ -28,7 +28,8 @@ func init() {
 
 func Test_parseCommit(t *testing.T) {
 	c1 := readerForString(testCommit1)
-	p := newObjectParser(c1)
+	oid, _ := OidFromString(testOidCrazy)
+	p := newObjectParser(c1, oid)
 
 	parsed, err := p.ParsePayload()
 	if err != nil {

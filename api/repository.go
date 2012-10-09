@@ -125,7 +125,7 @@ func (repo *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 		} else if !info.IsDir() {
 			hash := filepath.Base(filepath.Dir(path)) + name
 			var oid *ObjectId
-			if oid, err = NewObjectIdFromString(hash); err != nil {
+			if oid, err = OidFromString(hash); err != nil {
 				return err
 			}
 			oids = append(oids, *oid)

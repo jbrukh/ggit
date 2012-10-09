@@ -20,7 +20,7 @@ type ObjectId struct {
 // in from left to right, with no regard for the number
 // of bytes in the input. Extra bytes are discarded and
 // missing bytes are padded with zeros.
-func NewObjectIdFromBytes(bytes []byte) (id *ObjectId, err error) {
+func OidFromBytes(bytes []byte) (id *ObjectId, err error) {
 	if len(bytes) < OID_SZ {
 		return nil, errors.New("not enough bytes for oid")
 	}
@@ -31,12 +31,12 @@ func NewObjectIdFromBytes(bytes []byte) (id *ObjectId, err error) {
 	return
 }
 
-func NewObjectIdFromArray(bytes [20]byte) (id *ObjectId) {
-	oid, _ := NewObjectIdFromBytes(bytes[:]) // no error can happen
+func OidFromArray(bytes [20]byte) (id *ObjectId) {
+	oid, _ := OidFromBytes(bytes[:]) // no error can happen
 	return oid
 }
 
-func NewObjectIdFromString(hex string) (id *ObjectId, err error) {
+func OidFromString(hex string) (id *ObjectId, err error) {
 	bytes, e := computeBytes(hex)
 	if e == nil {
 		id = &ObjectId{
@@ -46,7 +46,7 @@ func NewObjectIdFromString(hex string) (id *ObjectId, err error) {
 	return id, e
 }
 
-func NewObjectIdFromHash(h hash.Hash) (id *ObjectId) {
+func OidFromHash(h hash.Hash) (id *ObjectId) {
 	id = &ObjectId{
 		bytes: getHash(h),
 	}
@@ -138,7 +138,7 @@ func hex2byte(ch byte) (byte, error) {
 // Reader and places the resulting object id in oid.
 func (p *objectIdParser) ParseObjectId() *ObjectId {
 	hex := string(p.consume(OID_HEXSZ))
-	oid, e := NewObjectIdFromString(hex)
+	oid, e := OidFromString(hex)
 	if e != nil {
 		panicErrf("expected: hex string of size %d", OID_HEXSZ)
 	}
@@ -147,7 +147,7 @@ func (p *objectIdParser) ParseObjectId() *ObjectId {
 
 func (p *objectIdParser) ParseObjectIdBytes() *ObjectId {
 	b := p.consume(OID_SZ)
-	oid, e := NewObjectIdFromBytes(b)
+	oid, e := OidFromBytes(b)
 	if e != nil {
 		panicErrf("expected: hash bytes %d long", OID_SZ)
 	}

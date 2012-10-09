@@ -42,7 +42,7 @@ func TestObjectIdString(t *testing.T) {
 }
 
 func compareHexRepr(t *testing.T, bytes []byte, expected string) {
-	id, e := NewObjectIdFromBytes(bytes)
+	id, e := OidFromBytes(bytes)
 	if e != nil {
 		t.Error("could not parse bytes")
 	}
@@ -70,7 +70,7 @@ func testHex2Bytes(t *testing.T, hex string) {
 }
 
 func TestNewObjectIdFromString(t *testing.T) {
-	id, err := NewObjectIdFromString(testOidCrazy)
+	id, err := OidFromString(testOidCrazy)
 	if err != nil || id == nil || id.bytes == nil {
 		t.Error("did not initialize bytes properly")
 	}
@@ -78,7 +78,7 @@ func TestNewObjectIdFromString(t *testing.T) {
 
 func TestNewObjectIdFromHash(t *testing.T) {
 	h := sha1.New()
-	id := NewObjectIdFromHash(h)
+	id := OidFromHash(h)
 	if id.bytes == nil {
 		t.Error("did not initialize bytes properly")
 	}
@@ -86,7 +86,7 @@ func TestNewObjectIdFromHash(t *testing.T) {
 	// now we will test a real hash
 	io.WriteString(h, "I have always known that one day I would take this road, but yesterday I did not know it would be today.")
 	hashBytes := h.Sum(nil)[0:OID_SZ]
-	id = NewObjectIdFromHash(h)
+	id = OidFromHash(h)
 
 	expected, actual := computeRepr(hashBytes), id.String()
 	if actual == testOidZeros || expected == testOidZeros || actual != expected {
@@ -96,7 +96,7 @@ func TestNewObjectIdFromHash(t *testing.T) {
 
 func TestNewObjectIdFromBytes(t *testing.T) {
 	bytes := make([]byte, OID_SZ)
-	id, e := NewObjectIdFromBytes(bytes)
+	id, e := OidFromBytes(bytes)
 	if e != nil {
 		t.Error("did not initialize bytes properly")
 	}

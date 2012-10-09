@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func OidFromRevision(repo Repository, spec string) (*Commit, error) {
+func CommitFromRevision(repo Repository, spec string) (*Commit, error) {
 	r := &revParser{
 		repo: repo,
 		spec: spec,
@@ -28,29 +28,48 @@ func (r *revParser) revParse() (*Commit, error) {
 		return nil, errors.New("spec is empty")
 	}
 	r.inx = 0
-	var err error
-	for r.inx < l {
-		c := r.spec[r.inx]
-		switch c {
-		case '^':
-		case '~':
-			r.ref = r.spec[:r.inx]
-			r.c, err = CommitFromRef(r.repo, r.ref)
-			if err != nil {
-				return nil, err
-			}
-			var n int
-			n, err = r.parseNumber()
-			if err != nil {
-				return nil, err
-			}
-			return CommitNthAncestor(r.repo, r.c, n)
+	//var err error
 
-		default:
-			// TODO check if ref is parsed?
-			r.inx++
+	// find the left hand revision
+	for !isModifier(r.spec[r.inx]) {
+		r.inx++
+	}
+
+	// write down the ref
+	r.ref = r.spec[:r.inx]
+
+	// for r.inx < l {
+	// 	c := r.spec[r.inx]
+	// 	switch c {
+	// 	case '^':
+	// 	case '~':
+	// 		r.ref = r.spec[:r.inx]
+	// 		r.c, err = CommitFromRef(r.repo, r.ref)
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+	// 		var n int
+	// 		n, err = r.parseNumber()
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+	// 		return CommitNthAncestor(r.repo, r.c, n)
+
+	// 	default:
+	// 		// TODO check if ref is parsed?
+	// 		r.inx++
+	// 	}
+	// }
+
+	if r.ref != "" {
+		oid, _ := OidFromString(r.ref)
+		var err error
+		r.c, err = CommitFromOid(r.repo, oid)
+		if err != nil {
+			return nil, err
 		}
 	}
+
 	if r.c != nil {
 		return r.c, nil
 	}
@@ -84,6 +103,14 @@ func (r *revParser) parseNumber() (int, error) {
 func isDigit(c byte) bool {
 	switch c {
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		return true
+	}
+	return false
+}
+
+func isModifier(c byte) bool {
+	switch c {
+	case '^', '~', '@':
 		return true
 	}
 	return false

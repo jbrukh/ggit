@@ -1,4 +1,4 @@
-	package api
+package api
 
 import (
 	"bufio"
@@ -374,7 +374,7 @@ func toIndex(file *bufio.Reader) (idx *Index, err error) {
 
 func toIndexEntry(entry *indexEntry, name string) *IndexEntry {
 	return &IndexEntry{
-		eid:   NewObjectIdFromArray(entry.Sha1),
+		eid:   OidFromArray(entry.Sha1),
 		flags: EntryFlagsV2(entry.Flags),
 		name:  name,
 		info:  &entry.Info,

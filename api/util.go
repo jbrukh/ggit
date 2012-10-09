@@ -41,7 +41,7 @@ type Hashable interface {
 func makeHash(h Hashable) (o *ObjectId) {
 	sha.Reset()
 	sha.Write(h.Bytes())
-	return NewObjectIdFromHash(sha)
+	return OidFromHash(sha)
 }
 
 // get the first OID_SZ of the hash
