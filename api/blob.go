@@ -34,9 +34,9 @@ func (b *Blob) ObjectId() *ObjectId {
 
 // parseBlob parses the payload of a binary blob object
 // and converts it to Blob
-func (p *objectParser) parseBlob(oid *ObjectId) *Blob {
+func (p *objectParser) parseBlob() *Blob {
 	b := new(Blob)
-	b.oid = oid
+	b.oid = p.oid
 
 	p.ResetCount()
 

@@ -53,9 +53,9 @@ func (c *Commit) addParent(oid *ObjectId) {
 // OBJECT PARSER COMMIT PARSING METHODS
 // ================================================================= //
 
-func (p *objectParser) parseCommit(oid *ObjectId) *Commit {
+func (p *objectParser) parseCommit() *Commit {
 	c := new(Commit)
-	c.oid = oid
+	c.oid = p.oid
 	p.ResetCount()
 
 	// read the tree line

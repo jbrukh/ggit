@@ -21,10 +21,11 @@ type objectHeader struct {
 
 type objectParser struct {
 	objectIdParser
+	oid *ObjectId
 	hdr *objectHeader
 }
 
-func newObjectParser(buf *bufio.Reader) *objectParser {
+func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
 	op := &objectParser{
 		objectIdParser: objectIdParser{
 			dataParser{
@@ -46,7 +47,7 @@ func (p *objectParser) ParseHeader() (*objectHeader, error) {
 	return p.hdr, err
 }
 
-func (p *objectParser) ParsePayload(oid *ObjectId) (Object, error) {
+func (p *objectParser) ParsePayload() (Object, error) {
 	// parse header if it wasn't parsed already
 	if _, e := p.ParseHeader(); e != nil {
 		return nil, e
@@ -59,13 +60,13 @@ func (p *objectParser) ParsePayload(oid *ObjectId) (Object, error) {
 	err = safeParse(func() {
 		switch p.hdr.Type {
 		case ObjectBlob:
-			obj = p.parseBlob(oid)
+			obj = p.parseBlob()
 		case ObjectTree:
-			obj = p.parseTree(oid)
+			obj = p.parseTree()
 		case ObjectCommit:
-			obj = p.parseCommit(oid)
+			obj = p.parseCommit()
 		case ObjectTag:
-			obj = p.parseTag(oid)
+			obj = p.parseTag()
 		default:
 			panic("unsupported type")
 		}

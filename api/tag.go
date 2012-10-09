@@ -42,9 +42,9 @@ func (t *Tag) Object() *ObjectId {
 // OBJECT PARSER
 // ================================================================= //
 
-func (p *objectParser) parseTag(oid *ObjectId) *Tag {
+func (p *objectParser) parseTag() *Tag {
 	tag := new(Tag)
-	tag.oid = oid
+	tag.oid = p.oid
 	p.ResetCount()
 
 	// read the object id

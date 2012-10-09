@@ -51,10 +51,10 @@ func (e *TreeEntry) String() (s string) {
 // OBJECT PARSER
 // ================================================================= //
 
-func (p *objectParser) parseTree(oid *ObjectId) *Tree {
+func (p *objectParser) parseTree() *Tree {
 	t := &Tree{
 		entries: make([]*TreeEntry, 0), // TODO
-		oid:     oid,
+		oid:     p.oid,
 	}
 	p.ResetCount()
 	for !p.EOF() {
