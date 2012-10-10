@@ -18,6 +18,7 @@ const (
 // to the git directory (without duplicate path separators, ".", or
 // "..").
 type Ref interface {
+
 	// Name returns the string name of this ref. This is
 	// a simple path relative to the git directory, which
 	// may or may not be HEAD, MERGE_HEAD, etc.
@@ -40,6 +41,10 @@ type refByName []Ref
 func (s refByName) Len() int           { return len(s) }
 func (s refByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s refByName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
+
+// ================================================================= //
+// REF IMPLEMENTATION
+// ================================================================= //
 
 type ref struct {
 	name   string
@@ -74,14 +79,6 @@ func (f *Format) Ref(r Ref) (int, error) {
 	_, rf := r.Target() // symbolic or oid
 	return fmt.Fprintf(f.Writer, "%s %s", rf, r.Name())
 }
-
-// func (f *Format) OidRef(r Ref) (int, error) {
-// 	symbolic, rf := r.Ref()
-// 	if !symbolic {
-// 		return fmt.Fprintf(f.Writer, "%s %s", rf, r.Name())
-// 	}
-// 	return 0, errors.New("not an oid ref")
-// }
 
 // TODO: come up with a better name for this
 func (f *Format) Deref(r Ref) (int, error) {
@@ -199,6 +196,9 @@ func (p *refParser) parseRef() (r Ref, err error) {
 // OPERATIONS
 // ================================================================= //
 
+// OidFromRef turns a ref specification into the ObjectId that ref
+// points to, by peeling away any symbolic refs that might stand
+// in its way.
 func OidFromRef(repo Repository, spec string) (*ObjectId, error) {
 	r, err := OidRefFromRef(repo, spec)
 	if err != nil {
@@ -208,6 +208,19 @@ func OidFromRef(repo Repository, spec string) (*ObjectId, error) {
 	return oid.(*ObjectId), nil
 }
 
+// ObjectFromRef is similar to OidFromRef, except it derefernces the
+// target ObjectId into an actual Object.
+func ObjectFromRef(repo Repository, spec string) (Object, error) {
+	oid, err := OidFromRef(repo, spec)
+	if err != nil {
+		return nil, err
+	}
+	return repo.ObjectFromOid(oid)
+}
+
+// OidRefFromRef returns a Ref object representing the target of
+// the ref, by peeling away any symbolic refs that might stand
+// in its way.
 func OidRefFromRef(repo Repository, spec string) (Ref, error) {
 	r, err := repo.Ref(spec)
 	if err != nil {
@@ -232,12 +245,4 @@ func OidRefFromRef(repo Repository, spec string) (Ref, error) {
 		}
 	}
 	return &ref{name: spec, oid: target.(*ObjectId)}, nil
-}
-
-func ObjectFromRef(repo Repository, spec string) (Object, error) {
-	oid, err := OidFromRef(repo, spec)
-	if err != nil {
-		return nil, err
-	}
-	return repo.ObjectFromOid(oid)
 }

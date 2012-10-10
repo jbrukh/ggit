@@ -34,10 +34,14 @@ func (f *Format) Object(o Object) (int, error) {
 // OPERATIONS
 // ================================================================= //
 
+// ObjectFromOid turns an ObjectId into an Object given the parent
+// repository of the object.
 func ObjectFromOid(repo Repository, oid *ObjectId) (Object, error) {
 	return repo.ObjectFromOid(oid)
 }
 
+// ObjectFromOid turns a short hex into an Object given the parent
+// repository of the object.
 func ObjectFromShortOid(repo Repository, short string) (Object, error) {
 	return repo.ObjectFromShortOid(short)
 }

@@ -11,15 +11,23 @@ const (
 	OID_HEXSZ = OID_SZ * 2 // maximum length of hex string we can translate
 )
 
+// ================================================================= //
+// OBJECT ID
+// ================================================================= //
+
+// ObjectId represents a git SHA1 hash that is 
+// used to represent objects and allows conversion
+// between the binary and string versions of the
+// id. ObjectIds are known colloquially as "oids".
 type ObjectId struct {
 	bytes []byte
 	repr  string
 }
 
-// create a new ObjectId from bytes; bytes are filled
-// in from left to right, with no regard for the number
-// of bytes in the input. Extra bytes are discarded and
-// missing bytes are padded with zeros.
+// OidFromBytes creates a new ObjectId from a byte slice. 
+// Bytes are filled in from left to right, with no regard
+// for the number of bytes in the input. Extra bytes are
+// discarded and missing bytes are padded with zeros.
 func OidFromBytes(bytes []byte) (id *ObjectId, err error) {
 	if len(bytes) < OID_SZ {
 		return nil, errors.New("not enough bytes for oid")
@@ -31,11 +39,18 @@ func OidFromBytes(bytes []byte) (id *ObjectId, err error) {
 	return
 }
 
+// OidFromArray convers an array of bytes into an ObjectId
+// stored in binary form. Because array size is fixed at 
+// compile time, this method does not throw an error.
 func OidFromArray(bytes [20]byte) (id *ObjectId) {
 	oid, _ := OidFromBytes(bytes[:]) // no error can happen
 	return oid
 }
 
+// OidFromString creates an ObjectId from a string representation
+// of the hash. The length of the string should be OID_HEXSZ, and
+// must consist of the characters [a-zA-Z0-9] or else an error is
+// returned.
 func OidFromString(hex string) (id *ObjectId, err error) {
 	bytes, e := computeBytes(hex)
 	if e == nil {
@@ -47,8 +62,9 @@ func OidFromString(hex string) (id *ObjectId, err error) {
 }
 
 func OidFromHash(h hash.Hash) (id *ObjectId) {
+	hsh := h.Sum(nil)
 	id = &ObjectId{
-		bytes: getHash(h),
+		bytes: hsh[0:OID_SZ], // TODO: what if size exceeds hash?
 	}
 	return
 }
@@ -134,6 +150,10 @@ func hex2byte(ch byte) (byte, error) {
 	return 0x0, errors.New("unknown char")
 }
 
+// ================================================================= //
+// PARSING
+// ================================================================= //
+
 // ParseObjectId reads the next OID_HEXSZ bytes from the
 // Reader and places the resulting object id in oid.
 func (p *objectIdParser) ParseObjectId() *ObjectId {
@@ -153,6 +173,10 @@ func (p *objectIdParser) ParseObjectIdBytes() *ObjectId {
 	}
 	return oid
 }
+
+// ================================================================= //
+// FORMATTING
+// ================================================================= //
 
 func (f *Format) ObjectId(oid *ObjectId) (int, error) {
 	return fmt.Fprint(f.Writer, oid.String())

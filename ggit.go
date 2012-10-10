@@ -33,7 +33,7 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	// --show-repo
+	// --which-git-dir
 	if flagWhichGitDir {
 		path, err := findRepo()
 		if err != nil {

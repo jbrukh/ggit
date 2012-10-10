@@ -25,12 +25,13 @@ const (
 // However, in the scheme of things, a Repository
 // should be a more general interface.
 type Repository interface {
+
 	// TODO: this needs to be replaced with
 	// higher level index operations
 	Index() (*Index, error)
 
 	// TODO: loose or packed refs may be irrelevant
-	// at this level of abstractions, probably should
+	// at this level of abstraction, probably should
 	// remove from here. For instance, packed refs
 	// are meant to compensate for lots of disk reads
 	// but such optimization may be irrelevant for
@@ -50,9 +51,19 @@ type Repository interface {
 	// returned object may be a symbolic or concrete ref.
 	Ref(spec string) (Ref, error)
 
+	// ObjectFromOid is the fundamental object retrieval
+	// operation of a repository. It is the basis for
+	// working with any object.
 	ObjectFromOid(oid *ObjectId) (Object, error)
+
+	// ObjectFromShortOid provides support for shortened
+	// hashes. This functionality is usually tied to the
+	// particular kind of backend the repository is using.
 	ObjectFromShortOid(short string) (Object, error)
 
+	// TODO: this is more or less an external operation
+	// that can be achieved with existing public methods of the
+	// repo, so it can probably be removed from here.
 	RevParse(name string) (Object, error)
 }
 
