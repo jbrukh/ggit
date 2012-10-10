@@ -11,15 +11,18 @@ const (
 	markerTagger = "tagger"
 )
 
+// ================================================================= //
+// TAGS
+// ================================================================= //
+
 type Tag struct {
-	//commit-SHA1
-	object     *ObjectId
-	tag        string
-	tagger     *WhoWhen
-	message    string
-	size       int
-	objectType ObjectType
-	oid        *ObjectId
+	object     *ObjectId  // the object this tag is pointing at
+	name       string     // the tag name
+	tagger     *WhoWhen   // the tagger
+	message    string     // the tag message
+	size       int        // the size of the tag
+	objectType ObjectType // the object type
+	oid        *ObjectId  // the oid of the tag itself
 }
 
 func (t *Tag) Type() ObjectType {
@@ -62,7 +65,7 @@ func (p *objectParser) parseTag() *Tag {
 	// read the tag name
 	p.ConsumeString(markerTag)
 	p.ConsumeByte(SP)
-	tag.tag = p.ReadString(LF) // gets rid of the LF!
+	tag.name = p.ReadString(LF) // gets rid of the LF!
 
 	// read the tagger
 	tag.tagger = p.parseWhoWhen(markerTagger)
@@ -86,5 +89,5 @@ func (p *objectParser) parseTag() *Tag {
 
 func (f *Format) Tag(t *Tag) (int, error) {
 	return fmt.Fprintf(f.Writer, "object %s\ntype %s\ntag %s\ntagger %s\n\n%s",
-		t.object, t.objectType, t.tag, t.tagger.String(), t.message)
+		t.object, t.objectType, t.name, t.tagger.String(), t.message)
 }
