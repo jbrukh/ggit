@@ -16,21 +16,17 @@ const (
 // ================================================================= //
 
 type Tag struct {
-	object     *ObjectId  // the object this tag is pointing at
-	name       string     // the tag name
-	tagger     *WhoWhen   // the tagger
-	message    string     // the tag message
-	size       int        // the size of the tag
-	objectType ObjectType // the object type
-	oid        *ObjectId  // the oid of the tag itself
+	hdr        ObjectHeader // the size of the tag
+	object     *ObjectId    // the object this tag is pointing at
+	name       string       // the tag name
+	tagger     *WhoWhen     // the tagger
+	message    string       // the tag message
+	objectType ObjectType   // the object type
+	oid        *ObjectId    // the oid of the tag itself
 }
 
-func (t *Tag) Type() ObjectType {
-	return ObjectTag
-}
-
-func (t *Tag) Size() int {
-	return t.size
+func (t *Tag) Header() ObjectHeader {
+	return t.hdr
 }
 
 func (t *Tag) ObjectId() *ObjectId {
@@ -74,9 +70,9 @@ func (p *objectParser) parseTag() *Tag {
 	// read the commit message
 	p.ConsumeByte(LF)
 	tag.message = p.String()
-	tag.size = p.hdr.Size
+	tag.hdr = p.hdr
 
-	if p.Count() != p.hdr.Size {
+	if p.Count() != p.hdr.Size() {
 		panicErr("payload doesn't match prescibed size")
 	}
 

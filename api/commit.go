@@ -21,21 +21,17 @@ const (
 // ================================================================= //
 
 type Commit struct {
+	hdr       ObjectHeader
 	author    *WhoWhen
 	committer *WhoWhen
 	message   string
 	tree      *ObjectId
 	parents   []*ObjectId
-	size      int
 	oid       *ObjectId
 }
 
-func (c *Commit) Type() ObjectType {
-	return ObjectCommit
-}
-
-func (c *Commit) Size() int {
-	return c.size
+func (c *Commit) Header() ObjectHeader {
+	return c.hdr
 }
 
 func (c *Commit) ObjectId() *ObjectId {
@@ -85,8 +81,8 @@ func (p *objectParser) parseCommit() *Commit {
 	p.ConsumeByte(LF)
 	c.message = p.String()
 
-	c.size = p.hdr.Size
-	if p.Count() != p.hdr.Size {
+	c.hdr = p.hdr
+	if p.Count() != p.hdr.Size() {
 		panicErr("payload doesn't match prescibed size")
 	}
 	return c

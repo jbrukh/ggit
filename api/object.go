@@ -1,14 +1,21 @@
 package api
 
-type Object interface {
-	// Type returns the type of this object. Available types are 
-	// defined by ObjectType are usually one of blob, tree, 
-	// commit, or tag.
+// ObjectHeader contains the type and size
+// information for an object.
+type ObjectHeader interface {
 	Type() ObjectType
-
-	// Size returns the size of the payload of this object.
 	Size() int
+}
 
+// Object represents a generic git object: a blob, a tree,
+// a tag, or a commit.
+type Object interface {
+
+	// Header returns the object header, which
+	// contains the object's type and size.
+	Header() ObjectHeader
+
+	// ObjectId returns the object id of the object.
 	ObjectId() *ObjectId
 }
 

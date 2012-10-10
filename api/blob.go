@@ -12,16 +12,12 @@ import (
 // object.
 type Blob struct {
 	data []byte
-	size int
 	oid  *ObjectId
+	hdr  ObjectHeader
 }
 
-func (b *Blob) Type() ObjectType {
-	return ObjectBlob
-}
-
-func (b *Blob) Size() int {
-	return b.size
+func (b *Blob) Header() ObjectHeader {
+	return b.hdr
 }
 
 func (b *Blob) ObjectId() *ObjectId {
@@ -41,9 +37,9 @@ func (p *objectParser) parseBlob() *Blob {
 	p.ResetCount()
 
 	b.data = p.Bytes()
-	b.size = p.hdr.Size
+	b.hdr = p.hdr
 
-	if p.Count() != p.hdr.Size {
+	if p.Count() != p.hdr.Size() {
 		panicErr("payload doesn't match prescibed size")
 	}
 

@@ -10,7 +10,7 @@ import (
 
 type Tree struct {
 	entries []*TreeEntry
-	size    int
+	hdr     ObjectHeader
 	oid     *ObjectId
 }
 
@@ -19,12 +19,8 @@ func (t *Tree) Entries() []*TreeEntry {
 	return t.entries
 }
 
-func (t *Tree) Type() ObjectType {
-	return ObjectTree
-}
-
-func (t *Tree) Size() int {
-	return t.size
+func (t *Tree) Header() ObjectHeader {
+	return t.hdr
 }
 
 func (t *Tree) ObjectId() *ObjectId {
@@ -48,7 +44,7 @@ func (e *TreeEntry) String() (s string) {
 }
 
 // ================================================================= //
-// OBJECT PARSER
+// PARSING
 // ================================================================= //
 
 func (p *objectParser) parseTree() *Tree {
@@ -69,15 +65,15 @@ func (p *objectParser) parseTree() *Tree {
 		}
 		t.entries = append(t.entries, entry)
 	}
-	t.size = p.hdr.Size
-	if p.Count() != p.hdr.Size {
+	t.hdr = p.hdr
+	if p.Count() != p.hdr.Size() {
 		panicErr("payload doesn't match prescibed size")
 	}
 	return t
 }
 
 // ================================================================= //
-// OBJECT FORMATTER
+// FORMATTING
 // ================================================================= //
 
 func (f *Format) Tree(t *Tree) (int, error) {

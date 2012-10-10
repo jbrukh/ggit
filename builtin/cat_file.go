@@ -52,9 +52,9 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 		f := api.Format{p.Wout}
 		f.Object(o)
 	case b.flagShowType:
-		fmt.Fprintln(p.Wout, o.Type())
+		fmt.Fprintln(p.Wout, o.Header().Type())
 	case b.flagShowSize:
-		fmt.Fprintln(p.Wout, o.Size())
+		fmt.Fprintln(p.Wout, o.Header().Size())
 	default:
 		b.HelpInfo.Usage(p.Werr)
 		return

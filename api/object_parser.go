@@ -11,8 +11,16 @@ import (
 // ObjectHeader is the deserialized (and more efficiently stored)
 // version of a git object header
 type objectHeader struct {
-	Type ObjectType
-	Size int
+	otype ObjectType
+	size  int
+}
+
+func (h *objectHeader) Type() ObjectType {
+	return h.otype
+}
+
+func (h *objectHeader) Size() int {
+	return h.size
 }
 
 // ================================================================= //
@@ -40,9 +48,9 @@ func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
 func (p *objectParser) ParseHeader() (*objectHeader, error) {
 	err := safeParse(func() {
 		p.hdr = new(objectHeader)
-		p.hdr.Type = ObjectType(p.ConsumeStrings(objectTypes))
+		p.hdr.otype = ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
-		p.hdr.Size = p.ParseAtoi(NUL)
+		p.hdr.size = p.ParseAtoi(NUL)
 	})
 	return p.hdr, err
 }
@@ -58,7 +66,7 @@ func (p *objectParser) ParsePayload() (Object, error) {
 	)
 
 	err = safeParse(func() {
-		switch p.hdr.Type {
+		switch p.hdr.otype {
 		case ObjectBlob:
 			obj = p.parseBlob()
 		case ObjectTree:
