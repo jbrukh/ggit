@@ -84,8 +84,7 @@ func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
 		return
 	}
 
-	f := make([]api.Filter, 0)
-
+	var f []api.Filter
 	if b.flagHeads && b.flagTags {
 		f = append(f, api.FilterOr(HeadsFilter, TagsFilter))
 	} else if b.flagHeads {
