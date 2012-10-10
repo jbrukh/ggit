@@ -25,7 +25,7 @@ func init() {
 func Test_parseTag(t *testing.T) {
 	tag, ok := parseTag(t, testTag)
 	assert(t, ok)
-	assert(t, tag.tag == "tattoo")
+	assert(t, tag.name == "tattoo")
 	assert(t, tag.object.String() == "a53e5437def11c1eed3a4be1d45fba42e7582b03")
 	assert(t, tag.message == "this is not a tag. it is a flying spaghetti monster.")
 	assert(t, tag.tagger.Email() == "michael.a.bosworth@gmail.com")
@@ -44,7 +44,7 @@ func Test_tagString(t *testing.T) {
 	var thereAndBackAgain *Tag
 	thereAndBackAgain, ok = parseTag(t, tagData)
 	assert(t, ok)
-	assert(t, tag.tag == thereAndBackAgain.tag)
+	assert(t, tag.name == thereAndBackAgain.name)
 	assert(t, tag.object.String() == thereAndBackAgain.object.String())
 	assert(t, tag.message == thereAndBackAgain.message)
 	assert(t, tag.tagger.Email() == thereAndBackAgain.tagger.Email())
