@@ -43,6 +43,41 @@ func (s refByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s refByName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
 
 // ================================================================= //
+// ERRORS
+// ================================================================= //
+
+type (
+	noSuchRef    error
+	ambiguousRef error
+)
+
+func noSuchRefErrf(ref string) noSuchRef {
+	return noSuchRef(fmt.Errorf("no such ref: %s", ref))
+}
+
+func ambiguousRefErrf(ref string) noSuchRef {
+	return ambiguousRef(fmt.Errorf("ambiguous ref: %s", ref))
+}
+
+func IsNoSuchRef(e error) bool {
+	switch t := e.(type) {
+	case noSuchRef:
+		e = t // must use t
+		return true
+	}
+	return false
+}
+
+func IsAmbiguousRef(e error) bool {
+	switch t := e.(type) {
+	case ambiguousRef:
+		e = t // must use t
+		return true
+	}
+	return false
+}
+
+// ================================================================= //
 // REF IMPLEMENTATION
 // ================================================================= //
 
@@ -199,6 +234,7 @@ func (p *refParser) parseRef() (r Ref, err error) {
 // OidFromRef turns a ref specification into the ObjectId that ref
 // points to, by peeling away any symbolic refs that might stand
 // in its way.
+// TODO: this method is superfluous in favor of OidRefFromRef
 func OidFromRef(repo Repository, spec string) (*ObjectId, error) {
 	r, err := OidRefFromRef(repo, spec)
 	if err != nil {
@@ -245,4 +281,35 @@ func OidRefFromRef(repo Repository, spec string) (Ref, error) {
 		}
 	}
 	return &ref{name: spec, oid: target.(*ObjectId)}, nil
+}
+
+var defaultRefPrefixes = []string{
+	"%s",
+	"refs/%s",
+	"refs/tags/%s",
+	"refs/heads/%s",
+	"refs/remotes/%s",
+	"refs/remotes/%s/HEAD",
+}
+
+// OidRefFromShortRef attempts to disambiguate "shorthand" refs, e.g.
+// when one writes "master" for "refs/head/master". It follows the 
+// rules specified here:
+//
+//    http://www.kernel.org/pub/software/scm/git/docs/gitrevisions.html
+//
+// under "Specifying Revisions/<refname>". If the ref does not exist
+// then you can check the returned error with api.IsNoSuchRef. If the
+// ref is ambiguous, you can check the returned error with
+// api.IsAmbiguousRef.
+func OidRefFromShortRef(repo Repository, spec string) (r Ref, e error) {
+	for _, prefix := range defaultRefPrefixes {
+		ref := fmt.Sprintf(prefix, spec)
+		if r, e = repo.Ref(ref); e == nil {
+			return r, nil
+		} else if !IsNoSuchRef(e) {
+			return nil, e // something went wrong
+		}
+	}
+	return nil, e // no such ref
 }

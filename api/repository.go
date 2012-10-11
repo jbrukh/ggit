@@ -155,21 +155,23 @@ func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 
 	if os.IsNotExist(e) {
 		// we can check packed refs now
-		// TODO: we can optimize this with a trie
+		// TODO: we can optimize this by caching it
 		refs, err := repo.PackedRefs()
 		if err != nil {
-			return nil, err
+			return nil, noSuchRefErrf(spec)
 		}
-		refs = FilterRefs(refs, FilterRefPattern(spec))
-		if len(refs) != 1 {
-			return nil, fmt.Errorf("Ambiguous or missing ref: %s", spec)
+		for _, r := range refs {
+			if r.Name() == spec {
+				return r, nil
+			}
 		}
-		return refs[0], nil
+		return nil, noSuchRefErrf(spec)
 	}
+
 	return nil, e
 }
 
-//find all objects and print their ids
+// find all objects and print their ids
 func (repo *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
 	oids = make([]ObjectId, 0)
