@@ -305,7 +305,7 @@ var defaultRefPrefixes = []string{
 func OidRefFromShortRef(repo Repository, spec string) (r Ref, e error) {
 	for _, prefix := range defaultRefPrefixes {
 		ref := fmt.Sprintf(prefix, spec)
-		if r, e = repo.Ref(ref); e == nil {
+		if r, e = repo.Ref(ref); e == nil { // TODO: inefficient because we read packed refs each time
 			return r, nil
 		} else if !IsNoSuchRef(e) {
 			return nil, e // something went wrong
@@ -313,3 +313,17 @@ func OidRefFromShortRef(repo Repository, spec string) (r Ref, e error) {
 	}
 	return nil, e // no such ref
 }
+
+// // ================================================================= //
+// // FINDERS
+// // ================================================================= //
+
+// type refFinder func(Repository, string) (Ref, error)
+
+// func oidRefFromRefFinder(repo Repository, spec string, finder refFinder) (Ref, error) {
+// 	r, e := finder(repo, spec)
+// 	if e != nil {
+// 		return nil, e
+// 	}
+
+// }
