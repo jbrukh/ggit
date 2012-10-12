@@ -15,6 +15,12 @@ func assert(t *testing.T, b bool, items ...interface{}) {
 	}
 }
 
+func assertNoErr(t *testing.T, err error) {
+	if err != nil {
+		t.Errorf("an error occurred: %s", err.Error())
+	}
+}
+
 func assertf(t *testing.T, b bool, format string, items ...interface{}) {
 	if !b {
 		t.Errorf(format, items)
@@ -22,8 +28,8 @@ func assertf(t *testing.T, b bool, format string, items ...interface{}) {
 }
 
 func Test_CreateTestRepo(t *testing.T) {
-	repo, err := CreateTestRepo("cases/empty_repo.sh")
-	assert(t, err == nil)
+	repo, err := CreateTestRepo("cases/single_commit.sh")
+	assertNoErr(t, err)
 	err = repo.Destroy()
-	assert(t, err == nil)
+	assertNoErr(t, err)
 }
