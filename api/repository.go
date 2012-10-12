@@ -3,7 +3,6 @@ package api
 import (
 	"bufio"
 	"compress/zlib"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -75,18 +74,14 @@ type DiskRepository struct {
 }
 
 // open a reprository that is located at the given path
-func Open(path string) (*DiskRepository, error) {
-	// check that repo is valid
-	if !validateRepo(path) {
-		return nil, errors.New("not a valid repo")
-	}
+func Open(path string) *DiskRepository {
 	return &DiskRepository{
 		path: path,
-	}, nil
+	}
 }
 
 // Destroy is a highly destructive operation that 
-// irrevocably destroy the git repository and its
+// irrevocably destroys the git repository and its
 // enclosing directory.
 func (repo *DiskRepository) Destroy() error {
 	dir := repo.path

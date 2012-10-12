@@ -112,10 +112,7 @@ func openRepo() (repo api.Repository, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	if repo, err = api.Open(path); err != nil {
-		return nil, err
-	}
+	repo = api.Open(path)
 	return
 }
 

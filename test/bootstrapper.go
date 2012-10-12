@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/jbrukh/ggit/api"
 	"os"
 	"os/exec"
 	"path"
@@ -13,8 +12,8 @@ const varDir = "var"
 
 // CreateTestRepo creates a temporary directory and a subdirectory where
 // a test repo will be created. It passes this path to a script which
-// it executes. It then returns a ggit Repository based on that directory.
-func Repo(script string) (api.Repository, error) {
+// it executes. It then returns the resulting directory.
+func Repo(script string) (string, error) {
 	dir := path.Join(varDir, intuitName(script))
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, err
@@ -23,7 +22,7 @@ func Repo(script string) (api.Repository, error) {
 	if err := cmd.Run(); err != nil {
 		return nil, err
 	}
-	return api.Open(dir)
+	return dir, nil
 }
 
 // intuitName returns the name of the shell script that is being used
