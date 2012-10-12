@@ -5,6 +5,9 @@ import (
 	"testing"
 )
 
+// TODO: these replicate the functionality in util.go, but
+// there is no good way to make them common and private.
+
 func assert(t *testing.T, b bool, items ...interface{}) {
 	if !b {
 		_, file, line, ok := runtime.Caller(1)
@@ -28,7 +31,7 @@ func assertf(t *testing.T, b bool, format string, items ...interface{}) {
 }
 
 func Test_SanityTest(t *testing.T) {
-	repo, err := CreateTestRepo("cases/single_commit.sh")
+	repo, err := Repo("cases/single_commit.sh")
 	assertNoErr(t, err)
 	err = repo.Destroy()
 	assertNoErr(t, err)

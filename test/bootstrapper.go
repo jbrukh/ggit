@@ -14,7 +14,7 @@ const varDir = "var"
 // CreateTestRepo creates a temporary directory and a subdirectory where
 // a test repo will be created. It passes this path to a script which
 // it executes. It then returns a ggit Repository based on that directory.
-func CreateTestRepo(script string) (api.Repository, error) {
+func Repo(script string) (api.Repository, error) {
 	dir := path.Join(varDir, intuitName(script))
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, err
