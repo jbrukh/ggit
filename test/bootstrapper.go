@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -8,15 +9,21 @@ import (
 	"strings"
 )
 
-// CreateTestRepo creates a temporary directory and a subdirectory where
-// a test repo will be created. It passes this path to a script which
-// it executes. It then returns the resulting directory.
+// Repo creates a directory in "root" and a subdirectory
+// therein where it executes the test case which builds up
+// a test repository. The test case script is handed the
+// destination directory as its sole parameter. That directory
+// is returned.
+// The name of the script can be a nickname, such as "empty_repo",
+// which will automatically resolve to "test/cases/empty_repo.sh".
+// Otherwise, the parameter will be regarded as a path to the
+// file.
 func Repo(root string, script string) (string, error) {
 	dir := path.Join(root, intuitName(script))
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
-	cmd := exec.Command(script, dir)
+	cmd := exec.Command(resolvePath(script), dir)
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
@@ -36,4 +43,13 @@ func intuitName(script string) string {
 		return toks[0]
 	}
 	return toks[len(toks)-2]
+}
+
+func resolvePath(script string) string {
+	// if it looks like a nickname, resolve automatically
+	if !strings.HasSuffix(script, ".sh") && strings.Index(script, "/") < 0 {
+		// TODO: relative path makes this a bug
+		return fmt.Sprintf("test/cases/%s.sh", script)
+	}
+	return script
 }
