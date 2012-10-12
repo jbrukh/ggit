@@ -27,7 +27,7 @@ func assertf(t *testing.T, b bool, format string, items ...interface{}) {
 	}
 }
 
-func Test_CreateTestRepo(t *testing.T) {
+func Test_SanityTest(t *testing.T) {
 	repo, err := CreateTestRepo("cases/single_commit.sh")
 	assertNoErr(t, err)
 	err = repo.Destroy()

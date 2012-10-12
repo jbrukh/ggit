@@ -26,6 +26,9 @@ func CreateTestRepo(script string) (api.Repository, error) {
 	return api.Open(dir)
 }
 
+// intuitName returns the name of the shell script that is being used
+// without any tail extention. For example, "test/cases/x.sh" would result
+// in the output "x".
 func intuitName(script string) string {
 	_, file := filepath.Split(script)
 	if file == "" {
