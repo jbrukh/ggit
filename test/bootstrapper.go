@@ -8,13 +8,11 @@ import (
 	"strings"
 )
 
-const varDir = "var"
-
 // CreateTestRepo creates a temporary directory and a subdirectory where
 // a test repo will be created. It passes this path to a script which
 // it executes. It then returns the resulting directory.
-func Repo(script string) (string, error) {
-	dir := path.Join(varDir, intuitName(script))
+func Repo(root string, script string) (string, error) {
+	dir := path.Join(root, intuitName(script))
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
