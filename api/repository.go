@@ -25,6 +25,7 @@ const (
 // However, in the scheme of things, a Repository
 // should be a more general interface.
 type Repository interface {
+	Destroy() error
 
 	// TODO: this needs to be replaced with
 	// higher level index operations
@@ -82,6 +83,14 @@ func Open(path string) (*DiskRepository, error) {
 	return &DiskRepository{
 		path: path,
 	}, nil
+}
+
+// Destroy is a highly destructive operation that 
+// irrevocably destroy the git repository and its
+// enclosing directory.
+func (repo *DiskRepository) Destroy() error {
+	dir := repo.path
+	return os.RemoveAll(dir)
 }
 
 func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error) {
