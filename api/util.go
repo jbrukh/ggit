@@ -98,7 +98,7 @@ func trimPrefix(str, prefix string) string {
 }
 
 // ================================================================= //
-// METHODS FOR TESTING
+// METHODS FOR TESTING // TODO: move these to test package
 // ================================================================= //
 
 func assert(t *testing.T, b bool, items ...interface{}) {
