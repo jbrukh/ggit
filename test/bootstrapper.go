@@ -16,11 +16,11 @@ const varDir = "var"
 func Repo(script string) (string, error) {
 	dir := path.Join(varDir, intuitName(script))
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return nil, err
+		return "", err
 	}
 	cmd := exec.Command(script, dir)
 	if err := cmd.Run(); err != nil {
-		return nil, err
+		return "", err
 	}
 	return dir, nil
 }
