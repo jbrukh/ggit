@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api"
 	"os"
 	"os/exec"
 	"path"
@@ -23,6 +24,12 @@ func Repo(root string, script string) (string, error) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
+
+	if api.IsValidRepo(dir) {
+		// already exists
+		return "", fmt.Errorf("the repo '%s' already exists", dir)
+	}
+
 	cmd := exec.Command(resolvePath(script), dir)
 	if err := cmd.Run(); err != nil {
 		return "", err
