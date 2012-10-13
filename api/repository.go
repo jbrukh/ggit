@@ -41,7 +41,7 @@ type Repository interface {
 
 	// TODO: while this is ok for now, this debug
 	// method should not be part of the backend interface
-	ObjectIds() ([]ObjectId, error)
+	ObjectIds() ([]*ObjectId, error)
 
 	// Refs returns a list of all refs in the repository.
 	// TODO: perhaps replace with a visitor of refs?
@@ -180,9 +180,9 @@ func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 }
 
 // find all objects and print their ids
-func (repo *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
+func (repo *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
 	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
-	oids = make([]ObjectId, 0)
+	oids = make([]*ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
 	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
 		if name := info.Name(); name == "info" || name == "pack" {
@@ -193,7 +193,7 @@ func (repo *DiskRepository) ObjectIds() (oids []ObjectId, err error) {
 			if oid, err = OidFromString(hash); err != nil {
 				return err
 			}
-			oids = append(oids, *oid)
+			oids = append(oids, oid)
 		}
 		return nil
 	})

@@ -69,6 +69,14 @@ func OidFromHash(h hash.Hash) (id *ObjectId) {
 	return
 }
 
+func OidNow(correctHex string) *ObjectId {
+	oid, err := OidFromString(correctHex)
+	if err != nil {
+		panic("provide a correct oid")
+	}
+	return oid
+}
+
 // String returns the hex string that represents
 // the ObjectId bytes
 func (id *ObjectId) String() string {
