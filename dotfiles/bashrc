@@ -14,7 +14,5 @@ alias gg="$GOPATH/bin/ggit"
 
 # list some objects... this is slow, so use on small repos
 objects() {
-    for obj in `git rev-list --objects --all | cut -d" " -f1`; do
-        echo $obj `git cat-file -t $obj`;
-    done
+    for o in `gg ls-objects`; do echo $o `gg cat-file -t $o`; done
 }

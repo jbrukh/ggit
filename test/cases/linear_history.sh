@@ -11,9 +11,9 @@ for ITER in {1..10}; do
 	git commit -a -m "Commit $ITER"
 done
 
-# 00750edc07d6415dcc07ae0351e9397b0222b7ba blob
+# 00750edc07d6415dcc07ae0351e9397b0222b7ba blob      // 3
 # 05009c62ad873f072815bf544ab8842a3208ffc5 tree
-# 0cfbf08886fca9a91cb753ec8734c84fcbe52c9f blob
+# 0cfbf08886fca9a91cb753ec8734c84fcbe52c9f blob      // 2
 # 111dc3983a4605621a48231cacc28c9f71dd977d commit
 # 1e8b314962144c26d5e0e50fd29d2ca327864913 blob
 # 2dd00ee70828ff9577c1dfc1933b266e1da1a01f tree

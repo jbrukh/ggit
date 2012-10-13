@@ -73,10 +73,18 @@ type DiskRepository struct {
 	pr   []Ref
 }
 
-// open a reprository that is located at the given path
-func Open(path string) *DiskRepository {
+// Open a reprository that is located at the given path. The
+// path of a repository is always its .git directory. However,
+// if the enclosing directory is given, then ggit will
+// append the .git directory to the specified path.
+func Open(pth string) *DiskRepository {
+	p := pth
+	_, file := filepath.Split(pth)
+	if file != DefaultGitDir {
+		p = path.Join(pth, DefaultGitDir)
+	}
 	return &DiskRepository{
-		path: path,
+		path: p,
 	}
 }
 
@@ -84,7 +92,7 @@ func Open(path string) *DiskRepository {
 // irrevocably destroys the git repository and its
 // enclosing directory.
 func (repo *DiskRepository) Destroy() error {
-	dir := repo.path
+	dir, _ := filepath.Split(repo.path)
 	return os.RemoveAll(dir)
 }
 

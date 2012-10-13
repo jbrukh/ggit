@@ -117,6 +117,12 @@ func assertf(t *testing.T, b bool, format string, items ...interface{}) {
 	}
 }
 
+func assertNoErr(t *testing.T, err error) {
+	if err != nil {
+		t.Errorf("an error occurred: %s", err)
+	}
+}
+
 func assertPanic(t *testing.T, f func()) {
 	defer func() {
 		if r := recover(); r != nil {
