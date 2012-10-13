@@ -298,6 +298,21 @@ func (repo *DiskRepository) RevParse(name string) (Object, error) {
 	return nil, nil
 }
 
+// IsValidRepo validates a repository path to make sure it has
+// the right format and that it exists.	
+func IsValidRepo(pth string) bool {
+	p := pth
+	_, file := filepath.Split(pth)
+	if file != DefaultGitDir {
+		p = path.Join(pth, DefaultGitDir)
+	}
+	if _, e := os.Stat(p); e != nil {
+		return false
+	}
+	// TODO: may want to do other checks here...
+	return true
+}
+
 // ================================================================= //
 // PRIVATE METHODS
 // ================================================================= //
@@ -313,11 +328,4 @@ func (repo *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error)
 func (repo *DiskRepository) relativeFile(relPath string) (file *os.File, err error) {
 	path := path.Join(repo.path, relPath)
 	return os.Open(path)
-}
-
-// validate a repository path to make sure it has
-// the right format and that it exists
-func validateRepo(path string) bool {
-	// TODO
-	return true
 }
