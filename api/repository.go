@@ -78,11 +78,7 @@ type DiskRepository struct {
 // if the enclosing directory is given, then ggit will
 // append the .git directory to the specified path.
 func Open(pth string) *DiskRepository {
-	p := pth
-	_, file := filepath.Split(pth)
-	if file != DefaultGitDir {
-		p = path.Join(pth, DefaultGitDir)
-	}
+	p := inferGitDir(pth)
 	return &DiskRepository{
 		path: p,
 	}
@@ -301,11 +297,7 @@ func (repo *DiskRepository) RevParse(name string) (Object, error) {
 // IsValidRepo validates a repository path to make sure it has
 // the right format and that it exists.	
 func IsValidRepo(pth string) bool {
-	p := pth
-	_, file := filepath.Split(pth)
-	if file != DefaultGitDir {
-		p = path.Join(pth, DefaultGitDir)
-	}
+	p := inferGitDir(pth)
 	if _, e := os.Stat(p); e != nil {
 		return false
 	}
@@ -328,4 +320,12 @@ func (repo *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error)
 func (repo *DiskRepository) relativeFile(relPath string) (file *os.File, err error) {
 	path := path.Join(repo.path, relPath)
 	return os.Open(path)
+}
+
+func inferGitDir(pth string) string {
+	_, file := filepath.Split(pth)
+	if file != DefaultGitDir {
+		return path.Join(pth, DefaultGitDir)
+	}
+	return pth
 }
