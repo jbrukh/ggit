@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"github.com/jbrukh/ggit/util"
 	"testing"
 )
 
@@ -10,20 +11,20 @@ func Test_ReadBytes(t *testing.T) {
 	t2 := parserForString("b")                  // empty token
 	t3 := parserForString("    life\000oh\000") // more delims
 
-	assertPanicFree(t, func() {
-		assert(t, string(t1.ReadBytes(NUL)) == "poop")
-		assert(t, string(t2.ReadBytes('b')) == "")
-		assert(t, string(t3.ReadBytes(NUL)) == "    life")
+	util.AssertPanicFree(t, func() {
+		util.Assert(t, string(t1.ReadBytes(NUL)) == "poop")
+		util.Assert(t, string(t2.ReadBytes('b')) == "")
+		util.Assert(t, string(t3.ReadBytes(NUL)) == "    life")
 	})
 }
 
 func Test_ReadBytesPanic(t *testing.T) {
 	t1 := parserForString("")
 	t2 := parserForString("hello\000wrong\000token")
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t1.ReadBytes(NUL)
 	})
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t2.ReadBytes('a') // should not find 'a'
 	})
 }
@@ -34,11 +35,11 @@ func Test_String(t *testing.T) {
 	t2 := parserForString(MSG)
 	t3 := parserForString("")
 
-	assertPanicFree(t, func() {
-		assert(t, t1.String() == MSG)
+	util.AssertPanicFree(t, func() {
+		util.Assert(t, t1.String() == MSG)
 		t2.buf.ReadByte()
-		assert(t, t2.String() == MSG[1:])
-		assert(t, t3.String() == "")
+		util.Assert(t, t2.String() == MSG[1:])
+		util.Assert(t, t3.String() == "")
 	})
 }
 
@@ -46,10 +47,10 @@ func Test_ConsumePeekString(t *testing.T) {
 	const MSG = "The quick brown fox jumped over the lazy dog."
 	t1 := parserForString(MSG)
 
-	assertPanicFree(t, func() {
-		assert(t, t1.PeekString(3) == "The")
-		assert(t, t1.PeekString(9) == "The quick")
-		assert(t, t1.PeekString(len(MSG)) == MSG)
+	util.AssertPanicFree(t, func() {
+		util.Assert(t, t1.PeekString(3) == "The")
+		util.Assert(t, t1.PeekString(9) == "The quick")
+		util.Assert(t, t1.PeekString(len(MSG)) == MSG)
 		t1.ConsumeString("The ")
 		t1.ConsumeString("quick ")
 		t1.ConsumeString("brown ")
@@ -61,7 +62,7 @@ func Test_ConsumePeekString(t *testing.T) {
 		t1.ConsumeString("")
 	})
 
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t1.ConsumeString("garbage")
 	})
 }
@@ -92,22 +93,22 @@ func Test_ParseAtoi(t *testing.T) {
 	t6 := parserForString("\000")
 	t7 := parserForString("14.3\000")
 
-	assertPanicFree(t, func() {
-		assert(t, t1.ParseAtoi(NUL) == -100)
-		assert(t, t2.ParseAtoi(NUL) == 101)
-		assert(t, t3.ParseAtoi(NUL) == 0)
+	util.AssertPanicFree(t, func() {
+		util.Assert(t, t1.ParseAtoi(NUL) == -100)
+		util.Assert(t, t2.ParseAtoi(NUL) == 101)
+		util.Assert(t, t3.ParseAtoi(NUL) == 0)
 	})
 
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t4.ParseAtoi(NUL)
 	})
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t5.ParseAtoi(NUL)
 	})
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t6.ParseAtoi(NUL)
 	})
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t7.ParseAtoi(NUL)
 	})
 }
@@ -118,11 +119,11 @@ func Test_ParseIntN(t *testing.T) {
 	t3 := parserForString("0\000")
 	t4 := parserForString("+11")
 
-	assertPanicFree(t, func() {
-		assert(t, t1.ParseIntN(4, 10, 0) == -100)
-		assert(t, t2.ParseIntN(3, 10, 0) == 101)
-		assert(t, t3.ParseIntN(1, 10, 0) == 0)
-		assert(t, t4.ParseIntN(3, 10, 0) == 11)
+	util.AssertPanicFree(t, func() {
+		util.Assert(t, t1.ParseIntN(4, 10, 0) == -100)
+		util.Assert(t, t2.ParseIntN(3, 10, 0) == 101)
+		util.Assert(t, t3.ParseIntN(1, 10, 0) == 0)
+		util.Assert(t, t4.ParseIntN(3, 10, 0) == 11)
 	})
 }
 
@@ -136,42 +137,42 @@ func Test_ConsumeStrings(t *testing.T) {
 	t1 := parserForString("dogcat")
 	t2 := parserForString("doggie")
 
-	assertPanicFree(t, func() {
-		assert(t, t1.ConsumeStrings(animals) == "dog")
-		assert(t, t1.ConsumeStrings(animals) == "cat")
-		assert(t, t2.ConsumeStrings(animals) == "dog") // only first match is returned
+	util.AssertPanicFree(t, func() {
+		util.Assert(t, t1.ConsumeStrings(animals) == "dog")
+		util.Assert(t, t1.ConsumeStrings(animals) == "cat")
+		util.Assert(t, t2.ConsumeStrings(animals) == "dog") // only first match is returned
 	})
 
 	t3 := parserForString("dogcat")
 	t4 := parserForString("")
 
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t3.ConsumeStrings([]string{})
 	})
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t3.ConsumeStrings(nil)
 	})
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t3.ConsumeStrings(objectTypes)
 	})
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t4.ConsumeStrings(animals)
 	})
-	assertPanic(t, func() {
+	util.AssertPanic(t, func() {
 		t4.ConsumeStrings([]string{""})
 	})
 }
 
 func Test_Count(t *testing.T) {
 	t1 := parserForString("tree 4\000lalala")
-	assertPanicFree(t, func() {
+	util.AssertPanicFree(t, func() {
 		t1.ReadString(NUL)
 	})
-	assert(t, t1.Count() == 7)
+	util.Assert(t, t1.Count() == 7)
 	t1.ResetCount()
-	assert(t, t1.Count() == 0)
-	assertPanicFree(t, func() {
+	util.Assert(t, t1.Count() == 0)
+	util.AssertPanicFree(t, func() {
 		t1.String()
 	})
-	assert(t, t1.Count() == 6)
+	util.Assert(t, t1.Count() == 6)
 }

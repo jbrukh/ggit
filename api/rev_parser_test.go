@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/jbrukh/ggit/util"
 	"testing"
 )
 
@@ -10,7 +11,7 @@ func Test_parseNumber(t *testing.T) {
 			spec: str,
 		}
 		i, err := p.parseNumber()
-		assert(t, err == nil && i == exp)
+		util.Assert(t, err == nil && i == exp)
 	}
 
 	test("~~", 1)

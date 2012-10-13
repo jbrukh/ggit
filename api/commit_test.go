@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 	"testing"
 )
 
@@ -35,22 +36,22 @@ func Test_parseCommit(t *testing.T) {
 	if err != nil {
 		fmt.Println("error was: ", err.Error())
 	}
-	assertf(t, err == nil, "failed due to error")
-	assert(t, parsed != nil, "parsed is nul")
+	util.Assertf(t, err == nil, "failed due to error")
+	util.Assert(t, parsed != nil, "parsed is nul")
 
 	c, ok := parsed.(*Commit)
-	assert(t, ok)
-	assert(t, c.tree.String() == testTreeSha.String())
-	assert(t, c.parents != nil && len(c.parents) != 0)
-	assert(t, c.parents[0].String() == testParentSha.String())
-	assert(t, c.author.Name() == "Jake Brukhman")
-	assert(t, c.author.Email() == "brukhman@gmail.com")
-	assert(t, c.author.Seconds() == 1348333582)
-	assert(t, c.author.Offset() == -240)
-	assert(t, c.committer.Name() == "Jake Brukhman")
-	assert(t, c.committer.Email() == "brukhman@gmail.com")
-	assert(t, c.committer.Seconds() == 1348333582)
-	assert(t, c.committer.Offset() == -240)
-	assert(t, c.message == "Structure for WhoWhen.")
+	util.Assert(t, ok)
+	util.Assert(t, c.tree.String() == testTreeSha.String())
+	util.Assert(t, c.parents != nil && len(c.parents) != 0)
+	util.Assert(t, c.parents[0].String() == testParentSha.String())
+	util.Assert(t, c.author.Name() == "Jake Brukhman")
+	util.Assert(t, c.author.Email() == "brukhman@gmail.com")
+	util.Assert(t, c.author.Seconds() == 1348333582)
+	util.Assert(t, c.author.Offset() == -240)
+	util.Assert(t, c.committer.Name() == "Jake Brukhman")
+	util.Assert(t, c.committer.Email() == "brukhman@gmail.com")
+	util.Assert(t, c.committer.Seconds() == 1348333582)
+	util.Assert(t, c.committer.Offset() == -240)
+	util.Assert(t, c.message == "Structure for WhoWhen.")
 
 }

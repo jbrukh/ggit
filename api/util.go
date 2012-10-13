@@ -5,8 +5,6 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"hash"
-	"runtime"
-	"testing"
 )
 
 const (
@@ -98,52 +96,8 @@ func trimPrefix(str, prefix string) string {
 }
 
 // ================================================================= //
-// METHODS FOR TESTING // TODO: move these to test package
+// METHODS FOR TESTING
 // ================================================================= //
-
-func assert(t *testing.T, b bool, items ...interface{}) {
-	if !b {
-		_, file, line, ok := runtime.Caller(1)
-		if !ok {
-			file = "(unknown file)"
-		}
-		t.Errorf("%s:%d: %s", file, line, items)
-	}
-}
-
-func assertf(t *testing.T, b bool, format string, items ...interface{}) {
-	if !b {
-		t.Errorf(format, items)
-	}
-}
-
-func assertNoErr(t *testing.T, err error) {
-	if err != nil {
-		t.Errorf("an error occurred: %s", err)
-	}
-}
-
-func assertPanic(t *testing.T, f func()) {
-	defer func() {
-		if r := recover(); r != nil {
-			return
-		}
-		// should never get here
-	}()
-	f()
-	// TODO: use runtime to get the line numbers of the caller
-	t.Error("was expecting a panic")
-}
-
-func assertPanicFree(t *testing.T, f func()) {
-	defer func() {
-		if r := recover(); r != nil {
-			// TODO: use runtime to get the line numbers of the caller
-			t.Error("failed because it panicked")
-		}
-	}()
-	f()
-}
 
 func objectParserForString(str string) *objectParser {
 	p := new(objectParser)

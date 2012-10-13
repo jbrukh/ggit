@@ -1,14 +1,15 @@
 package api
 
 import (
+	"github.com/jbrukh/ggit/util"
 	"os"
 	"path"
 	"testing"
 )
 
 func Test_Open(t *testing.T) {
-	assert(t, Open("test").path == "test/.git")
-	assert(t, Open("test/.git").path == "test/.git")
+	util.Assert(t, Open("test").path == "test/.git")
+	util.Assert(t, Open("test/.git").path == "test/.git")
 }
 
 func Test_IsValidRepo(t *testing.T) {
@@ -17,11 +18,11 @@ func Test_IsValidRepo(t *testing.T) {
 		gitDir = path.Join(repo, ".git")
 	)
 	err := os.MkdirAll(gitDir, 0755)
-	assertNoErr(t, err)
+	util.AssertNoErr(t, err)
 
-	assert(t, IsValidRepo(repo))
-	assert(t, IsValidRepo(gitDir))
+	util.Assert(t, IsValidRepo(repo))
+	util.Assert(t, IsValidRepo(gitDir))
 
 	err = os.RemoveAll(repo)
-	assertNoErr(t, err)
+	util.AssertNoErr(t, err)
 }

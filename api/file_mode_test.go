@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/jbrukh/ggit/util"
 	"testing"
 )
 
@@ -14,8 +15,8 @@ func Test_assertFileMode(t *testing.T) {
 
 	test := func(m uint16, exp FileMode) {
 		mode, ok := assertFileMode(m)
-		assert(t, ok, "could not convert to file mode")
-		assert(t, mode == exp)
+		util.Assert(t, ok, "could not convert to file mode")
+		util.Assert(t, mode == exp)
 	}
 
 	test(m1, ModeNew)
