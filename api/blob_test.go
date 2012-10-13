@@ -1,6 +1,7 @@
 package api
 
 import (
+	//	"fmt"
 	"github.com/jbrukh/ggit/test"
 	"testing"
 )
@@ -11,6 +12,7 @@ func Test_readSimpleBlobs(t *testing.T) {
 	const blob2 = "00750edc07d6415dcc07ae0351e9397b0222b7ba"
 	dir, err := test.Repo(varRepo, "../test/cases/linear_history.sh")
 	assertNoErr(t, err)
+
 	repo := Open(dir)
 
 	var o Object

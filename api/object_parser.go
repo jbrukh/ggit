@@ -40,7 +40,7 @@ func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
 				buf: buf,
 			},
 		},
-		hdr: nil,
+		oid: oid,
 	}
 	return op
 }
