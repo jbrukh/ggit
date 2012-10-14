@@ -47,3 +47,17 @@ func GitExec(workDir string, args ...string) (string, error) {
 	}
 	return out.String(), nil
 }
+
+// GitExecMany executes multiple git commands in the 
+// given repo (simular to GitExec) but swallows the
+// output and returns on any error. This is meant for
+// setting up test scenarios.
+func GitExecMany(workDir string, cmds ...[]string) error {
+	for _, cmd := range cmds {
+		_, err := GitExec(workDir, cmd...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
