@@ -3,12 +3,19 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path"
 )
 
+// TestDir returns a temporary location where we 
+// can store the test repo.
+func TestDir(subdir string) string {
+	return path.Join( /*os.TempDir()*/ "var", subdir)
+}
+
+// CreateGitRepo creates an empty git repo in the
+// specified location.
 func CreateGitRepo(dir string) (string, error) {
 	// ensure the directory exists
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -17,21 +24,9 @@ func CreateGitRepo(dir string) (string, error) {
 	return GitExec(dir, "init")
 }
 
-func RemoveGitRepo(dir string) error {
-	return os.RemoveAll(dir)
-}
-
-// IsValidRepo validates a repository path to make sure it has
-// the right format and that it exists.	
-func IsValidRepo(pth string) bool {
-	p := inferGitDir(pth)
-	if _, e := os.Stat(p); e != nil {
-		return false
-	}
-	// TODO: may want to do other checks here...
-	return true
-}
-
+// GitExec executes a git command via the shell in
+// the given workDir. The string returned is the
+// output of the git command.
 func GitExec(workDir string, args ...string) (string, error) {
 	// execute the git command
 	gitDir := path.Join(workDir, ".git")

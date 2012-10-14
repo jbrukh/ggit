@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/zlib"
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 	"io"
 	"os"
 	"path"
@@ -78,7 +79,7 @@ type DiskRepository struct {
 // if the enclosing directory is given, then ggit will
 // append the .git directory to the specified path.
 func Open(pth string) *DiskRepository {
-	p := inferGitDir(pth)
+	p := util.InferGitDir(pth)
 	return &DiskRepository{
 		path: p,
 	}
@@ -309,12 +310,4 @@ func (repo *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error)
 func (repo *DiskRepository) relativeFile(relPath string) (file *os.File, err error) {
 	path := path.Join(repo.path, relPath)
 	return os.Open(path)
-}
-
-func inferGitDir(pth string) string {
-	_, file := filepath.Split(pth)
-	if file != DefaultGitDir {
-		return path.Join(pth, DefaultGitDir)
-	}
-	return pth
 }
