@@ -32,8 +32,12 @@ func IsValidRepo(pth string) bool {
 	return true
 }
 
-func UniqueId() string {
-	buf := make([]byte, 16)
+func UniqueHex16() string {
+	return UniqueHex20()[:16]
+}
+
+func UniqueHex20() string {
+	buf := make([]byte, 20)
 	io.ReadFull(rand.Reader, buf)
 	return fmt.Sprintf("%x", buf)
 }

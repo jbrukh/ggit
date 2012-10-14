@@ -68,7 +68,7 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 	if !IsValidRepo(repo) {
 		return "", fmt.Errorf("does not appear to be a valid repo: %s", repo)
 	}
-	name := path.Join(os.TempDir(), UniqueId())
+	name := path.Join(os.TempDir(), UniqueHex16())
 	err = ioutil.WriteFile(name, []byte(contents), 0644)
 	if err != nil {
 		return "", err
