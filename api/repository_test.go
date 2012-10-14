@@ -20,8 +20,8 @@ func Test_IsValidRepo(t *testing.T) {
 	err := os.MkdirAll(gitDir, 0755)
 	util.AssertNoErr(t, err)
 
-	util.Assert(t, IsValidRepo(repo))
-	util.Assert(t, IsValidRepo(gitDir))
+	util.Assert(t, util.IsValidRepo(repo))
+	util.Assert(t, util.IsValidRepo(gitDir))
 
 	err = os.RemoveAll(repo)
 	util.AssertNoErr(t, err)
