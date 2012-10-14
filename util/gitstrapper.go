@@ -3,9 +3,11 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
+	//"path/filepath"
 	"strings"
 )
 
@@ -45,7 +47,7 @@ func GitExec(workDir string, args ...string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return out.String(), nil
+	return strings.TrimSpace(out.String()), nil
 }
 
 // GitExecMany executes multiple git commands in the 
@@ -60,4 +62,19 @@ func GitExecMany(workDir string, cmds ...[]string) error {
 		}
 	}
 	return nil
+}
+
+func HashBlob(repo string, name string, contents string) (oid string, err error) {
+	if !IsValidRepo(repo) {
+		return "", fmt.Errorf("does not appear to be a valid repo: %s", repo)
+	}
+	err = ioutil.WriteFile(name, []byte(contents), 0644)
+	if err != nil {
+		return "", err
+	}
+	oid, err = GitExec(repo, "hash-object", "-w", name)
+	if err != nil {
+		return "", err
+	}
+	return oid, err
 }
