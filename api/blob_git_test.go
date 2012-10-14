@@ -40,7 +40,7 @@ var blobContents = []string{
 }
 
 func Test_readBlobs(t *testing.T) {
-	repo := "test_blobs"
+	repo := util.TempRepo("test_blobs")
 	util.AssertCreateGitRepo(t, repo)
 	defer util.AssertRemoveGitRepo(t, repo)
 
