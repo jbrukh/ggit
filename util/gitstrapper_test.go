@@ -1,7 +1,10 @@
 package util
 
 import (
+	"bytes"
+	"io"
 	"io/ioutil"
+	"os"
 	"path"
 	"testing"
 )
@@ -44,6 +47,25 @@ func Test_GitExec(t *testing.T) {
 	oid, err = HashBlob(repo, "hahaha")
 	AssertNoErr(t, err)
 	Assert(t, oid == oidOfTestFile)
+}
+
+func Test_TestFile(t *testing.T) {
+	repo := TempRepo("test_file_add")
+	AssertCreateGitRepo(t, repo)
+	defer AssertRemoveGitRepo(t, repo)
+
+	testFile := "hello"
+	testContents := "hey!"
+	err := TestFile(repo, testFile, testContents)
+	AssertNoErrOrDie(t, err)
+
+	pth := path.Join(repo, testFile)
+	file, err := os.Open(pth)
+	AssertNoErr(t, err)
+
+	var contents bytes.Buffer
+	io.Copy(&contents, file)
+	AssertEqualString(t, contents.String(), testContents)
 }
 
 const emptyRepoStatus = `# On branch master

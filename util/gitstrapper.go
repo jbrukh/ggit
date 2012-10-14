@@ -82,6 +82,12 @@ func AssertRemoveGitRepo(t *testing.T, repo string) {
 	AssertNoErr(t, err)
 }
 
+func TestFile(repo string, name string, contents string) error {
+	pth := path.Join(repo, name)
+	err := ioutil.WriteFile(pth, []byte(contents), 0644)
+	return err
+}
+
 func HashBlob(repo string, contents string) (oid string, err error) {
 	if !IsValidRepo(repo) {
 		return "", fmt.Errorf("does not appear to be a valid repo: %s", repo)

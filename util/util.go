@@ -80,6 +80,12 @@ func AssertNoErr(t *testing.T, err error) {
 	}
 }
 
+func AssertNoErrOrDie(t *testing.T, err error) {
+	if err != nil {
+		t.Fatalf("a fatal error occurred: %s", err)
+	}
+}
+
 func AssertPanic(t *testing.T, f func()) {
 	defer func() {
 		if r := recover(); r != nil {
