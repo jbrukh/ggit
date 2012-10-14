@@ -2,16 +2,8 @@ package api
 
 import (
 	"github.com/jbrukh/ggit/util"
-	"os"
 	"testing"
 )
-
-var repo string
-var testFile string
-
-func init() {
-	repo = util.TestDir("test001")
-}
 
 var blobContents = []string{
 	`'Tis better to have loved and lost than never
@@ -48,10 +40,9 @@ var blobContents = []string{
 }
 
 func Test_readBlobs(t *testing.T) {
-	// create a repo
-	_, err := util.CreateGitRepo(repo)
-	util.AssertNoErr(t, err)
-	util.Assert(t, util.IsValidRepo(repo))
+	repo := "test_blobs"
+	util.AssertCreateGitRepo(t, repo)
+	defer util.AssertRemoveGitRepo(t, repo)
 
 	// create a ggit repo
 	ggrepo := Open(repo)
@@ -71,8 +62,4 @@ func Test_readBlobs(t *testing.T) {
 		util.AssertEqualInt(t, b.Header().Size(), len(contents))
 	}
 
-}
-
-func Test_CLEANUP(t *testing.T) {
-	os.RemoveAll(repo)
 }

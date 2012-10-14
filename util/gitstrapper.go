@@ -9,11 +9,12 @@ import (
 	"path"
 	//"path/filepath"
 	"strings"
+	"testing"
 )
 
-// TestDir returns a temporary location where we 
+// TempRepo returns a temporary location where we 
 // can store the test repo.
-func TestDir(subdir string) string {
+func TempRepo(subdir string) string {
 	return path.Join( /*os.TempDir()*/ "var", subdir)
 }
 
@@ -62,6 +63,23 @@ func GitExecMany(workDir string, cmds ...[]string) error {
 		}
 	}
 	return nil
+}
+
+// AssertCreateGitRepo is a convenience method for testing
+// which creates a new repo and asserts that it was
+// created successfully.
+func AssertCreateGitRepo(t *testing.T, repo string) {
+	_, err := CreateGitRepo(repo)
+	AssertNoErr(t, err)
+	Assert(t, IsValidRepo(repo))
+}
+
+// AssertRemoveGitRepo is a convenience method for testing
+// which removes a new repo and asserts that is was
+// removed successfully.
+func AssertRemoveGitRepo(t *testing.T, repo string) {
+	err := os.RemoveAll(repo)
+	AssertNoErr(t, err)
 }
 
 func HashBlob(repo string, contents string) (oid string, err error) {
