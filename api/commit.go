@@ -95,7 +95,7 @@ func (p *objectParser) parseCommit() *Commit {
 // TODO: the return values of this method are broken
 func (f *Format) Commit(c *Commit) (int, error) {
 	// tree
-	fmt.Fprintf(f.Writer, "tree %\n", c.tree)
+	fmt.Fprintf(f.Writer, "tree %s\n", c.tree)
 
 	// parents
 	for _, p := range c.parents {
@@ -103,8 +103,8 @@ func (f *Format) Commit(c *Commit) (int, error) {
 	}
 
 	// author
-	fmt.Fprintf(f.Writer, "author %\n", c.author)
-	fmt.Fprintf(f.Writer, "committer %\n", c.committer)
+	fmt.Fprintf(f.Writer, "author %s\n", c.author)
+	fmt.Fprintf(f.Writer, "committer %s\n", c.committer)
 
 	// commit message
 	fmt.Fprintf(f.Writer, "\n%s", c.message)

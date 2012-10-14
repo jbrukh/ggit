@@ -48,7 +48,7 @@ func GitExec(workDir string, args ...string) (string, error) {
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(out.String()), nil
+	return out.String(), nil
 }
 
 // GitExecMany executes multiple git commands in the 
@@ -101,5 +101,5 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 	if err != nil {
 		return "", err
 	}
-	return oid, err
+	return strings.TrimSpace(oid), err
 }

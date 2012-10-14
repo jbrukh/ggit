@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
 
@@ -40,7 +41,7 @@ func Test_GitExec(t *testing.T) {
 	// hash an object in the repo's object db
 	out, err = GitExec(repo, "hash-object", "-w", testFile)
 	AssertNoErr(t, err)
-	Assert(t, out == oidOfTestFile)
+	Assert(t, strings.TrimSpace(out) == oidOfTestFile)
 
 	// hash an object in the repo's object db, using HashBlob
 	var oid string
@@ -72,7 +73,8 @@ const emptyRepoStatus = `# On branch master
 #
 # Initial commit
 #
-nothing to commit (create/copy files and use "git add" to track)`
+nothing to commit (create/copy files and use "git add" to track)
+`
 
 const newFileStatus = `# On branch master
 #
@@ -82,6 +84,7 @@ const newFileStatus = `# On branch master
 #   (use "git add <file>..." to include in what will be committed)
 #
 #	test.txt
-nothing added to commit but untracked files present (use "git add" to track)`
+nothing added to commit but untracked files present (use "git add" to track)
+`
 
-const oidOfTestFile = `1240583197c9a4507a2fb0d59eb1a82886844e57`
+const oidOfTestFile = "1240583197c9a4507a2fb0d59eb1a82886844e57"

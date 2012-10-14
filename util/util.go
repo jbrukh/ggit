@@ -76,7 +76,11 @@ func AssertEqualInt(t *testing.T, one, two int) {
 
 func AssertNoErr(t *testing.T, err error) {
 	if err != nil {
-		t.Errorf("an error occurred: %s", err)
+		_, file, line, ok := runtime.Caller(1)
+		if !ok {
+			file = "(unknown file)"
+		}
+		t.Errorf("%s:%d: %s", file, line, err)
 	}
 }
 
