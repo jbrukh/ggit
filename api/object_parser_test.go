@@ -7,7 +7,8 @@ import (
 
 func Test_ParseObjectId(t *testing.T) {
 	var oid *ObjectId
-	t1 := objectParserForString(testOidCrazy)
+	oidStr := "ff6ccb68859fd52216ec8dadf98d2a00859f5369"
+	t1 := objectParserForString(oidStr)
 	oid = t1.ParseObjectId()
-	util.Assert(t, oid.String() == testOidCrazy)
+	util.Assert(t, oid.String() == oidStr)
 }

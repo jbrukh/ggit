@@ -56,7 +56,7 @@ func Test_tagString(t *testing.T) {
 
 func parseTag(t *testing.T, s string) (tag *Tag, ok bool) {
 	r := readerForString(s)
-	oid, _ := OidFromString(testOidCrazy)
+	oid := OidNow("ff6ccb68859fd52216ec8dadf98d2a00859f5369")
 	p := newObjectParser(r, oid)
 
 	parsed, err := p.ParsePayload()
