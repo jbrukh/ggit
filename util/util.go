@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -34,7 +35,11 @@ func IsValidRepo(pth string) bool {
 
 func Assert(t *testing.T, b bool, items ...interface{}) {
 	if !b {
-		t.Error(items...)
+		_, file, line, ok := runtime.Caller(1)
+		if !ok {
+			file = "(unknown file)"
+		}
+		t.Errorf("%s:%d: %s", file, line, items)
 	}
 }
 

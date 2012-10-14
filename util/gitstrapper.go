@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 )
 
 // TestDir returns a temporary location where we 
@@ -32,11 +33,12 @@ func GitExec(workDir string, args ...string) (string, error) {
 	gitDir := path.Join(workDir, ".git")
 	gitDirArg := fmt.Sprintf("--git-dir=%s", gitDir)
 	workDirArg := fmt.Sprintf("--work-tree=%s", workDir)
-	args = append([]string{gitDirArg, workDirArg}, args...)
+	args = append([]string{"git", gitDirArg, workDirArg}, args...)
 
-	fmt.Println(args)
+	// print the output
+	fmt.Println(strings.Join(args, " "))
 
-	cmd := exec.Command("git", args...)
+	cmd := exec.Command(args[0], args[1:]...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
