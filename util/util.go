@@ -1,6 +1,9 @@
 package util
 
 import (
+	"crypto/rand"
+	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -27,6 +30,12 @@ func IsValidRepo(pth string) bool {
 	}
 	// TODO: may want to do other checks here...
 	return true
+}
+
+func UniqueId() string {
+	buf := make([]byte, 16)
+	io.ReadFull(rand.Reader, buf)
+	return fmt.Sprintf("%x", buf)
 }
 
 // ================================================================= //

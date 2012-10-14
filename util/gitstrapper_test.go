@@ -52,7 +52,7 @@ func Test_GitExec(t *testing.T) {
 
 	// hash an object in the repo's object db, using HashBlob
 	var oid string
-	oid, err = HashBlob(testDir2, testFile1, "hahaha")
+	oid, err = HashBlob(testDir2, "hahaha")
 	AssertNoErr(t, err)
 	Assert(t, oid == oidOfTestFile)
 }

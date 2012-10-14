@@ -64,10 +64,11 @@ func GitExecMany(workDir string, cmds ...[]string) error {
 	return nil
 }
 
-func HashBlob(repo string, name string, contents string) (oid string, err error) {
+func HashBlob(repo string, contents string) (oid string, err error) {
 	if !IsValidRepo(repo) {
 		return "", fmt.Errorf("does not appear to be a valid repo: %s", repo)
 	}
+	name := path.Join(os.TempDir(), UniqueId())
 	err = ioutil.WriteFile(name, []byte(contents), 0644)
 	if err != nil {
 		return "", err
