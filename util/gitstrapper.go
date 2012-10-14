@@ -43,8 +43,8 @@ func GitExec(workDir string, args ...string) (string, error) {
 	cmd := exec.Command(args[0], args[1:]...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
+
+	if err := cmd.Run(); err != nil {
 		return "", err
 	}
 	return strings.TrimSpace(out.String()), nil
