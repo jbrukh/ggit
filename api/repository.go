@@ -294,17 +294,6 @@ func (repo *DiskRepository) RevParse(name string) (Object, error) {
 	return nil, nil
 }
 
-// IsValidRepo validates a repository path to make sure it has
-// the right format and that it exists.	
-func IsValidRepo(pth string) bool {
-	p := inferGitDir(pth)
-	if _, e := os.Stat(p); e != nil {
-		return false
-	}
-	// TODO: may want to do other checks here...
-	return true
-}
-
 // ================================================================= //
 // PRIVATE METHODS
 // ================================================================= //
