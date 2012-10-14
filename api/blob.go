@@ -24,6 +24,10 @@ func (b *Blob) ObjectId() *ObjectId {
 	return b.oid
 }
 
+func (b *Blob) String() string {
+	return string(b.data)
+}
+
 // ================================================================= //
 // OBJECT PARSER
 // ================================================================= //

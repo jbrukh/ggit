@@ -58,6 +58,18 @@ func Assertf(t *testing.T, b bool, format string, items ...interface{}) {
 	}
 }
 
+func AssertEqualString(t *testing.T, one, two string) {
+	if one != two {
+		t.Errorf("expecting: '%s' but got '%s'\n", one, two)
+	}
+}
+
+func AssertEqualInt(t *testing.T, one, two int) {
+	if one != two {
+		t.Errorf("expecting: '%d' but got '%d'\n", one, two)
+	}
+}
+
 func AssertNoErr(t *testing.T, err error) {
 	if err != nil {
 		t.Errorf("an error occurred: %s", err)
