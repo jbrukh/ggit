@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	OID_SZ    = 20         // bytes
-	OID_HEXSZ = OID_SZ * 2 // maximum length of hex string we can translate
+	OidSize    = 20          // bytes
+	OidHexSize = OidSize * 2 // maximum length of hex string we can translate
 )
 
 // ================================================================= //
@@ -29,11 +29,11 @@ type ObjectId struct {
 // for the number of bytes in the input. Extra bytes are
 // discarded and missing bytes are padded with zeros.
 func OidFromBytes(bytes []byte) (id *ObjectId, err error) {
-	if len(bytes) < OID_SZ {
+	if len(bytes) < OidSize {
 		return nil, errors.New("not enough bytes for oid")
 	}
 	id = &ObjectId{
-		bytes: make([]byte, OID_SZ),
+		bytes: make([]byte, OidSize),
 	}
 	copy(id.bytes, bytes)
 	return
@@ -48,7 +48,7 @@ func OidFromArray(bytes [20]byte) (id *ObjectId) {
 }
 
 // OidFromString creates an ObjectId from a string representation
-// of the hash. The length of the string should be OID_HEXSZ, and
+// of the hash. The length of the string should be OidHexSize, and
 // must consist of the characters [a-zA-Z0-9] or else an error is
 // returned.
 func OidFromString(hex string) (id *ObjectId, err error) {
@@ -64,7 +64,7 @@ func OidFromString(hex string) (id *ObjectId, err error) {
 func OidFromHash(h hash.Hash) (id *ObjectId) {
 	hsh := h.Sum(nil)
 	id = &ObjectId{
-		bytes: hsh[0:OID_SZ], // TODO: what if size exceeds hash?
+		bytes: hsh[0:OidSize], // TODO: what if size exceeds hash?
 	}
 	return
 }
@@ -90,7 +90,7 @@ func (id *ObjectId) String() string {
 // the object id
 func computeRepr(bytes []byte) (hex string) {
 	const byte2hex = "0123456789abcdef"
-	out := make([]byte, OID_HEXSZ)
+	out := make([]byte, OidHexSize)
 	for inx, b := range bytes {
 		// the left and right halves of the byte (8 bits)
 		i := 2 * inx
@@ -101,12 +101,12 @@ func computeRepr(bytes []byte) (hex string) {
 }
 
 func computeBytes(hex string) (bytes []byte, err error) {
-	if len(hex) < OID_HEXSZ {
+	if len(hex) < OidHexSize {
 		err = errors.New("hex is too short")
 		return
 	}
-	bytes = make([]byte, OID_SZ)
-	for inx, _ := range bytes[0:OID_SZ] {
+	bytes = make([]byte, OidSize)
+	for inx, _ := range bytes[0:OidSize] {
 		i := 2 * inx
 		left, err := hex2byte(hex[i])
 		right, err := hex2byte(hex[i+1])
@@ -162,22 +162,22 @@ func hex2byte(ch byte) (byte, error) {
 // PARSING
 // ================================================================= //
 
-// ParseObjectId reads the next OID_HEXSZ bytes from the
+// ParseObjectId reads the next OidHexSize bytes from the
 // Reader and places the resulting object id in oid.
 func (p *objectIdParser) ParseObjectId() *ObjectId {
-	hex := string(p.consume(OID_HEXSZ))
+	hex := string(p.consume(OidHexSize))
 	oid, e := OidFromString(hex)
 	if e != nil {
-		panicErrf("expected: hex string of size %d", OID_HEXSZ)
+		panicErrf("expected: hex string of size %d", OidHexSize)
 	}
 	return oid
 }
 
 func (p *objectIdParser) ParseObjectIdBytes() *ObjectId {
-	b := p.consume(OID_SZ)
+	b := p.consume(OidSize)
 	oid, e := OidFromBytes(b)
 	if e != nil {
-		panicErrf("expected: hash bytes %d long", OID_SZ)
+		panicErrf("expected: hash bytes %d long", OidSize)
 	}
 	return oid
 }

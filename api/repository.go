@@ -114,12 +114,12 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 
 func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 	l := len(short)
-	if l < 4 || l > OID_HEXSZ {
+	if l < 4 || l > OidHexSize {
 		return nil, fmt.Errorf("fatal: Not a valid object name %s", short)
 	}
 
 	// don't bother with directories if we know the full SHA
-	if l == OID_HEXSZ {
+	if l == OidHexSize {
 		oid, err := OidFromString(short)
 		if err != nil {
 			return nil, fmt.Errorf("fatal: Not a valid object name %s", short)
