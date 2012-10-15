@@ -1,7 +1,7 @@
-# ggit: git in golang.
+# ggit: Git in Golang
 
 * ggit is an (aspiring) implementation of Git written in Go.
-* ggit is a single-executable implementation of Git.
+* ggit is a single-executable implementation of Git that compiles on Go-supported systems, including Windows.
 * ggit is a library for programmatically interacting with Git repositories.
 
 # Copyright
