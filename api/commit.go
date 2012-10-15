@@ -103,8 +103,12 @@ func (f *Format) Commit(c *Commit) (int, error) {
 	}
 
 	// author
-	fmt.Fprintf(f.Writer, "author %s\n", c.author)
-	fmt.Fprintf(f.Writer, "committer %s\n", c.committer)
+	sf := NewStrFormat()
+	sf.WhoWhen(c.author)
+	fmt.Fprintf(f.Writer, "author %s\n", sf.String())
+	sf.Reset()
+	sf.WhoWhen(c.committer)
+	fmt.Fprintf(f.Writer, "committer %s\n", sf.String())
 
 	// commit message
 	fmt.Fprintf(f.Writer, "\n%s", c.message)

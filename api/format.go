@@ -19,6 +19,10 @@ func (f *strFormat) String() string {
 	return f.Writer.(*bytes.Buffer).String()
 }
 
+func (f *strFormat) Reset() {
+	f.Writer.(*bytes.Buffer).Reset()
+}
+
 func NewStrFormat() *strFormat {
 	b := bytes.NewBufferString("")
 	return &strFormat{
