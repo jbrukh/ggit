@@ -1,8 +1,8 @@
-# ggit - git in golang.
+# ggit: git in golang.
 
-* ggit is an (aspiring) implementation of Linus Torvalds' git written in Rob Pike's golang.
-* ggit is a single-executable implementation of git.
-* ggit is a library for programmatically interacting with git repositories.
+* ggit is an (aspiring) implementation of Git written in Go.
+* ggit is a single-executable implementation of Git.
+* ggit is a library for programmatically interacting with Git repositories.
 
 # Copyright
 
