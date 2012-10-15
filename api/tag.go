@@ -84,6 +84,12 @@ func (p *objectParser) parseTag() *Tag {
 // ================================================================= //
 
 func (f *Format) Tag(t *Tag) (int, error) {
-	return fmt.Fprintf(f.Writer, "object %s\ntype %s\ntag %s\ntagger %s\n\n%s",
-		t.object, t.objectType, t.name, t.tagger.String(), t.message)
+	fmt.Fprintf(f.Writer, "object %s\n", t.object)
+	fmt.Fprintf(f.Writer, "type %s\n", t.objectType)
+	fmt.Fprintf(f.Writer, "tag %s\n", t.name)
+	sf := NewStrFormat()
+	sf.WhoWhen(t.tagger)
+	fmt.Fprintf(f.Writer, "tagger %s\n\n", sf.String())
+	fmt.Fprintf(f.Writer, "%s", t.message)
+	return 0, nil // TODO
 }

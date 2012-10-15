@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Who represents a user that has been using
@@ -31,6 +32,24 @@ func (w *When) Seconds() int64 {
 
 func (w *When) Offset() int {
 	return w.offset
+}
+
+func (w *When) Date() string {
+	t := time.Unix(w.seconds, int64(0))
+	// standard time: Mon Jan 2 15:04:05 -0700 MST 2006
+	return t.Format("Mon Jan 2 15:04:05 2006")
+
+}
+
+func (f *Format) WhoWhen(ww *WhoWhen) (int, error) {
+	sign := ""
+	if ww.offset < 0 {
+		sign = MINUS
+	}
+	offset := abs(ww.Offset())
+	hours := int(offset / 60)
+	minutes := offset - hours*60
+	return fmt.Fprintf(f.Writer, "%s <%s> %s %s%02d%02d", ww.Name(), ww.Email(), ww.Date(), sign, hours, minutes)
 }
 
 // WhoWhen

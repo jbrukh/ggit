@@ -49,6 +49,13 @@ func min(a, b int) int {
 	return b
 }
 
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 // The file mode of a tree entry implies an object type.
 func deduceObjectType(mode FileMode) ObjectType {
 	switch mode {
