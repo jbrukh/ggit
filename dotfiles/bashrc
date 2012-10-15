@@ -9,7 +9,7 @@ cd $PROJECT
 alias gf="gofmt -tabs=false -tabwidth=4 -w *.go"
 
 # the most up-to-date ggit command
-alias ggit="go run $GOPATH/src/github.com/jbrukh/ggit/*.go"
+alias ggit="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
 alias gg="$GOPATH/bin/ggit"
 
 # list some objects... this is slow, so use on small repos
