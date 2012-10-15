@@ -10,7 +10,7 @@
 
 # Authors
 
-This project is authored by:
+This project is authored and maintained by:
 
     Jake Brukhman <brukhman@gmail.com>
     Michael Bosworth <michael.a.bosworth@gmail.com>
