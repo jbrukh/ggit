@@ -6,8 +6,7 @@
 
 # Copyright
 
-Copyright (c) 2012 Jake Brukhman <brukhman@gmail.com>
-Copyright (c) 2012 Michael Bosworth <michael.a.bosworth@gmail.com>
+    Copyright (c) 2012 Jake Brukhman <brukhman@gmail.com>, Michael Bosworth <michael.a.bosworth@gmail.com>
 
 
 # Licence
