@@ -1,3 +1,10 @@
+//
+// Unless otherwise noted, this project is licensed under the Creative
+// Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License. Please
+// see the README file.
+//
+// Copyright (c) 2012 The ggit Authors
+//
 package api
 
 import (
@@ -42,9 +49,3 @@ func Test_commitReads(t *testing.T) {
 	f.Commit(c)
 	util.AssertEqualString(t, f.String(), dashP)
 }
-
-// func setupStringOfCommits(repo string, t *testing.T) {
-// 	for i := 0; i < 10; i++ {
-// 		testFile := string(i)+".txt"
-// 	}
-// }
