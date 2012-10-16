@@ -32,6 +32,9 @@ const (
 // However, in the scheme of things, a Repository
 // should be a more general interface.
 type Repository interface {
+
+	// Destroy will mercilessly and irreparably delete
+	// the existing repository.
 	Destroy() error
 
 	// TODO: this needs to be replaced with
@@ -59,11 +62,6 @@ type Repository interface {
 	// hashes. This functionality is usually tied to the
 	// particular kind of backend the repository is using.
 	ObjectFromShortOid(short string) (Object, error)
-
-	// TODO: this is more or less an external operation
-	// that can be achieved with existing public methods of the
-	// repo, so it can probably be removed from here.
-	RevParse(name string) (Object, error)
 }
 
 // a representation of a git repository
@@ -286,11 +284,6 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 	}
 	sort.Sort(refByName(refList))
 	return refList, nil
-}
-
-func (repo *DiskRepository) RevParse(name string) (Object, error) {
-	// TODO: implement
-	return nil, nil
 }
 
 // ================================================================= //
