@@ -38,15 +38,6 @@ type Repository interface {
 	// higher level index operations
 	Index() (*Index, error)
 
-	// TODO: loose or packed refs may be irrelevant
-	// at this level of abstraction, probably should
-	// remove from here. For instance, packed refs
-	// are meant to compensate for lots of disk reads
-	// but such optimization may be irrelevant for
-	// repos with distributed cache backends.
-	LooseRefs() ([]Ref, error)
-	PackedRefs() ([]Ref, error)
-
 	// TODO: while this is ok for now, this debug
 	// method should not be part of the backend interface
 	ObjectIds() ([]*ObjectId, error)
