@@ -22,7 +22,7 @@ import (
 // TempRepo returns a temporary location where we 
 // can store the test repo.
 func TempRepo(subdir string) string {
-	return path.Join( /*os.TempDir()*/ "var", subdir)
+	return path.Join(os.TempDir(), subdir)
 }
 
 // CreateGitRepo creates an empty git repo in the
@@ -89,12 +89,16 @@ func AssertRemoveGitRepo(t *testing.T, repo string) {
 	AssertNoErr(t, err)
 }
 
+// TestFile creates a file with name "name" inside of the
+// repo "repo" with the specified contents.
 func TestFile(repo string, name string, contents string) error {
 	pth := path.Join(repo, name)
 	err := ioutil.WriteFile(pth, []byte(contents), 0644)
 	return err
 }
 
+// HashBlob creates a new blob object in the odb of the
+// given repository.
 func HashBlob(repo string, contents string) (oid string, err error) {
 	if !IsValidRepo(repo) {
 		return "", fmt.Errorf("does not appear to be a valid repo: %s", repo)

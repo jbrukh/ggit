@@ -29,8 +29,10 @@ func Test_GitExec(t *testing.T) {
 	defer AssertRemoveGitRepo(t, repo)
 
 	// status on empty dir
-	var out string
-	var err error
+	var (
+		out string
+		err error
+	)
 	out, err = GitExec(repo, "status")
 	AssertNoErr(t, err)
 	Assert(t, out == emptyRepoStatus)

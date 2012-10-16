@@ -39,10 +39,14 @@ func IsValidRepo(pth string) bool {
 	return true
 }
 
+// UniqueHex16 generates a random 16-character
+// hexadecimal string.
 func UniqueHex16() string {
 	return UniqueHex20()[:16]
 }
 
+// UniqueHex20 generates a random 20-character
+// hexadecimal string.
 func UniqueHex20() string {
 	buf := make([]byte, 20)
 	io.ReadFull(rand.Reader, buf)
