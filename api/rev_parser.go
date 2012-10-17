@@ -10,6 +10,7 @@ package api
 import (
 	"errors"
 	//"fmt"
+	//"os"
 	"regexp"
 	"strconv"
 )
@@ -65,6 +66,22 @@ func (p *revParser) peek(n int) string {
 	return p.rev[p.inx : p.inx+n]
 }
 
+func (p *revParser) number() (n int, err error) {
+	p.next()
+	start := p.inx
+	if !p.more() {
+		return 1, nil // 1 by default
+	}
+	for p.more() && isDigit(p.curr()) {
+		p.next()
+	}
+	strNum := p.rev[start:p.inx]
+	if strNum == "" {
+		return 1, nil
+	}
+	return strconv.Atoi(strNum)
+}
+
 func (p *revParser) revParse() error {
 	if p.rev == "" {
 		return errors.New("revision spec is empty")
@@ -92,7 +109,40 @@ func (p *revParser) revParse() error {
 		return err
 	}
 
+	for p.more() {
+		var parent *Commit
+		var err error
+		if p.curr() == '^' {
+			parent, err = applyParentFunc(p, CommitNthParent)
+		} else if p.curr() == '~' {
+			parent, err = applyParentFunc(p, CommitNthAncestor)
+		} else {
+			panic("unknown modifier, shouldn't get here")
+		}
+
+		if err != nil {
+			return err
+		}
+		p.o = parent
+	}
+
 	return nil
+}
+
+type parentFunc func(Repository, *Commit, int) (*Commit, error)
+
+func applyParentFunc(p *revParser, f parentFunc) (*Commit, error) {
+	n, err := p.number()
+	if err != nil {
+		return nil, err
+	}
+
+	// go to that commit
+	if p.o.Header().Type() != ObjectCommit {
+		return nil, errors.New("cannot go to parent: this object is not a commit")
+	}
+	c := p.o.(*Commit)
+	return f(p.repo, c, n)
 }
 
 func (p *revParser) findCommit(simpleRev string) (err error) {

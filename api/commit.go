@@ -131,8 +131,8 @@ func CommitNthParent(repo Repository, c *Commit, n int) (rc *Commit, err error) 
 		return c, nil
 	}
 	l := len(c.parents)
-	if 0 < n && n < l {
-		oid := c.parents[n]
+	if 0 < n && n <= l {
+		oid := c.parents[n-1]
 		return CommitFromOid(repo, oid)
 	}
 	return nil, fmt.Errorf("cannot find parent n=%d", n)
@@ -146,7 +146,10 @@ func CommitNthAncestor(repo Repository, c *Commit, n int) (rc *Commit, err error
 	rc = c
 	for i := 0; i < n; i++ {
 		if len(rc.parents) > 0 {
-			return CommitFromOid(repo, rc.parents[0])
+			rc, err = CommitFromOid(repo, rc.parents[0])
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			return nil, errors.New("no first parent")
 		}
