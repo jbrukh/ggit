@@ -15,24 +15,27 @@ import (
 	"strconv"
 )
 
+// ================================================================= //
+// CONSTANTS
+// ================================================================= //
+
+// regular expression for text-based hexadecimal strings
+// that signify oid's or short oids
 var hexRegex *regexp.Regexp
+
+// parentFunc specifies a strategy for selecting a parent
+// or an ancestor of a commit
+type parentFunc func(Repository, *Commit, int) (*Commit, error)
 
 func init() {
 	hexRegex, _ = regexp.Compile("[0-9a-fA-F]{4,40}")
 }
 
-func ObjectFromRevision(repo Repository, rev string) (Object, error) {
-	p := &revParser{
-		repo: repo,
-		rev:  rev,
-	}
-	e := p.revParse()
-	if e != nil {
-		return nil, e
-	}
-	return p.Object(), nil
-}
+// ================================================================= //
+// REV PARSER
+// ================================================================= //
 
+// revParser is a parser for revision specs.
 type revParser struct {
 	repo Repository
 
@@ -42,44 +45,65 @@ type revParser struct {
 	o Object
 }
 
+// Object returns the object that the rev spec
+// refers to after (and during) parsing.
 func (p *revParser) Object() Object {
 	return p.o
 }
 
+// more returns true if and only if the index
+// of the parser has more characters to read.
 func (p *revParser) more() bool {
 	return p.inx < len(p.rev)
 }
 
+// next increments the index of the parser.
 func (p *revParser) next() {
 	p.inx++
 }
 
+// curr returns the current character in the
+// revision that the index is pointing to.
 func (p *revParser) curr() byte {
 	return p.rev[p.inx]
 }
 
+// symbol returns the revision string until,
+// but not including, the index.
 func (p *revParser) symbol() string {
 	return p.rev[:p.inx]
 }
 
+// peek peeks ahead a number of characters
+// from the index.
 func (p *revParser) peek(n int) string {
 	return p.rev[p.inx : p.inx+n]
 }
 
-func (p *revParser) number() (n int, err error) {
+// number parses and returns the number that
+// is represented by the string immediately
+// following the index. If the string in question
+// is empty, or we are at the end of the revision
+// sting, then 1 is returned by default.
+func (p *revParser) number() (n int) {
 	p.next()
 	start := p.inx
 	if !p.more() {
-		return 1, nil // 1 by default
+		return 1 // 1 by default
 	}
 	for p.more() && isDigit(p.curr()) {
 		p.next()
 	}
 	strNum := p.rev[start:p.inx]
 	if strNum == "" {
-		return 1, nil
+		return 1
 	}
-	return strconv.Atoi(strNum)
+
+	// no error is possible, since we have
+	// verified digits ahead of time
+	// TODO: what about digit strings that are too long?
+	n, _ = strconv.Atoi(strNum)
+	return n
 }
 
 func (p *revParser) revParse() error {
@@ -129,13 +153,8 @@ func (p *revParser) revParse() error {
 	return nil
 }
 
-type parentFunc func(Repository, *Commit, int) (*Commit, error)
-
 func applyParentFunc(p *revParser, f parentFunc) (*Commit, error) {
-	n, err := p.number()
-	if err != nil {
-		return nil, err
-	}
+	n := p.number()
 
 	c, err := CommitFromObject(p.repo, p.o)
 	if err != nil {
@@ -191,6 +210,28 @@ func (r *revParser) parseNumber() (int, error) {
 	return num, nil
 }
 
+// ================================================================= //
+// OPERATIONS
+// ================================================================= //
+
+func ObjectFromRevision(repo Repository, rev string) (Object, error) {
+	p := &revParser{
+		repo: repo,
+		rev:  rev,
+	}
+	e := p.revParse()
+	if e != nil {
+		return nil, e
+	}
+	return p.Object(), nil
+}
+
+// ================================================================= //
+// UTILITY METHODS
+// ================================================================= //
+
+// isDigit returns true if and only if the parameter
+// is a digit from 0 to 9.
 func isDigit(c byte) bool {
 	switch c {
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
@@ -199,6 +240,11 @@ func isDigit(c byte) bool {
 	return false
 }
 
+// isModifier returns true if and only if the parameter
+// is a supported modifier that may appear in rev parsing.
+// The modifier usually comes after the rev spec, signifying
+// a path to take from the commit object referred to by
+// the spec.
 func isModifier(c byte) bool {
 	switch c {
 	case '^', '~', '@':
