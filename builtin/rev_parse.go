@@ -36,12 +36,12 @@ func (b *RevParseBuiltin) Execute(p *Params, args []string) {
 		return
 	}
 	rev := args[0]
-	oid, err := api.OidFromRevision(p.Repo, rev)
+	o, err := api.ObjectFromRevision(p.Repo, rev)
 	if err != nil {
 		fmt.Fprintf(p.Wout, "%s\nfatal: ambiguous argument '%s': unknown revision or path not in the working tree.\n", rev, rev)
 		fmt.Fprintln(p.Werr, err.Error())
 		return
 	}
 
-	fmt.Fprintln(p.Wout, oid)
+	fmt.Fprintln(p.Wout, o.ObjectId())
 }

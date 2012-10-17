@@ -48,7 +48,7 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 		return
 	}
 	id := args[0]
-	o, err := api.ObjectFromShortOid(p.Repo, id)
+	o, err := api.ObjectFromRevision(p.Repo, id)
 	if err != nil {
 		fmt.Fprintln(p.Werr, err)
 		return

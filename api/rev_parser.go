@@ -21,7 +21,7 @@ func init() {
 	hexRegex, _ = regexp.Compile("[0-9a-fA-F]{4,40}")
 }
 
-func OidFromRevision(repo Repository, rev string) (*ObjectId, error) {
+func ObjectFromRevision(repo Repository, rev string) (Object, error) {
 	p := &revParser{
 		repo: repo,
 		rev:  rev,
@@ -30,7 +30,7 @@ func OidFromRevision(repo Repository, rev string) (*ObjectId, error) {
 	if e != nil {
 		return nil, e
 	}
-	return p.Object().ObjectId(), nil
+	return p.Object(), nil
 }
 
 type revParser struct {
