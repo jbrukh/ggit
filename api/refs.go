@@ -36,6 +36,10 @@ type Ref interface {
 	// "symbolic" is true.
 	Target() (symbolic bool, o interface{})
 
+	// ObjectId returns the object id that this ref references
+	// provided this ref is not symbolic, and otherwise panics.
+	ObjectId() *ObjectId
+
 	// If this ref is a tag, then this field may contain
 	// the target commit of the tag, if such an optimization
 	// is available. Otherwise, this field is nil.
@@ -111,6 +115,14 @@ func (r *ref) Name() string {
 
 func (r *ref) Commit() *ObjectId {
 	return r.commit
+}
+
+func (r *ref) ObjectId() *ObjectId {
+	symbolic, oid := r.Target()
+	if !symbolic {
+		return oid.(*ObjectId)
+	}
+	panic("cannot return oid: this is a symbolic ref")
 }
 
 // ================================================================= //
@@ -312,7 +324,7 @@ var defaultRefPrefixes = []string{
 func OidRefFromShortRef(repo Repository, spec string) (r Ref, e error) {
 	for _, prefix := range defaultRefPrefixes {
 		ref := fmt.Sprintf(prefix, spec)
-		if r, e = repo.Ref(ref); e == nil { // TODO: inefficient because we read packed refs each time
+		if r, e = OidRefFromRef(repo, ref); e == nil { // TODO: inefficient because we read packed refs each time
 			return r, nil
 		} else if !IsNoSuchRef(e) {
 			return nil, e // something went wrong

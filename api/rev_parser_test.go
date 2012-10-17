@@ -15,7 +15,7 @@ import (
 func Test_parseNumber(t *testing.T) {
 	test := func(str string, exp int) {
 		p := &revParser{
-			spec: str,
+			rev: str,
 		}
 		i, err := p.parseNumber()
 		util.Assert(t, err == nil && i == exp)

@@ -9,6 +9,7 @@ package builtin
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api"
 )
 
 func init() {
@@ -34,6 +35,12 @@ func (b *RevParseBuiltin) Execute(p *Params, args []string) {
 		b.Usage(p.Werr)
 		return
 	}
-	spec := args[0]
-	fmt.Fprintln(p.Wout, "doing: rev-parse TODO: ", spec)
+	rev := args[0]
+	oid, err := api.OidFromRevision(p.Repo, rev)
+	if err != nil {
+		fmt.Fprintf(p.Wout, "%s\nfatal: ambiguous argument '%s': unknown revision or path not in the working tree.\n", rev, rev)
+		return
+	}
+
+	fmt.Fprintln(p.Wout, oid)
 }

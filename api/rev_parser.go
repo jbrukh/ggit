@@ -9,93 +9,128 @@ package api
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
+	"regexp"
 	"strconv"
 )
 
-func CommitFromRevision(repo Repository, spec string) (*Commit, error) {
-	r := &revParser{
+var hexRegex *regexp.Regexp
+
+func init() {
+	hexRegex, _ = regexp.Compile("[0-9a-fA-F]{4,40}")
+}
+
+func OidFromRevision(repo Repository, rev string) (*ObjectId, error) {
+	p := &revParser{
 		repo: repo,
-		spec: spec,
+		rev:  rev,
 	}
-	return r.revParse()
+	e := p.revParse()
+	if e != nil {
+		return nil, e
+	}
+	return p.Object().ObjectId(), nil
 }
 
 type revParser struct {
 	repo Repository
-	inx  int
-	spec string // the whole spec
-	ref  string // the ref on the left
-	c    *Commit
+
+	inx int
+	rev string
+
+	o Object
 }
 
-func (r *revParser) revParse() (*Commit, error) {
-	l := len(r.spec)
-	if l < 1 {
-		return nil, errors.New("spec is empty")
+func (p *revParser) Object() Object {
+	return p.o
+}
+
+func (p *revParser) more() bool {
+	return p.inx < len(p.rev)
+}
+
+func (p *revParser) next() {
+	p.inx++
+}
+
+func (p *revParser) curr() byte {
+	return p.rev[p.inx]
+}
+
+func (p *revParser) symbol() string {
+	return p.rev[:p.inx]
+}
+
+func (p *revParser) peek(n int) string {
+	return p.rev[p.inx : p.inx+n]
+}
+
+func (p *revParser) revParse() error {
+	if p.rev == "" {
+		return errors.New("revision spec is empty")
 	}
-	r.inx = 0
-	//var err error
 
-	// find the left hand revision
-	for !isModifier(r.spec[r.inx]) {
-		r.inx++
+	if p.peek(1) == ":" {
+		return errors.New(": syntaxes not supported") // TODO
 	}
 
-	// write down the ref
-	r.ref = r.spec[:r.inx]
-
-	// for r.inx < l {
-	// 	c := r.spec[r.inx]
-	// 	switch c {
-	// 	case '^':
-	// 	case '~':
-	// 		r.ref = r.spec[:r.inx]
-	// 		r.c, err = CommitFromRef(r.repo, r.ref)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		var n int
-	// 		n, err = r.parseNumber()
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		return CommitNthAncestor(r.repo, r.c, n)
-
-	// 	default:
-	// 		// TODO check if ref is parsed?
-	// 		r.inx++
-	// 	}
-	// }
-
-	if r.ref != "" {
-		oid, _ := OidFromString(r.ref)
-		var err error
-		r.c, err = CommitFromOid(r.repo, oid)
-		if err != nil {
-			return nil, err
+	// read until modifier or end
+	for p.more() {
+		if !isModifier(p.curr()) {
+			p.next()
+		} else {
+			break
 		}
 	}
 
-	if r.c != nil {
-		return r.c, nil
+	rev := p.symbol()
+	if rev == "" {
+		return errors.New("revision is empty")
 	}
-	return nil, fmt.Errorf("Unknown revision: %s", r.spec)
+	err := p.findCommit(rev)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *revParser) findCommit(simpleRev string) (err error) {
+	// oid or short oid
+	var o Object
+	switch {
+	case hexRegex.MatchString(simpleRev):
+		o, err = ObjectFromShortOid(p.repo, simpleRev)
+		if err != nil {
+			return err
+		}
+	default:
+		ref, err := OidRefFromShortRef(p.repo, simpleRev)
+		if err != nil {
+			return err
+		}
+		o, err = ObjectFromOid(p.repo, ref.ObjectId())
+		if err != nil {
+			return err
+		}
+	}
+	p.o = o
+	return nil
 }
 
 func (r *revParser) parseNumber() (int, error) {
-	c := r.spec[r.inx]
+	c := r.rev[r.inx]
 	if c != '^' && c != '~' {
 		return 0, errors.New("not expecting a number")
 	}
 	i := r.inx + 1
-	for i < len(r.spec) {
-		if !isDigit(r.spec[i]) {
+	for i < len(r.rev) {
+		if !isDigit(r.rev[i]) {
 			break
 		}
 		i++
 	}
-	n := r.spec[r.inx+1 : i]
+	n := r.rev[r.inx+1 : i]
 	if n == "" {
 		return 1, nil
 	}
