@@ -137,11 +137,10 @@ func applyParentFunc(p *revParser, f parentFunc) (*Commit, error) {
 		return nil, err
 	}
 
-	// go to that commit
-	if p.o.Header().Type() != ObjectCommit {
-		return nil, errors.New("cannot go to parent: this object is not a commit")
+	c, err := CommitFromObject(p.repo, p.o)
+	if err != nil {
+		return nil, err
 	}
-	c := p.o.(*Commit)
 	return f(p.repo, c, n)
 }
 
