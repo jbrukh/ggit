@@ -207,14 +207,17 @@ func (repo *DiskRepository) Index() (idx *Index, err error) {
 }
 
 func (repo *DiskRepository) PackedRefs() (pr []Ref, err error) {
-	file, e := repo.relativeFile(PackedRefsFile)
-	if e != nil {
-		return nil, e
-	}
-	defer file.Close()
-	p := newRefParser(bufio.NewReader(file), "")
-	if pr, e = p.ParsePackedRefs(); e != nil {
-		return nil, e
+	if repo.pr == nil {
+		file, e := repo.relativeFile(PackedRefsFile)
+		if e != nil {
+			return nil, e
+		}
+		defer file.Close()
+		p := newRefParser(bufio.NewReader(file), "")
+		if pr, e = p.ParsePackedRefs(); e != nil {
+			return nil, e
+		}
+		repo.pr = pr
 	}
 	return pr, nil
 }

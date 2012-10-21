@@ -2,6 +2,7 @@
 
 PROJECT=$GOPATH/src/github.com/jbrukh/ggit
 cd $PROJECT
+export PATH=$GOPATH/bin:$PATH
 
 # not necessary if you're using the git hook
 # at https://github.com/jbrukh/git-gofmt or
@@ -9,10 +10,26 @@ cd $PROJECT
 alias gf="gofmt -tabs=false -tabwidth=4 -w *.go"
 
 # the most up-to-date ggit command
-alias ggit="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
-alias gg="$GOPATH/bin/ggit"
+alias gg="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
+
 
 # list some objects... this is slow, so use on small repos
 objects() {
-    for o in `gg ls-objects`; do echo $o `gg cat-file -t $o`; done
+    for o in `ggit ls-objects`; do echo $o `ggit cat-file -t $o`; done
+}
+
+compare() {
+	echo "GIT ==========================="
+	git "$@"
+	echo "GGIT =========================="
+	ggit "$@"
+	echo "==============================="
+}
+
+ggtime() {
+	echo "GIT ==========================="
+	time git "$@" 2>&1 >/dev/null
+	echo "GGIT =========================="
+	time ggit "$@" 2>&1 >/dev/null
+	echo "==============================="
 }
