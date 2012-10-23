@@ -231,11 +231,11 @@ func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
 				spec := trimPrefix(path, repoPath)
-				oid, e := OidFromRef(repo, spec)
+				r, e := OidRefFromRef(repo, spec)
 				if e != nil {
 					return e
 				}
-				refs = append(refs, &ref{name: spec, oid: oid})
+				refs = append(refs, &ref{name: spec, oid: r.ObjectId()})
 			}
 			return nil
 		},
@@ -267,11 +267,11 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 			// refs are files, so...
 			if !f.IsDir() {
 				spec := trimPrefix(path, repo.path+"/")
-				oid, e := OidFromRef(repo, spec)
+				r, e := OidRefFromRef(repo, spec)
 				if e != nil {
 					return e
 				}
-				refs[spec] = &ref{name: spec, oid: oid}
+				refs[spec] = &ref{name: spec, oid: r.ObjectId()}
 			}
 			return nil
 		},

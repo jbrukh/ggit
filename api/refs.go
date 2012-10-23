@@ -250,29 +250,6 @@ func (p *refParser) parseRef() (r Ref, err error) {
 // OPERATIONS
 // ================================================================= //
 
-// OidFromRef turns a ref specification into the ObjectId that ref
-// points to, by peeling away any symbolic refs that might stand
-// in its way.
-// TODO: this method is superfluous in favor of OidRefFromRef
-func OidFromRef(repo Repository, spec string) (*ObjectId, error) {
-	r, err := OidRefFromRef(repo, spec)
-	if err != nil {
-		return nil, err
-	}
-	_, oid := r.Target()
-	return oid.(*ObjectId), nil
-}
-
-// ObjectFromRef is similar to OidFromRef, except it derefernces the
-// target ObjectId into an actual Object.
-func ObjectFromRef(repo Repository, spec string) (Object, error) {
-	oid, err := OidFromRef(repo, spec)
-	if err != nil {
-		return nil, err
-	}
-	return repo.ObjectFromOid(oid)
-}
-
 // OidRefFromRef returns a Ref object representing the target of
 // the ref, by peeling away any symbolic refs that might stand
 // in its way.
@@ -324,7 +301,7 @@ var defaultRefPrefixes = []string{
 func OidRefFromShortRef(repo Repository, spec string) (r Ref, e error) {
 	for _, prefix := range defaultRefPrefixes {
 		ref := fmt.Sprintf(prefix, spec)
-		if r, e = OidRefFromRef(repo, ref); e == nil { // TODO: inefficient because we read packed refs each time
+		if r, e = OidRefFromRef(repo, ref); e == nil {
 			return r, nil
 		} else if !IsNoSuchRef(e) {
 			return nil, e // something went wrong
@@ -332,17 +309,3 @@ func OidRefFromShortRef(repo Repository, spec string) (r Ref, e error) {
 	}
 	return nil, e // no such ref
 }
-
-// // ================================================================= //
-// // FINDERS
-// // ================================================================= //
-
-// type refFinder func(Repository, string) (Ref, error)
-
-// func oidRefFromRefFinder(repo Repository, spec string, finder refFinder) (Ref, error) {
-// 	r, e := finder(repo, spec)
-// 	if e != nil {
-// 		return nil, e
-// 	}
-
-// }
