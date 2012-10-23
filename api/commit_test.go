@@ -48,6 +48,7 @@ func Test_parseCommit(t *testing.T) {
 
 	c, ok := parsed.(*Commit)
 	util.Assert(t, ok)
+	util.Assert(t, c.ObjectId() == oid)
 	util.Assert(t, c.tree.String() == testTreeSha.String())
 	util.Assert(t, c.parents != nil && len(c.parents) != 0)
 	util.Assert(t, c.parents[0].String() == testParentSha.String())
