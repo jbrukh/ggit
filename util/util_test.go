@@ -20,3 +20,17 @@ func Test_IsValidRepo(t *testing.T) {
 	err = os.RemoveAll(repo)
 	AssertNoErr(t, err)
 }
+
+func Test_IsDigit(t *testing.T) {
+	Assert(t, IsDigit('0'))
+	Assert(t, IsDigit('1'))
+	Assert(t, IsDigit('2'))
+	Assert(t, IsDigit('3'))
+	Assert(t, IsDigit('4'))
+	Assert(t, IsDigit('5'))
+	Assert(t, IsDigit('6'))
+	Assert(t, IsDigit('7'))
+	Assert(t, IsDigit('8'))
+	Assert(t, IsDigit('9'))
+	Assert(t, !IsDigit('z'))
+}
