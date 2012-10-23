@@ -11,6 +11,7 @@ import (
 	"errors"
 	//"fmt"
 	//"os"
+	"github.com/jbrukh/ggit/util"
 	"regexp"
 	"strconv"
 )
@@ -91,7 +92,7 @@ func (p *revParser) number() (n int) {
 	if !p.more() {
 		return 1 // 1 by default
 	}
-	for p.more() && isDigit(p.curr()) {
+	for p.more() && util.IsDigit(p.curr()) {
 		p.next()
 	}
 	strNum := p.rev[start:p.inx]
@@ -193,7 +194,7 @@ func (r *revParser) parseNumber() (int, error) {
 	}
 	i := r.inx + 1
 	for i < len(r.rev) {
-		if !isDigit(r.rev[i]) {
+		if !util.IsDigit(r.rev[i]) {
 			break
 		}
 		i++
@@ -229,16 +230,6 @@ func ObjectFromRevision(repo Repository, rev string) (Object, error) {
 // ================================================================= //
 // UTILITY METHODS
 // ================================================================= //
-
-// isDigit returns true if and only if the parameter
-// is a digit from 0 to 9.
-func isDigit(c byte) bool {
-	switch c {
-	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		return true
-	}
-	return false
-}
 
 // isModifier returns true if and only if the parameter
 // is a supported modifier that may appear in rev parsing.
