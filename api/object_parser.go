@@ -88,37 +88,3 @@ func (p *objectParser) ParsePayload() (Object, error) {
 	})
 	return obj, err
 }
-
-// ================================================================= //
-// GGIT OBJECT ID PARSER
-// ================================================================= //
-
-type objectIdParser struct {
-	dataParser
-}
-
-// ================================================================= //
-// GGIT REF PARSER
-// ================================================================= //
-
-type refParser struct {
-	objectIdParser
-	name string
-}
-
-func newRefParser(buf *bufio.Reader, name string) *refParser {
-	return &refParser{
-		objectIdParser: objectIdParser{
-			dataParser{
-				buf: buf,
-			},
-		},
-		name: name,
-	}
-}
-
-// ================================================================= //
-// GGIT INDEX PARSER
-// ================================================================= //
-
-type indexParser dataParser

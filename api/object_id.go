@@ -95,6 +95,11 @@ func (id *ObjectId) String() string {
 // PARSING
 // ================================================================= //
 
+// objectIdParser is a dataparser that supports parsing of oids.
+type objectIdParser struct {
+	dataParser
+}
+
 // ParseObjectId reads the next OidHexSize bytes from the
 // Reader and places the resulting object id in oid.
 func (p *objectIdParser) ParseObjectId() *ObjectId {

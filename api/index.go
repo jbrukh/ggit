@@ -266,6 +266,9 @@ func (info *statInfo) String() string {
 // PARSING FUNCTIONS
 // ================================================================= //
 
+// TODO: integrate this parser with everything else
+type indexParser dataParser
+
 func parseIndexHeader(r *bufio.Reader) (hdr *indexHeader, err error) {
 	var h indexHeader
 	if err = binary.Read(r, ord, &h); err != nil {

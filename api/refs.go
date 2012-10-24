@@ -8,6 +8,7 @@
 package api
 
 import (
+	"bufio"
 	"fmt"
 	"strings"
 )
@@ -193,6 +194,24 @@ func matchRefs(full, partial string) bool {
 // ================================================================= //
 // REF PARSING
 // ================================================================= //
+
+// refParser implements functions for parsing refs and packed refs.
+type refParser struct {
+	objectIdParser
+	name string // the name of the ref file
+}
+
+// newRefParser creates a new Ref parser 
+func newRefParser(buf *bufio.Reader, name string) *refParser {
+	return &refParser{
+		objectIdParser: objectIdParser{
+			dataParser{
+				buf: buf,
+			},
+		},
+		name: name,
+	}
+}
 
 func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 	r := make([]Ref, 0)
