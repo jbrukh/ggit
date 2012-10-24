@@ -244,7 +244,6 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObj
 		absoluteCursor = len(data)
 	}
 	absoluteCursor += relativeCursor
-	var dp *packedObjectParser
 	switch {
 	case pot == BLOB || pot == COMMIT || pot == TREE || pot == TAG:
 		object = parseNonDeltaEntry(&bytes, pot, &v.ObjectId, size)
@@ -253,6 +252,7 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObj
 			deltaDeflated packedDelta
 			base          *packedObject
 			offset        int64
+			dp            *packedObjectParser
 		)
 		switch pot {
 		case OBJECT_REF_DELTA:
@@ -410,7 +410,115 @@ func (p *objectParser) readByteAsInt() int64 {
 }
 
 func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (object *packedObject) {
-	return nil
+	p := dp.objectParser
+
+	readByte := func() (int, byte, bool) {
+		return p.Count(), p.ReadByte(), true
+	}
+
+	baseSize := parseIntWhileMSB(readByte)
+	outputSize := parseIntWhileMSB(readByte)
+
+	src := base.bytes
+
+	if int(baseSize) != len(*src) {
+		s := ""
+		for _, b := range *src {
+			s += fmt.Sprintf("%08b ", b)
+		}
+		panicErrf("Expected size of base object is %d, but actual size is %d: %s", baseSize, len(*src), s)
+	}
+
+	out := make([]byte, 0)
+	var appended int64
+	cmd := p.ReadByte()
+	for appended = int64(0); appended < outputSize; {
+		if cmd == 0 {
+			panicErrf("Invalid delta! Byte 0 is not a supported delta code.")
+		}
+		var offset, len int64
+		if cmd&0x80 != 0 {
+			//copy from base to output
+			offset, len = dp.parseCopyCmd(cmd)
+			for i := offset; i < offset+len; i++ {
+				out = append(out, (*src)[i])
+			}
+			if offset+len > baseSize {
+				panicErrf("Bad delta - references byte %d of a %d-byte source", offset+len, baseSize)
+				break
+			}
+		} else {
+			//copy from delta to output
+			offset, len = 0, int64(cmd)
+			for i := offset; i < offset+len; i++ {
+				out = append(out, p.ReadByte())
+			}
+		}
+		appended += len
+		if appended < outputSize {
+			cmd = p.ReadByte()
+		}
+	}
+	if appended != outputSize {
+		panicErrf("Expected output of size %d, got %d. \n", outputSize, appended)
+	}
+	if outputSize != int64(len(out)) {
+		panicErrf("Expected output of len %d, got %d. \n", outputSize, len(out))
+	}
+	outputType := base.Object.Header().Type()
+	outputParser := newObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
+	outputParser.hdr = &objectHeader{
+		outputType,
+		int(outputSize),
+	}
+	var obj Object
+	switch outputType {
+	case ObjectBlob:
+		obj = outputParser.parseBlob()
+	case ObjectTree:
+		obj = outputParser.parseTree()
+	case ObjectCommit:
+		obj = outputParser.parseCommit()
+	case ObjectTag:
+		obj = outputParser.parseTag()
+	}
+	return &packedObject{
+		obj,
+		&out,
+	}
+}
+
+// Given a copy command, return the offset and length it represents. None or all of
+// the next seven bytes may be read, as determined by the seven least significant
+// bits of the copy command.
+func (dp *packedObjectParser) parseCopyCmd(cmd byte) (offset int64, len int64) {
+	p := dp.objectParser
+	offset, len = 0, 0
+	if cmd&0x01 != 0 {
+		offset = p.readByteAsInt()
+	}
+	if cmd&0x02 != 0 {
+		offset |= (p.readByteAsInt() << 8)
+	}
+	if cmd&0x04 != 0 {
+		offset |= (p.readByteAsInt() << 16)
+	}
+	if cmd&0x08 != 0 {
+		offset |= (p.readByteAsInt() << 24)
+	}
+	if cmd&0x10 != 0 {
+		len = p.readByteAsInt()
+	}
+	if cmd&0x20 != 0 {
+		len |= (p.readByteAsInt() << 8)
+	}
+	if cmd&0x40 != 0 {
+		len |= (p.readByteAsInt() << 16)
+	}
+	if len == 0 {
+		len = 0x10000
+	}
+	return
 }
 
 // Compute an integer value in the format that pack files use for a delta's base
