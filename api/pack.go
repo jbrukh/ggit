@@ -50,3 +50,13 @@ type PackedObjectId struct {
 	offset int64
 	crc32  int64
 }
+
+// ================================================================= //
+// GGIT PACK PARSER
+// ================================================================= //
+
+type packIdxParser struct {
+	idxParser  objectIdParser
+	packParser dataParser
+	name       string
+}
