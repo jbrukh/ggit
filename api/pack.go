@@ -60,3 +60,25 @@ type packIdxParser struct {
 	packParser dataParser
 	name       string
 }
+
+// ================================================================= //
+// Sorting of PackedObjectIds by offset.
+// ================================================================= //
+
+type packedObjectIds []*PackedObjectId
+
+func (e packedObjectIds) Less(i, j int) bool {
+	s := []*PackedObjectId(e)
+	a, b := s[i], s[j]
+	return a.offset < b.offset
+}
+
+func (e packedObjectIds) Swap(i, j int) {
+	s := []*PackedObjectId(e)
+	s[i], s[j] = s[j], s[i]
+}
+
+func (e packedObjectIds) Len() int {
+	s := []*PackedObjectId(e)
+	return len(s)
+}
