@@ -208,7 +208,43 @@ func (r *DiskRepository) VerifyPackedObjects() (oids []*PackedObjectId, err erro
 
 //extract object ids from a pack file. also extract objects if everything is true.
 func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, packs *[]Pack, err error) {
-	return make([]*PackedObjectId, 0), nil, nil
+	objectsRoot := path.Join(r.path, DefaultObjectsDir)
+	packRoot := path.Join(objectsRoot, DefaultPackDir)
+	packs = nil
+	packNames := make([]string, 0)
+	if err = filepath.Walk(packRoot, func(path string, info os.FileInfo, ignored error) error {
+		if path[len(path)-3:] == "idx" {
+			name := info.Name()
+			packNames = append(packNames, name[5:len(name)-4])
+		}
+		return nil
+	}); err != nil {
+		return
+	}
+	oids = make([]*PackedObjectId, 0)
+	for i := range packNames {
+		idxFile, _ := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".idx"))
+		packFile, _ := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".pack"))
+		pp := packIdxParser{
+			idxParser: objectIdParser{
+				dataParser{
+					buf: bufio.NewReader(idxFile),
+				},
+			},
+			packParser: dataParser{
+				buf: bufio.NewReader(packFile),
+			},
+			name: packNames[i],
+		}
+		if everything {
+			pack := pp.parsePack()
+			oids = append(oids, pack.Idx.entries...)
+		} else {
+			idx := pp.parseIdx()
+			oids = append(oids, idx.entries...)
+		}
+	}
+	return
 }
 
 func (r *DiskRepository) LooseObjectIds() (oids []*ObjectId, err error) {
