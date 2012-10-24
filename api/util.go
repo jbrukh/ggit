@@ -36,17 +36,20 @@ var signs []string = []string{
 // hashes of our objects
 var sha hash.Hash = sha1.New()
 
-// interface for hashable objects
-type Hashable interface {
-	Bytes() []byte
-}
-
-// produce a hash for any object that
-// can be construed as a bunch of bytes
-func makeHash(h Hashable) (o *ObjectId) {
+// produce the SHA1 hash for any Object.
+/*func makeHash(o Object) hash.Hash {
 	sha.Reset()
-	sha.Write(h.Bytes())
-	return OidFromHash(sha)
+	kind := string(o.Type())
+	content := o.String()
+	len := len([]byte(content)) + 1
+	toHash := []byte(kind + " " + fmt.Sprint(len) + "\000" + content + "\n")
+	sha.Write(toHash)
+	return sha
+}*/
+
+// get the first OID_SZ of the hash
+func getHash(h hash.Hash) []byte {
+	return h.Sum(nil)[0:OidSize]
 }
 
 func min(a, b int) int {
