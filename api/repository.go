@@ -201,16 +201,15 @@ func (r *DiskRepository) PackedObjectIds() (oids []*PackedObjectId, err error) {
 	return oids, err
 }
 
-func (r *DiskRepository) VerifyPackedObjects() (oids []*PackedObjectId, err error) {
-	oids, _, err = r.unpack(true)
-	return oids, err
+func (r *DiskRepository) VerifyPackedObjects() (oids []*PackedObjectId, objects []Object, err error) {
+	oids, objects, err = r.unpack(true)
+	return oids, objects, err
 }
 
 //extract object ids from a pack file. also extract objects if everything is true.
-func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, packs *[]Pack, err error) {
+func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, objects []Object, err error) {
 	objectsRoot := path.Join(r.path, DefaultObjectsDir)
 	packRoot := path.Join(objectsRoot, DefaultPackDir)
-	packs = nil
 	packNames := make([]string, 0)
 	if err = filepath.Walk(packRoot, func(path string, info os.FileInfo, ignored error) error {
 		if path[len(path)-3:] == "idx" {
@@ -222,6 +221,7 @@ func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, packs 
 		return
 	}
 	oids = make([]*PackedObjectId, 0)
+	objects = make([]Object, 0)
 	for i := range packNames {
 		idxFile, _ := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".idx"))
 		packFile, _ := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".pack"))
@@ -238,7 +238,11 @@ func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, packs 
 		}
 		if everything {
 			pack := pp.parsePack()
-			oids = append(oids, pack.Idx.entries...)
+			for _, v := range pack.content {
+				object := v.Object
+				objects = append(objects, object)
+				oids = append(oids, pack.Idx.entriesById[object.ObjectId().repr])
+			}
 		} else {
 			idx := pp.parseIdx()
 			oids = append(oids, idx.entries...)
