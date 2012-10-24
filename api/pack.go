@@ -203,3 +203,74 @@ func (p *packIdxParser) parsePack() *Pack {
 func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObject) (object *packedObject) {
 	return nil
 }
+
+func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size int64) (object *packedObject) {
+	var (
+		dp  *packedObjectParser
+		err error
+	)
+	if dp, err = newPackedObjectParser(bytes, oid); err != nil {
+		panicErr(err.Error())
+	}
+	switch pot {
+	case BLOB:
+		object = dp.parseBlob(size)
+	case COMMIT:
+		object = dp.parseCommit(size)
+	case TREE:
+		object = dp.parseTree(size)
+	case TAG:
+		object = dp.parseTag(size)
+	}
+	return
+}
+
+func (dp *packedObjectParser) parseCommit(size int64) *packedObject {
+	dp.hdr = &objectHeader{
+		ObjectCommit,
+		int(size),
+	}
+	commit := dp.objectParser.parseCommit()
+
+	return &packedObject{
+		commit,
+		dp.bytes,
+	}
+}
+func (dp *packedObjectParser) parseTag(size int64) *packedObject {
+	dp.hdr = &objectHeader{
+		ObjectTag,
+		int(size),
+	}
+	tag := dp.objectParser.parseTag()
+	return &packedObject{
+		tag,
+		dp.bytes,
+	}
+}
+
+func (dp *packedObjectParser) parseBlob(size int64) *packedObject {
+	blob := new(Blob)
+	blob.data = dp.Bytes()
+	blob.oid = dp.objectParser.oid
+	blob.hdr = &objectHeader{
+		ObjectBlob,
+		int(size),
+	}
+	return &packedObject{
+		blob,
+		&blob.data,
+	}
+}
+
+func (dp *packedObjectParser) parseTree(size int64) *packedObject {
+	dp.hdr = &objectHeader{
+		ObjectTree,
+		int(size),
+	}
+	tree := dp.objectParser.parseTree()
+	return &packedObject{
+		tree,
+		dp.bytes,
+	}
+}
