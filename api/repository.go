@@ -23,6 +23,7 @@ import (
 const (
 	DefaultGitDir     = ".git"
 	DefaultObjectsDir = "objects"
+	DefaultPackDir    = "pack"
 	IndexFile         = "index"
 	PackedRefsFile    = "packed-refs"
 )
@@ -176,9 +177,42 @@ func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 	return nil, e
 }
 
-// find all objects and print their ids
-func (repo *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
-	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
+//find all objects and print their ids
+func (r *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
+	pOids, err := r.PackedObjectIds()
+	if err != nil {
+		return nil, err
+	}
+	lOids, err := r.LooseObjectIds()
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range lOids {
+		oids = append(oids, v)
+	}
+	for _, v := range pOids {
+		oids = append(oids, &(v.ObjectId))
+	}
+	return
+}
+
+func (r *DiskRepository) PackedObjectIds() (oids []*PackedObjectId, err error) {
+	oids, _, err = r.unpack(false)
+	return oids, err
+}
+
+func (r *DiskRepository) VerifyPackedObjects() (oids []*PackedObjectId, err error) {
+	oids, _, err = r.unpack(true)
+	return oids, err
+}
+
+//extract object ids from a pack file. also extract objects if everything is true.
+func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, packs *[]Pack, err error) {
+	return make([]*PackedObjectId, 0), nil, nil
+}
+
+func (r *DiskRepository) LooseObjectIds() (oids []*ObjectId, err error) {
+	objectsRoot := path.Join(r.path, DefaultObjectsDir)
 	oids = make([]*ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
 	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
