@@ -1,7 +1,11 @@
 package api
 
 import (
+	"bufio"
+	"bytes"
+	"compress/zlib"
 	"fmt"
+	"io"
 	"sort"
 )
 
@@ -144,4 +148,33 @@ func (p *packIdxParser) parseIdx() *Idx {
 		packChecksum,
 		idxChecksum,
 	}
+}
+
+// ================================================================= //
+// .pack and pack entry parsing.
+// ================================================================= //
+
+type packedObjectParser struct {
+	*objectParser
+	bytes *[]byte
+}
+
+func newPackedObjectParser(data *[]byte, oid *ObjectId) (p *packedObjectParser, e error) {
+	compressedReader := bytes.NewReader(*data)
+	var zr io.ReadCloser
+	if zr, e = zlib.NewReader(compressedReader); e == nil {
+		exploder := &dataParser{
+			bufio.NewReader(zr),
+			0,
+		}
+		exploded := exploder.Bytes()
+		explodedReader := bufio.NewReader(bytes.NewReader(exploded))
+		op := newObjectParser(explodedReader, oid)
+		pop := packedObjectParser{
+			op,
+			&exploded,
+		}
+		p = &pop
+	}
+	return
 }
