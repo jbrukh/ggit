@@ -31,7 +31,7 @@ func (p parseErr) Error() string {
 
 // parseErrf allows convenience formatting for ParseErrors
 func parseErrf(format string, items ...interface{}) parseErr {
-	return parseErr(fmt.Sprintf(format, items))
+	return parseErr(fmt.Sprintf(format, items...))
 }
 
 // parseErrn concatenates a bunch of items together to 
@@ -49,7 +49,7 @@ func panicErrn(items ...string) {
 }
 
 func panicErrf(format string, items ...interface{}) {
-	panic(parseErrf(format, items))
+	panic(parseErrf(format, items...))
 }
 
 // ================================================================= //
@@ -84,7 +84,7 @@ func safeParse(f func()) (err error) {
 func (p *dataParser) consume(n int) []byte {
 	b := make([]byte, n)
 	if rd, e := p.buf.Read(b); e != nil || rd != n {
-		panicErrf("expected: %d byte(s)", n)
+		panicErrf("expected: %d byte(s), read %d, values %x", n, rd, b[0:rd])
 	}
 	p.count += n
 	return b
@@ -161,8 +161,8 @@ func (p *dataParser) PeekBytes(n int) []byte {
 func (p *dataParser) ConsumeBytes(b []byte) {
 	d := p.consume(len(b))
 	for inx, v := range d {
-		if d[inx] != v {
-			panicErrf("expected bytes: %v", b)
+		if b[inx] != v {
+			panicErrf("expected bytes: 0x%x, found: 0x%x", b, d)
 		}
 	}
 }
@@ -202,6 +202,19 @@ func (p *dataParser) PeekString(n int) string {
 		panicErrf("expected: %d byte(s)", n)
 	}
 	return string(pk)
+}
+
+func (p *dataParser) ReadByte() byte {
+	b := p.PeekBytes(1)
+	p.Consume(1)
+	return b[0]
+}
+
+// ReadBytesUntil
+func (p *dataParser) ReadNBytes(n int) []byte {
+	b := p.PeekBytes(n)
+	p.Consume(n)
+	return b
 }
 
 // ReadBytesUntil
@@ -250,8 +263,17 @@ func (p *dataParser) ParseAtoi(delim byte) (n int) {
 	return int(p.ParseInt(delim, 10, 0))
 }
 
+// Returns the int64 represented by the next n bytes in network byte order (most significant first).
+func (p *dataParser) ParseIntBigEndian(n int) (i64 int64) {
+	bytes := p.consume(n)
+	value := fmt.Sprintf("%x", bytes)
+	return parseInt(value, 16, 64)
+}
+
 func (p *dataParser) ParseIntN(n int, base int, bitSize int) (i64 int64) {
-	return parseInt(string(p.consume(n)), base, bitSize)
+	bytes := p.consume(n)
+	value := string(bytes)
+	return parseInt(value, base, bitSize)
 }
 
 func (p *dataParser) ParseInt(delim byte, base int, bitSize int) (i64 int64) {
