@@ -178,3 +178,28 @@ func newPackedObjectParser(data *[]byte, oid *ObjectId) (p *packedObjectParser, 
 	}
 	return
 }
+
+func (p *packIdxParser) parsePack() *Pack {
+	idx := p.parseIdx()
+	objects := make([]*packedObject, idx.count)
+	p.packParser.ConsumeString(PackSignature)
+	p.packParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
+	count := p.packParser.ParseIntBigEndian(4)
+	if count != idx.count {
+		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
+	}
+	entries := &idx.entries
+	data := p.packParser.Bytes()
+	for i := range *entries {
+		objects[i] = parseEntry(&data, i, idx, &objects)
+	}
+	return &Pack{
+		PackVersion,
+		objects,
+		idx,
+	}
+}
+
+func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObject) (object *packedObject) {
+	return nil
+}
