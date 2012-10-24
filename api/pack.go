@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strconv"
 )
 
 const (
@@ -201,7 +202,55 @@ func (p *packIdxParser) parsePack() *Pack {
 }
 
 func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObject) (object *packedObject) {
-	return nil
+	entries := idx.entries
+	objects := *packedObjects
+	data := *packedData
+	v := entries[i]
+	absoluteCursor := int(v.offset) - 12 //pack signature + pack version + count = 12 bytes
+	if len(objects) > i && objects[i] != nil {
+		//sometimes (for ref delta objects) we jump ahead in the []byte
+		return objects[i]
+	}
+	var (
+		size int64
+		err  error
+	)
+	// keep track of bytes read so that, in conjunction with the next entry's offset, we can know where the next
+	// object in the pack begins.
+	relativeCursor := 0
+	headerHeader := data[absoluteCursor+relativeCursor]
+	relativeCursor++
+	typeBits := (headerHeader & 127) >> 4
+	sizeBits := (headerHeader & 15)
+	//collect remaining size bytes, if any.
+	sizeBytes := fmt.Sprintf("%04b", sizeBits)
+	for s := headerHeader; isSetMSB(s); {
+		s = data[absoluteCursor+relativeCursor]
+		relativeCursor++
+		sizeBytes = fmt.Sprintf("%07b", s&127) + sizeBytes
+	}
+	if size, err = strconv.ParseInt(sizeBytes, 2, 64); err != nil {
+		panicErrf("Err parsing size: %v. Could not determine size for %s", err, v.repr)
+	}
+	pot := PackedObjectType(typeBits)
+	var bytes []byte
+	if i+1 < len(entries) {
+		n := int(entries[i+1].offset - v.offset)
+		bytes = data[absoluteCursor+relativeCursor : absoluteCursor+n]
+		relativeCursor = n
+	} else {
+		//todo: limited reading so we don't gOOM
+		bytes = data[absoluteCursor+relativeCursor:]
+		absoluteCursor = len(data)
+	}
+	absoluteCursor += relativeCursor
+	switch {
+	case pot == BLOB || pot == COMMIT || pot == TREE || pot == TAG:
+		object = parseNonDeltaEntry(&bytes, pot, &v.ObjectId, size)
+	default:
+		panicErrf("Delta pack entries are not implemented yet")
+	}
+	return
 }
 
 func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size int64) (object *packedObject) {
@@ -273,4 +322,13 @@ func (dp *packedObjectParser) parseTree(size int64) *packedObject {
 		tree,
 		dp.bytes,
 	}
+}
+
+// ================================================================= //
+// UTIL METHODS
+// ================================================================= //
+
+//return true if the most significant bit is set, false otherwise
+func isSetMSB(b byte) bool {
+	return b > 127
 }
