@@ -244,11 +244,46 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObj
 		absoluteCursor = len(data)
 	}
 	absoluteCursor += relativeCursor
+	var dp *packedObjectParser
 	switch {
 	case pot == BLOB || pot == COMMIT || pot == TREE || pot == TAG:
 		object = parseNonDeltaEntry(&bytes, pot, &v.ObjectId, size)
 	default:
-		panicErrf("Delta pack entries are not implemented yet")
+		var (
+			deltaDeflated packedDelta
+			base          *packedObject
+			offset        int64
+		)
+		switch pot {
+		case OBJECT_REF_DELTA:
+			var oid *ObjectId
+			deltaDeflated, oid = readPackedRefDelta(&bytes)
+			offset = idx.entriesById[oid.String()].offset
+		case OBJECT_OFFSET_DELTA:
+			if deltaDeflated, offset, err = readPackedOffsetDelta(&bytes); err != nil {
+				panicErrf("Err parsing size: %v. Could not determine size for %s", err, v.repr)
+			}
+			offset = v.offset - offset
+		}
+		objectIndex := sort.Search(len(idx.entries), func(i int) bool {
+			return idx.entries[i].offset >= int64(offset)
+		})
+		if idx.entries[objectIndex].offset != offset {
+			panicErrf("Could not find object with offset %d (%d - %d). Closest match was %d.", offset,
+				v.offset+offset, v.offset, idx.entries[i].offset)
+		}
+		if objects[objectIndex] == nil {
+			objects[objectIndex] = parseEntry(packedData, objectIndex, idx, packedObjects)
+			if objects[objectIndex] == nil {
+				panicErrf("Ref deltas not yet implemented!")
+			}
+		}
+		base = objects[objectIndex]
+		bytes = *((*[]byte)(deltaDeflated))
+		if dp, err = newPackedObjectParser(&bytes, &v.ObjectId); err != nil {
+			panicErr(err.Error())
+		}
+		object = dp.parseDelta(base, &v.ObjectId)
 	}
 	return
 }
@@ -322,6 +357,77 @@ func (dp *packedObjectParser) parseTree(size int64) *packedObject {
 		tree,
 		dp.bytes,
 	}
+}
+
+// ================================================================= //
+// Delta parsing.
+// ================================================================= //
+
+type packedDelta *[]byte
+
+func readPackedRefDelta(bytes *[]byte) (delta packedDelta, oid *ObjectId) {
+	baseOidBytes := (*bytes)[0:20]
+	deltaBytes := (*bytes)[20:]
+	delta = packedDelta(&deltaBytes)
+	oid, _ = OidFromBytes(baseOidBytes)
+	return packedDelta(&deltaBytes), oid
+}
+
+func readPackedOffsetDelta(bytes *[]byte) (delta packedDelta, offset int64, err error) {
+	//first the offset to the base object earlier in the pack
+	var i int
+	offset, err, i = parseOffset(bytes)
+	//now the rest of the bytes - the compressed delta
+	deltaBytes := (*bytes)[i:]
+	delta = packedDelta(&deltaBytes)
+	return
+}
+
+func parseOffset(bytes *[]byte) (offset int64, err error, index int) {
+	offsetBits := ""
+	var base int64
+	for i := 0; ; {
+		v := (*bytes)[i]
+		offsetBits = offsetBits + fmt.Sprintf("%07b", v&127)
+		if i >= 1 {
+			base += int64(1 << (7 * uint(i)))
+		}
+		if !isSetMSB(v) {
+			if offset, err = strconv.ParseInt(offsetBits, 2, 64); err != nil {
+				return
+			}
+			offset += base
+			index = i + 1
+			break
+		}
+		i++
+	}
+	return
+}
+
+func (p *objectParser) readByteAsInt() int64 {
+	return int64(p.ReadByte())
+}
+
+func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (object *packedObject) {
+	return nil
+}
+
+// Compute an integer value in the format that pack files use for a delta's base
+// size and output size. The function is named after the decoding mechanism:
+// bytes are read and computed until a byte is found whose most significant
+// bit is not set.
+func parseIntWhileMSB(readByte func() (int, byte, bool)) (i int64) {
+	n := 0
+	for {
+		_, v, _ := readByte()
+		i |= (int64(v&127) << (uint(n) * 7))
+		if !isSetMSB(v) {
+			break
+		}
+		n++
+	}
+	return i
 }
 
 // ================================================================= //
