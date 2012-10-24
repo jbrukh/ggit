@@ -1,5 +1,10 @@
 package api
 
+import (
+	"fmt"
+	"sort"
+)
+
 const (
 	PackSignature    = "PACK"    //0x5041434b
 	PackIdxSignature = "\377tOc" //0xff744f63
@@ -81,4 +86,62 @@ func (e packedObjectIds) Swap(i, j int) {
 func (e packedObjectIds) Len() int {
 	s := []*PackedObjectId(e)
 	return len(s)
+}
+
+// ================================================================= //
+// .idx parsing.
+// ================================================================= //
+
+func (p *packIdxParser) parseIdx() *Idx {
+	p.idxParser.ConsumeString(PackIdxSignature)
+	p.idxParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
+	var counts [256]int64
+	for i := range counts {
+		counts[i] = p.idxParser.ParseIntBigEndian(4)
+	}
+	//discard the fan-out values, just use the largest value, which is the total # of objects:
+	count := counts[255]
+	entries := make([]*PackedObjectId, count, count)
+	entriesByOid := make(map[string]*PackedObjectId)
+	for i := int64(0); i < count; i++ {
+		b := p.idxParser.ReadNBytes(20)
+		representation := fmt.Sprintf("%x", b)
+		entries[i] = &PackedObjectId{
+			ObjectId: ObjectId{
+				b,
+				representation,
+			},
+		}
+		entriesByOid[representation] = entries[i]
+	}
+	for i := int64(0); i < count; i++ {
+		entries[i].crc32 = int64(p.idxParser.ParseIntBigEndian(4))
+	}
+	for i := int64(0); i < count; i++ {
+		//TODO: 8-byte #'s for some offsets for some pack files (packs > 2gb)
+		entries[i].offset = p.idxParser.ParseIntBigEndian(4)
+	}
+	checksumPack := p.idxParser.ReadNBytes(20)
+	packChecksum := &ObjectId{
+		bytes: checksumPack,
+		repr:  fmt.Sprintf("%x", checksumPack),
+	}
+	//TODO: check the checksum
+	checksumIdx := p.idxParser.ReadNBytes(20)
+	idxChecksum := &ObjectId{
+		bytes: checksumIdx,
+		repr:  fmt.Sprintf("%x", checksumIdx),
+	}
+	if !p.idxParser.EOF() {
+		panicErrf("Found extraneous bytes! %x", p.idxParser.Bytes())
+	}
+	//order by offset
+	sort.Sort(packedObjectIds(entries))
+	return &Idx{
+		entries,
+		entriesByOid,
+		count,
+		packChecksum,
+		idxChecksum,
+	}
 }
