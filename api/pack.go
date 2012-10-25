@@ -29,7 +29,7 @@ const (
 
 type packedObject struct {
 	Object
-	bytes *[]byte
+	bytes []byte
 }
 
 type Pack struct {
@@ -191,7 +191,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 
 type packedObjectParser struct {
 	*objectParser
-	bytes *[]byte
+	bytes []byte
 }
 
 func newPackedObjectParser(data *[]byte, oid *ObjectId) (p *packedObjectParser, e error) {
@@ -208,7 +208,7 @@ func newPackedObjectParser(data *[]byte, oid *ObjectId) (p *packedObjectParser, 
 		op := newObjectParser(explodedReader, oid)
 		pop := packedObjectParser{
 			op,
-			&exploded,
+			exploded,
 		}
 		p = &pop
 	}
@@ -377,7 +377,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *packedObject {
 	}
 	return &packedObject{
 		blob,
-		&blob.data,
+		blob.data,
 	}
 }
 
@@ -449,7 +449,7 @@ func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (obje
 	baseSize := p.parseIntWhileMSB()
 	outputSize := p.parseIntWhileMSB()
 
-	src := *base.bytes
+	src := base.bytes
 
 	if int(baseSize) != len(src) {
 		panicErrf("Expected size of base object is %d, but actual size is %d")
@@ -512,7 +512,7 @@ func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (obje
 	}
 	return &packedObject{
 		obj,
-		&out,
+		out,
 	}
 }
 
