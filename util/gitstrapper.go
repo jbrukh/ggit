@@ -46,7 +46,7 @@ func GitExec(workDir string, args ...string) (string, error) {
 	args = append([]string{"git", gitDirArg, workDirArg}, args...)
 
 	// print the output
-	fmt.Println(strings.Join(args, " "))
+	fmt.Println(strings.Join(args[3:], " "))
 
 	cmd := exec.Command(args[0], args[1:]...)
 	var out bytes.Buffer

@@ -20,6 +20,7 @@ const (
 	LF  = '\n'
 	LT  = '<'
 	GT  = '>'
+	TAB = '\t'
 )
 
 const (

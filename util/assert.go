@@ -32,7 +32,7 @@ func Assert(t *testing.T, b bool, items ...interface{}) {
 
 func Assertf(t *testing.T, b bool, format string, items ...interface{}) {
 	if !b {
-		t.Errorf(format, items)
+		t.Errorf(format, items...)
 	}
 }
 

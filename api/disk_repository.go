@@ -30,6 +30,8 @@ type DiskRepository struct {
 // path of a repository is always its .git directory. However,
 // if the enclosing directory is given, then ggit will
 // append the .git directory to the specified path.
+// TODO: really should be using the same logic here as in ggit,
+// which finds the closest top-level repo.
 func Open(pth string) *DiskRepository {
 	p := util.InferGitDir(pth)
 	return &DiskRepository{
