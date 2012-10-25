@@ -1,3 +1,10 @@
+//
+// Unless otherwise noted, this project is licensed under the Creative
+// Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License. Please
+// see the README file.
+//
+// Copyright (c) 2012 The ggit Authors
+//
 package main
 
 import (
@@ -24,7 +31,7 @@ const (
 	msgNotARepo = "fatal: Not a git repository (or any of the parent directories): " + api.DefaultGitDir
 )
 
-var tmplUsage = `usage: ggit [--version] <command> [<args>]
+var tmplUsage = `usage: ggit [--which-git-dir] [--version] <command> [<args>]
 
 Available commands:
 {{range .}}

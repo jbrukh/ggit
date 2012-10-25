@@ -1,17 +1,27 @@
+//
+// Unless otherwise noted, this project is licensed under the Creative
+// Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License. Please
+// see the README file.
+//
+// Copyright (c) 2012 The ggit Authors
+//
 // Code in this package originally based on https://github.com/jordanorelli/multicommand.
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
 	"github.com/jbrukh/ggit/builtin"
 	"io"
 	"os"
+	"path"
 )
 
 var (
-	flagVersion bool
+	flagVersion     bool
+	flagWhichGitDir bool
 
 	Wout = os.Stdout
 	Werr = os.Stderr
@@ -19,6 +29,7 @@ var (
 
 func init() {
 	flag.BoolVar(&flagVersion, "version", false, "")
+	flag.BoolVar(&flagWhichGitDir, "which-git-dir", false, "show the path of the enclosing repo")
 }
 
 // ================================================================= //
@@ -28,6 +39,17 @@ func init() {
 func main() {
 	flag.Usage = usage
 	flag.Parse()
+
+	// --which-git-dir
+	if flagWhichGitDir {
+		path, err := findRepo()
+		if err != nil {
+			fmt.Fprintf(Werr, "Could not discern parent repo: %s\n", err.Error())
+			os.Exit(1)
+		}
+		fmt.Fprintln(Wout, path)
+		os.Exit(0)
+	}
 
 	// --version
 	if flagVersion {
@@ -48,7 +70,8 @@ func main() {
 	if ok {
 		repo, e := openRepo()
 		if e != nil {
-			fmt.Println(e.Error())
+			fmt.Fprintln(Werr, msgNotARepo)
+			os.Exit(1)
 		}
 		cmd.Execute(&builtin.Params{
 			repo,
@@ -62,9 +85,34 @@ func main() {
 }
 
 func findRepo() (string, error) {
-	return api.DefaultGitDir, nil
+	dir, e := os.Getwd()
+	if e != nil {
+		return "", e
+	}
+	var file string
+	for {
+		// check this directory to see if it contains
+		// the git directory, usually .git
+		gitDir := path.Join(dir, api.DefaultGitDir)
+		if _, e = os.Stat(gitDir); os.IsNotExist(e) {
+			// try the directory up
+			dir, file = path.Split(dir)
+			if file == "" { // nothing more to go up
+				return "", errors.New("no repo found")
+			}
+		} else if e != nil {
+			// there is some other error
+			break
+		} else {
+			// no, error the git dir exists
+			return gitDir, nil
+		}
+	}
+	return "", e
 }
 
+// openRepo opens the repository, if any, which is
+// the enclosing repository of this directory.
 func openRepo() (repo api.Repository, err error) {
 	var path string
 	path, err = findRepo()
