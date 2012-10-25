@@ -34,9 +34,8 @@ func Test_assertFileMode(t *testing.T) {
 	test(m6, ModeCommit)
 }
 
-func Test_parseFileMode(t *testing.T) {
+func Test_parseValidFileMode(t *testing.T) {
 	p := objectParserForString("0000000\n0040000\n0100644\n0100755\n0120000\n0160000\n")
-
 	util.Assert(t, p.ParseFileMode(LF) == ModeNew)
 	util.Assert(t, p.ParseFileMode(LF) == ModeTree)
 	util.Assert(t, p.ParseFileMode(LF) == ModeBlob)
@@ -44,4 +43,16 @@ func Test_parseFileMode(t *testing.T) {
 	util.Assert(t, p.ParseFileMode(LF) == ModeLink)
 	util.Assert(t, p.ParseFileMode(LF) == ModeCommit)
 	util.Assert(t, p.EOF())
+}
+
+func Test_parseInvalidFileMode(t *testing.T) {
+	// test non-file modes
+	p := objectParserForString("000200\n002000\n000644\n000755\n0120200\n01600990\n")
+	for !p.EOF() {
+		util.AssertPanic(t, func() {
+			m := p.ParseFileMode(LF)
+			println(m)
+
+		})
+	}
 }
