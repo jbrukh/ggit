@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+filter.go implements a simple generic filtering framework.
+*/
 package api
 
 // filter represents a generic filter that desides

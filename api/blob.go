@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+blob.go implements ggit Blob objects and their parsing and formatting.
+*/
 package api
 
 import (

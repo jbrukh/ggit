@@ -5,6 +5,15 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+format.go implements the ggit Format object, which contains formatting
+functions for various objects that we want to print as output. Each formatting
+function is implemented in the file relevant to the object that it formats.
+
+Format prints to an io.Writer, or optionally, one can print a string by
+using a strFormat object and calling String() on it.
+*/
 package api
 
 import (
@@ -13,30 +22,38 @@ import (
 	"io"
 )
 
-// Formatter is the central hub for formatting ggit objects.
+// Format is a collection of formatting
+// methods for various ggit objects we 
+// wish to format and output.
 type Format struct {
 	Writer io.Writer
 }
 
-type strFormat struct {
+// strFormat does everything that Format
+// does, except its output destination is
+// a string that you can obtain by calling
+// the String() method.
+type StrFormat struct {
 	Format
 }
 
-func (f *strFormat) String() string {
-	return f.Writer.(*bytes.Buffer).String()
-}
-
-func (f *strFormat) Reset() {
-	f.Writer.(*bytes.Buffer).Reset()
-}
-
-func NewStrFormat() *strFormat {
+func NewStrFormat() *StrFormat {
 	b := bytes.NewBufferString("")
-	return &strFormat{
+	return &StrFormat{
 		Format{b},
 	}
 }
 
+func (f *StrFormat) String() string {
+	return f.Writer.(*bytes.Buffer).String()
+}
+
+func (f *StrFormat) Reset() {
+	f.Writer.(*bytes.Buffer).Reset()
+}
+
+// Lf prints a line feed to the underlying
+// io.Writer of the Format.
 func (f *Format) Lf() (int, error) {
 	return fmt.Fprint(f.Writer, "\n")
 }
