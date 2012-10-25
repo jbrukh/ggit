@@ -5,6 +5,11 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+tree.go implements ggit Tree objects, TreeEntries, their parsing and
+formatting.
+*/
 package api
 
 import (
