@@ -7,8 +7,6 @@
 //
 package api
 
-import ()
-
 const (
 	DefaultGitDir     = ".git"
 	DefaultObjectsDir = "objects"

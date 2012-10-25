@@ -33,3 +33,7 @@ func Test_assertFileMode(t *testing.T) {
 	test(m5, ModeLink)
 	test(m6, ModeCommit)
 }
+
+func Test_parseFileMode(t *testing.T) {
+
+}
