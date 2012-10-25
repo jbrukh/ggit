@@ -10,6 +10,7 @@ package api
 import (
 	"fmt"
 	"github.com/jbrukh/ggit/util"
+	"math/rand"
 	"testing"
 )
 
@@ -67,10 +68,21 @@ func Test_parseInvalidBlobHeader(t *testing.T) {
 }
 
 func Test_parseBlobBadSize(t *testing.T) {
-	/*test := func(badBlob string) {
-		p := objectParserForString("")
+	test := func(contents string) {
+		l := len(contents)
+		size := rand.Intn(l+1) - 1 + 2*rand.Intn(2)*l // never equal to l
+		tb := makeTestBlobWithSize(size, contents)
+		p := objectParserForString(tb)
 		hdr, e := p.ParseHeader()
+		util.AssertNoErr(t, e)
+		util.Assert(t, hdr.Type() == ObjectBlob)
+		util.Assert(t, hdr.Size() == size)
+
+		// should not be able to parse
+		_, e = p.ParsePayload()
 		util.Assert(t, e != nil)
-		util.Assert(t, hdr == nil)
-	}*/
+	}
+	for _, v := range testCasesBlobs {
+		test(v)
+	}
 }
