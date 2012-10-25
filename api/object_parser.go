@@ -64,8 +64,10 @@ func (p *objectParser) ParseHeader() (*objectHeader, error) {
 
 func (p *objectParser) ParsePayload() (Object, error) {
 	// parse header if it wasn't parsed already
-	if _, e := p.ParseHeader(); e != nil {
-		return nil, e
+	if p.hdr == nil {
+		if _, e := p.ParseHeader(); e != nil {
+			return nil, e
+		}
 	}
 	var (
 		obj Object

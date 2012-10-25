@@ -199,7 +199,7 @@ func (p *dataParser) ConsumeStrings(s []string) string {
 func (p *dataParser) PeekString(n int) string {
 	pk, e := p.buf.Peek(n)
 	if e != nil {
-		panicErrf("expected: %d byte(s)", n)
+		panicErrf("expected: %d byte(s); got: %s", n, e.Error())
 	}
 	return string(pk)
 }

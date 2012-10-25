@@ -116,6 +116,8 @@ func trimPrefix(str, prefix string) string {
 // METHODS FOR TESTING
 // ================================================================= //
 
+// TODO: move to util
+
 func objectParserForString(str string) *objectParser {
 	p := new(objectParser)
 	p.buf = readerForString(str)
