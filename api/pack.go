@@ -33,12 +33,12 @@ type packedObject struct {
 }
 
 type Pack struct {
-	// GIT currently accepts version number 2 or 3 but
+	// Git currently accepts version number 2 or 3 but
 	// generates version 2 only.
 	version int32
-	// the unpacked objects
+	// the unpacked objects sorted by offset
 	content []*packedObject
-	*Idx
+	*Idx    //TODO: hide Idx, the Pack can expose index functionality itself.
 }
 
 type Idx struct {
@@ -49,7 +49,8 @@ type Idx struct {
 	// number of objects contained in the pack (network
 	// byte order)
 	count int64
-	// copy of the checksum for this idx file's corresponding pack file.
+	// copy of the checksum for this idx file's
+	// corresponding pack file.
 	packChecksum *ObjectId
 	// checksum for this idx file.
 	idxChecksum *ObjectId
@@ -59,6 +60,21 @@ type PackedObjectId struct {
 	ObjectId
 	offset int64
 	crc32  int64
+	index  int
+}
+
+// Return the Object in this pack with the given ObjectId,
+// or nil if no such Object is in this pack.
+func (pack *Pack) Unpack(oid *ObjectId) Object {
+	entry := pack.Idx.entriesById[oid.String()]
+	if entry == nil {
+		return nil
+	}
+	index := entry.index
+	if len(pack.content) <= index {
+		return nil
+	}
+	return pack.content[index].Object
 }
 
 // ================================================================= //
@@ -69,6 +85,20 @@ type packIdxParser struct {
 	idxParser  objectIdParser
 	packParser dataParser
 	name       string
+}
+
+func newPackIdxParser(idx io.Reader, pack io.Reader, name string) *packIdxParser {
+	return &packIdxParser{
+		idxParser: objectIdParser{
+			dataParser{
+				buf: bufio.NewReader(idx),
+			},
+		},
+		packParser: dataParser{
+			buf: bufio.NewReader(pack),
+		},
+		name: name,
+	}
 }
 
 // ================================================================= //
@@ -104,7 +134,8 @@ func (p *packIdxParser) parseIdx() *Idx {
 	for i := range counts {
 		counts[i] = p.idxParser.ParseIntBigEndian(4)
 	}
-	//discard the fan-out values, just use the largest value, which is the total # of objects:
+	//discard the fan-out values, just use the largest value,
+	//which is the total # of objects:
 	count := counts[255]
 	entries := make([]*PackedObjectId, count, count)
 	entriesByOid := make(map[string]*PackedObjectId)
@@ -142,6 +173,9 @@ func (p *packIdxParser) parseIdx() *Idx {
 	}
 	//order by offset
 	sort.Sort(packedObjectIds(entries))
+	for i, v := range entries {
+		v.index = i
+	}
 	return &Idx{
 		entries,
 		entriesByOid,
@@ -164,6 +198,7 @@ func newPackedObjectParser(data *[]byte, oid *ObjectId) (p *packedObjectParser, 
 	compressedReader := bytes.NewReader(*data)
 	var zr io.ReadCloser
 	if zr, e = zlib.NewReader(compressedReader); e == nil {
+		defer zr.Close()
 		exploder := &dataParser{
 			bufio.NewReader(zr),
 			0,
@@ -189,10 +224,10 @@ func (p *packIdxParser) parsePack() *Pack {
 	if count != idx.count {
 		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
 	}
-	entries := &idx.entries
+	entries := idx.entries
 	data := p.packParser.Bytes()
-	for i := range *entries {
-		objects[i] = parseEntry(&data, i, idx, &objects)
+	for i := range entries {
+		objects[i] = parseEntry(&data, i, idx, objects)
 	}
 	return &Pack{
 		PackVersion,
@@ -201,16 +236,16 @@ func (p *packIdxParser) parsePack() *Pack {
 	}
 }
 
-func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObject) (object *packedObject) {
-	entries := idx.entries
-	objects := *packedObjects
-	data := *packedData
-	v := entries[i]
-	absoluteCursor := int(v.offset) - 12 //pack signature + pack version + count = 12 bytes
+func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*packedObject) (object *packedObject) {
+	//TODO: break this function up... or at least segment it more clearly
 	if len(objects) > i && objects[i] != nil {
 		//sometimes (for ref delta objects) we jump ahead in the []byte
 		return objects[i]
 	}
+	entries := idx.entries
+	data := *packedData
+	v := entries[i]
+	absoluteCursor := int(v.offset) - 12 //pack signature + pack version + count = 12 bytes
 	var (
 		size int64
 		err  error
@@ -218,7 +253,7 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObj
 	// keep track of bytes read so that, in conjunction with the next entry's offset, we can know where the next
 	// object in the pack begins.
 	relativeCursor := 0
-	headerHeader := data[absoluteCursor+relativeCursor]
+	headerHeader := data[absoluteCursor]
 	relativeCursor++
 	typeBits := (headerHeader & 127) >> 4
 	sizeBits := (headerHeader & 15)
@@ -239,7 +274,6 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObj
 		bytes = data[absoluteCursor+relativeCursor : absoluteCursor+n]
 		relativeCursor = n
 	} else {
-		//todo: limited reading so we don't gOOM
 		bytes = data[absoluteCursor+relativeCursor:]
 		absoluteCursor = len(data)
 	}
@@ -273,7 +307,7 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObj
 				v.offset+offset, v.offset, idx.entries[i].offset)
 		}
 		if objects[objectIndex] == nil {
-			objects[objectIndex] = parseEntry(packedData, objectIndex, idx, packedObjects)
+			objects[objectIndex] = parseEntry(packedData, objectIndex, idx, objects)
 			if objects[objectIndex] == nil {
 				panicErrf("Ref deltas not yet implemented!")
 			}
@@ -288,7 +322,7 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, packedObjects *[]*packedObj
 	return
 }
 
-func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size int64) (object *packedObject) {
+func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size int64) (po *packedObject) {
 	var (
 		dp  *packedObjectParser
 		err error
@@ -298,13 +332,13 @@ func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size
 	}
 	switch pot {
 	case BLOB:
-		object = dp.parseBlob(size)
+		po = dp.parseBlob(size)
 	case COMMIT:
-		object = dp.parseCommit(size)
+		po = dp.parseCommit(size)
 	case TREE:
-		object = dp.parseTree(size)
+		po = dp.parseTree(size)
 	case TAG:
-		object = dp.parseTag(size)
+		po = dp.parseTag(size)
 	}
 	return
 }
@@ -412,27 +446,19 @@ func (p *objectParser) readByteAsInt() int64 {
 func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (object *packedObject) {
 	p := dp.objectParser
 
-	readByte := func() (int64, byte, bool) {
-		return p.Count(), p.ReadByte(), true
-	}
+	baseSize := p.parseIntWhileMSB()
+	outputSize := p.parseIntWhileMSB()
 
-	baseSize := parseIntWhileMSB(readByte)
-	outputSize := parseIntWhileMSB(readByte)
+	src := *base.bytes
 
-	src := base.bytes
-
-	if int(baseSize) != len(*src) {
-		s := ""
-		for _, b := range *src {
-			s += fmt.Sprintf("%08b ", b)
-		}
-		panicErrf("Expected size of base object is %d, but actual size is %d: %s", baseSize, len(*src), s)
+	if int(baseSize) != len(src) {
+		panicErrf("Expected size of base object is %d, but actual size is %d")
 	}
 
 	out := make([]byte, 0)
 	var appended int64
 	cmd := p.ReadByte()
-	for appended = int64(0); appended < outputSize; {
+	for {
 		if cmd == 0 {
 			panicErrf("Invalid delta! Byte 0 is not a supported delta code.")
 		}
@@ -441,7 +467,7 @@ func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (obje
 			//copy from base to output
 			offset, len = dp.parseCopyCmd(cmd)
 			for i := offset; i < offset+len; i++ {
-				out = append(out, (*src)[i])
+				out = append(out, (src)[i])
 			}
 			if offset+len > baseSize {
 				panicErrf("Bad delta - references byte %d of a %d-byte source", offset+len, baseSize)
@@ -457,6 +483,8 @@ func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (obje
 		appended += len
 		if appended < outputSize {
 			cmd = p.ReadByte()
+		} else {
+			break
 		}
 	}
 	if appended != outputSize {
@@ -525,10 +553,10 @@ func (dp *packedObjectParser) parseCopyCmd(cmd byte) (offset int64, len int64) {
 // size and output size. The function is named after the decoding mechanism:
 // bytes are read and computed until a byte is found whose most significant
 // bit is not set.
-func parseIntWhileMSB(readByte func() (int64, byte, bool)) (i int64) {
+func (p *objectParser) parseIntWhileMSB() (i int64) {
 	n := 0
 	for {
-		_, v, _ := readByte()
+		v := p.ReadByte()
 		i |= (int64(v&127) << (uint(n) * 7))
 		if !isSetMSB(v) {
 			break

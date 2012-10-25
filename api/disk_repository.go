@@ -163,46 +163,46 @@ func (r *DiskRepository) VerifyPackedObjects() (oids []*PackedObjectId, objects 
 	return oids, objects, err
 }
 
+func packName(fileName string) string {
+	return fileName[5 : len(fileName)-4]
+}
+
 //extract object ids from a pack file. also extract objects if everything is true.
 func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, objects []Object, err error) {
 	objectsRoot := path.Join(r.path, DefaultObjectsDir)
 	packRoot := path.Join(objectsRoot, DefaultPackDir)
 	packNames := make([]string, 0)
 	if err = filepath.Walk(packRoot, func(path string, info os.FileInfo, ignored error) error {
-		if path[len(path)-3:] == "idx" {
+		if strings.HasSuffix(path, "idx") {
 			name := info.Name()
-			packNames = append(packNames, name[5:len(name)-4])
+			packNames = append(packNames, packName(name))
 		}
 		return nil
 	}); err != nil {
 		return
 	}
-	oids = make([]*PackedObjectId, 0)
-	objects = make([]Object, 0)
 	for i := range packNames {
-		idxFile, _ := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".idx"))
-		packFile, _ := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".pack"))
-		pp := packIdxParser{
-			idxParser: objectIdParser{
-				dataParser{
-					buf: bufio.NewReader(idxFile),
-				},
-			},
-			packParser: dataParser{
-				buf: bufio.NewReader(packFile),
-			},
-			name: packNames[i],
+		idxFile, e := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".idx"))
+		if e != nil {
+			return nil, nil, e
 		}
+		packFile, e := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".pack"))
+		if e != nil {
+			return nil, nil, e
+		}
+		pp := newPackIdxParser(bufio.NewReader(idxFile), bufio.NewReader(packFile), packNames[i])
 		if everything {
 			pack := pp.parsePack()
-			for _, v := range pack.content {
+			oids = make([]*PackedObjectId, pack.Idx.count)
+			objects = make([]Object, len(pack.content))
+			for i, v := range pack.content {
 				object := v.Object
-				objects = append(objects, object)
-				oids = append(oids, pack.Idx.entriesById[object.ObjectId().repr])
+				objects[i] = object
+				oids[i] = pack.Idx.entriesById[object.ObjectId().repr]
 			}
 		} else {
 			idx := pp.parseIdx()
-			oids = append(oids, idx.entries...)
+			oids = idx.entries
 		}
 	}
 	return
