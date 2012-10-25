@@ -59,7 +59,10 @@ func (p *objectParser) ParseHeader() (*objectHeader, error) {
 		p.ConsumeByte(SP)
 		p.hdr.size = p.ParseAtoi(NUL)
 	})
-	return p.hdr, err
+	if err != nil {
+		return nil, err
+	}
+	return p.hdr, nil
 }
 
 func (p *objectParser) ParsePayload() (Object, error) {
