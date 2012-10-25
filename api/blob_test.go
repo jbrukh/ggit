@@ -54,7 +54,7 @@ func Test_parseValidBlob(t *testing.T) {
 
 func Test_parseInvalidBlobHeader(t *testing.T) {
 	test := func(badBlob string) {
-		p := objectParserForString("notblob 100\000haha")
+		p := objectParserForString(badBlob)
 		hdr, e := p.ParseHeader()
 		util.Assert(t, e != nil)
 		util.Assert(t, hdr == nil)
@@ -64,4 +64,13 @@ func Test_parseInvalidBlobHeader(t *testing.T) {
 	test("100\000hehe")
 	test("bad \000hoho")
 	test("no header at all")
+}
+
+func Test_parseBlobBadSize(t *testing.T) {
+	/*test := func(badBlob string) {
+		p := objectParserForString("")
+		hdr, e := p.ParseHeader()
+		util.Assert(t, e != nil)
+		util.Assert(t, hdr == nil)
+	}*/
 }
