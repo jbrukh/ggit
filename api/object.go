@@ -11,7 +11,7 @@ package api
 // information for an object.
 type ObjectHeader interface {
 	Type() ObjectType
-	Size() int
+	Size() int64
 }
 
 // Object represents a generic git object: a blob, a tree,

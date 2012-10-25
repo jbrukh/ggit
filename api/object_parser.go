@@ -19,14 +19,14 @@ import (
 // version of a git object header
 type objectHeader struct {
 	otype ObjectType
-	size  int
+	size  int64
 }
 
 func (h *objectHeader) Type() ObjectType {
 	return h.otype
 }
 
-func (h *objectHeader) Size() int {
+func (h *objectHeader) Size() int64 {
 	return h.size
 }
 

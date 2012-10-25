@@ -312,7 +312,7 @@ func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size
 func (dp *packedObjectParser) parseCommit(size int64) *packedObject {
 	dp.hdr = &objectHeader{
 		ObjectCommit,
-		int(size),
+		size,
 	}
 	commit := dp.objectParser.parseCommit()
 
@@ -324,7 +324,7 @@ func (dp *packedObjectParser) parseCommit(size int64) *packedObject {
 func (dp *packedObjectParser) parseTag(size int64) *packedObject {
 	dp.hdr = &objectHeader{
 		ObjectTag,
-		int(size),
+		size,
 	}
 	tag := dp.objectParser.parseTag()
 	return &packedObject{
@@ -339,7 +339,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *packedObject {
 	blob.oid = dp.objectParser.oid
 	blob.hdr = &objectHeader{
 		ObjectBlob,
-		int(size),
+		size,
 	}
 	return &packedObject{
 		blob,
@@ -350,7 +350,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *packedObject {
 func (dp *packedObjectParser) parseTree(size int64) *packedObject {
 	dp.hdr = &objectHeader{
 		ObjectTree,
-		int(size),
+		size,
 	}
 	tree := dp.objectParser.parseTree()
 	return &packedObject{
@@ -412,7 +412,7 @@ func (p *objectParser) readByteAsInt() int64 {
 func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (object *packedObject) {
 	p := dp.objectParser
 
-	readByte := func() (int, byte, bool) {
+	readByte := func() (int64, byte, bool) {
 		return p.Count(), p.ReadByte(), true
 	}
 
@@ -469,7 +469,7 @@ func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (obje
 	outputParser := newObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
 	outputParser.hdr = &objectHeader{
 		outputType,
-		int(outputSize),
+		outputSize,
 	}
 	var obj Object
 	switch outputType {
@@ -525,7 +525,7 @@ func (dp *packedObjectParser) parseCopyCmd(cmd byte) (offset int64, len int64) {
 // size and output size. The function is named after the decoding mechanism:
 // bytes are read and computed until a byte is found whose most significant
 // bit is not set.
-func parseIntWhileMSB(readByte func() (int, byte, bool)) (i int64) {
+func parseIntWhileMSB(readByte func() (int64, byte, bool)) (i int64) {
 	n := 0
 	for {
 		_, v, _ := readByte()

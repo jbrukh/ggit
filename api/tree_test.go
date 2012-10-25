@@ -110,7 +110,7 @@ func parseAndCompareTree(t *testing.T, repo Repository, treeRepr string) {
 
 	hdr := o.Header()
 	util.Assert(t, hdr.Type() == ObjectTree)
-	util.Assert(t, hdr.Size() == int(size))
+	util.Assert(t, hdr.Size() == size)
 
 	tree := o.(*Tree)
 	entries := tree.Entries()

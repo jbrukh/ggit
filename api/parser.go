@@ -58,7 +58,7 @@ func panicErrf(format string, items ...interface{}) {
 
 type dataParser struct {
 	buf   *bufio.Reader
-	count int
+	count int64
 }
 
 // safeParse allows you to call a number of parsing functions on your
@@ -86,7 +86,7 @@ func (p *dataParser) consume(n int) []byte {
 	if rd, e := p.buf.Read(b); e != nil || rd != n {
 		panicErrf("expected: %d byte(s), read %d, values %x", n, rd, b[0:rd])
 	}
-	p.count += n
+	p.count += int64(n)
 	return b
 }
 
@@ -103,7 +103,7 @@ func (p *dataParser) consumeUntil(delim byte) []byte {
 	if e != nil {
 		panicErrf("expected delimiter: %v", delim)
 	}
-	p.count += len(b)
+	p.count += int64(len(b))
 	return trimLastByte(b)
 }
 
@@ -115,7 +115,7 @@ func (p *dataParser) ResetCount() {
 // Count returns the number of bytes read since
 // the parser was initialized or ResetCount() was
 // called, whichever came last.
-func (p *dataParser) Count() int {
+func (p *dataParser) Count() int64 {
 	return p.count
 }
 
@@ -242,7 +242,7 @@ func (p *dataParser) Bytes() []byte {
 		panicErr(e.Error())
 	}
 	bts := b.Bytes()
-	p.count += len(bts)
+	p.count += int64(len(bts))
 	return bts
 }
 
@@ -259,8 +259,8 @@ func parseInt(str string, base int, bitSize int) (i64 int64) {
 }
 
 // TODO: this should be smarter than delimiter
-func (p *dataParser) ParseAtoi(delim byte) (n int) {
-	return int(p.ParseInt(delim, 10, 0))
+func (p *dataParser) ParseAtoi(delim byte) (n int64) {
+	return p.ParseInt(delim, 10, 64)
 }
 
 // Returns the int64 represented by the next n bytes in network byte order (most significant first).

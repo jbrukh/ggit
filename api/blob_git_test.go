@@ -66,7 +66,7 @@ func Test_readBlobs(t *testing.T) {
 		util.Assert(t, o.Header().Type() == ObjectBlob)
 		b := o.(*Blob)
 		util.AssertEqualString(t, b.String(), contents)
-		util.AssertEqualInt(t, b.Header().Size(), len(contents))
+		util.AssertEqualInt(t, int(b.Header().Size()), len(contents))
 	}
 
 }
