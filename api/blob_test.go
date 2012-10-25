@@ -63,4 +63,5 @@ func Test_parseInvalidBlobHeader(t *testing.T) {
 	test("bl0b 10\000est")
 	test("100\000hehe")
 	test("bad \000hoho")
+	test("no header at all")
 }
