@@ -66,18 +66,6 @@ func abs(x int) int {
 	return x
 }
 
-// The file mode of a tree entry implies an object type.
-func deduceObjectType(mode FileMode) ObjectType {
-	switch mode {
-	case ModeNew, ModeBlob, ModeBlobExec:
-		return ObjectBlob
-	case ModeTree:
-		return ObjectTree
-	}
-	// TODO
-	panic("unknown mode")
-}
-
 // ================================================================= //
 // HELPERS
 // ================================================================= //
