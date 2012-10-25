@@ -59,6 +59,10 @@ func (e *TreeEntry) String() (s string) {
 // PARSING
 // ================================================================= //
 
+// parseTree performs the parsing of binary data into a Tree
+// object, or panics with panicErr if there is a problem parsing.
+// For this reason, it should be called as a parameter to
+// safeParse().
 func (p *objectParser) parseTree() *Tree {
 	t := &Tree{
 		entries: make([]*TreeEntry, 0), // TODO
@@ -68,7 +72,7 @@ func (p *objectParser) parseTree() *Tree {
 	for !p.EOF() {
 		mode := p.ParseFileMode(SP)
 		name := p.ReadString(NUL)
-		oid := p.ParseObjectIdBytes()
+		oid := p.ParseOidBytes()
 		entry := &TreeEntry{
 			mode:  mode,
 			otype: deduceObjectType(mode),
@@ -100,6 +104,8 @@ func deduceObjectType(mode FileMode) ObjectType {
 // FORMATTING
 // ================================================================= //
 
+// Tree formats this tree object into a standard table that
+// is the same as the output of git-cat-file -p <tree>.
 func (f *Format) Tree(t *Tree) (int, error) {
 	N := 0
 	for _, e := range t.entries {

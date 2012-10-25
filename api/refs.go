@@ -229,7 +229,7 @@ func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 				// this means the previous line is an annotated tag and the the current
 				// line contains the commit that tag points to
 				p.ConsumeByte('^')
-				commit := p.ParseObjectId()
+				commit := p.ParseOid()
 				p.ConsumeByte(LF)
 
 				if l := len(r); l > 0 {
@@ -237,7 +237,7 @@ func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 				}
 			default:
 				re := new(ref)
-				re.oid = p.ParseObjectId()
+				re.oid = p.ParseOid()
 				p.ConsumeByte(SP)
 				re.name = p.ReadString(LF)
 
@@ -257,7 +257,7 @@ func (p *refParser) parseRef() (r Ref, err error) {
 			spec := p.ReadString(LF)
 			r = &ref{name: p.name, spec: spec}
 		} else {
-			oid := p.ParseObjectId()
+			oid := p.ParseOid()
 			p.ConsumeByte(LF)
 			r = &ref{name: p.name, oid: oid}
 		}

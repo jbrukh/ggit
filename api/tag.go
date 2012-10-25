@@ -56,7 +56,7 @@ func (p *objectParser) parseTag() *Tag {
 	// read the object id
 	p.ConsumeString(markerObject)
 	p.ConsumeByte(SP)
-	tag.object = p.ParseObjectId()
+	tag.object = p.ParseOid()
 	p.ConsumeByte(LF)
 
 	// read object type

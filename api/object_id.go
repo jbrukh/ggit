@@ -100,9 +100,9 @@ type objectIdParser struct {
 	dataParser
 }
 
-// ParseObjectId reads the next OidHexSize bytes from the
+// ParseOid reads the next OidHexSize bytes from the
 // Reader and places the resulting object id in oid.
-func (p *objectIdParser) ParseObjectId() *ObjectId {
+func (p *objectIdParser) ParseOid() *ObjectId {
 	hex := string(p.consume(OidHexSize))
 	oid, e := OidFromString(hex)
 	if e != nil {
@@ -111,7 +111,9 @@ func (p *objectIdParser) ParseObjectId() *ObjectId {
 	return oid
 }
 
-func (p *objectIdParser) ParseObjectIdBytes() *ObjectId {
+// ParseOidBytes reads the next OidSize bytes from
+// the Reader and generates an ObjectId.
+func (p *objectIdParser) ParseOidBytes() *ObjectId {
 	b := p.consume(OidSize)
 	oid, e := OidFromBytes(b)
 	if e != nil {

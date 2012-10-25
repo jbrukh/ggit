@@ -64,7 +64,7 @@ func (p *objectParser) parseCommit() *Commit {
 	// read the tree line
 	p.ConsumeString(markerTree)
 	p.ConsumeByte(SP)
-	c.tree = p.ParseObjectId()
+	c.tree = p.ParseOid()
 	p.ConsumeByte(LF)
 
 	// read an arbitrary number of parent lines
@@ -72,7 +72,7 @@ func (p *objectParser) parseCommit() *Commit {
 	for p.PeekString(n) == markerParent {
 		p.ConsumeString(markerParent)
 		p.ConsumeByte(SP)
-		c.addParent(p.ParseObjectId())
+		c.addParent(p.ParseOid())
 		p.ConsumeByte(LF)
 	}
 
