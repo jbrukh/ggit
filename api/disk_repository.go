@@ -55,7 +55,13 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 		rz io.ReadCloser
 	)
 	if f, e = repo.objectFile(oid); e != nil {
-		if !os.IsExist(e) {
+		if os.IsNotExist(e) {
+			if err := repo.loadPacks(); err != nil {
+				return nil, err
+			}
+			if obj := unpack(repo.packs, oid); obj != nil {
+				return obj, nil
+			}
 		}
 		return nil, e
 	}
@@ -159,7 +165,7 @@ func (r *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
 	return objectIdsFromPacks(r.packs), nil
 }
 
-func (r *DiskRepository) PackedObjects() ([]Object, error) {
+func (r *DiskRepository) PackedObjects() ([]*PackedObject, error) {
 	if err := r.loadPacks(); err != nil {
 		return nil, err
 	}

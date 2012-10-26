@@ -27,9 +27,10 @@ const (
 	ObjectRefDelta    PackedObjectType = 7
 )
 
-type packedObject struct {
+type PackedObject struct {
 	Object
-	bytes []byte
+	bytes   []byte
+	DeltaOf *ObjectId
 }
 
 type Pack struct {
@@ -37,7 +38,7 @@ type Pack struct {
 	// generates version 2 only.
 	version int32
 	// the unpacked objects sorted by offset
-	content []*packedObject
+	content []*PackedObject
 	idx     *Idx
 	name    string
 }
@@ -62,6 +63,15 @@ type PackedObjectId struct {
 	offset int64
 	crc32  int64
 	index  int
+}
+
+func unpack(packs []*Pack, oid *ObjectId) Object {
+	for _, pack := range packs {
+		if obj := pack.unpack(oid); obj != nil {
+			return obj
+		}
+	}
+	return nil
 }
 
 // Return the Object in this pack with the given ObjectId,
@@ -94,16 +104,16 @@ func objectIdsFromPacks(packs []*Pack) (ids []*ObjectId) {
 	return ids
 }
 
-func objectsFromPacks(packs []*Pack) (objects []Object) {
+func objectsFromPacks(packs []*Pack) (objects []*PackedObject) {
 	var count int64
 	for _, pack := range packs {
 		count += pack.idx.count
 	}
-	objects = make([]Object, count, count)
+	objects = make([]*PackedObject, count, count)
 	i := 0
 	for _, pack := range packs {
 		for _, entry := range pack.content {
-			objects[i] = entry.Object
+			objects[i] = entry
 			i++
 		}
 	}
@@ -250,7 +260,7 @@ func newPackedObjectParser(data *[]byte, oid *ObjectId) (p *packedObjectParser, 
 
 func (p *packIdxParser) parsePack() *Pack {
 	idx := p.parseIdx()
-	objects := make([]*packedObject, idx.count)
+	objects := make([]*PackedObject, idx.count)
 	p.packParser.ConsumeString(PackSignature)
 	p.packParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
 	count := p.packParser.ParseIntBigEndian(4)
@@ -270,7 +280,7 @@ func (p *packIdxParser) parsePack() *Pack {
 	}
 }
 
-func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*packedObject) (object *packedObject) {
+func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*PackedObject) (obj *PackedObject) {
 	//TODO: break this function up... or at least segment it more clearly
 	if len(objects) > i && objects[i] != nil {
 		//sometimes (for ref delta objects) we jump ahead in the []byte
@@ -286,7 +296,7 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*packedObject) (o
 	)
 	// keep track of bytes read so that, in conjunction with the next entry's offset, we can know where the next
 	// object in the pack begins.
-	relativeCursor := 0
+	var relativeCursor int
 	headerHeader := data[absoluteCursor]
 	relativeCursor++
 	typeBits := (headerHeader & 127) >> 4
@@ -314,11 +324,11 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*packedObject) (o
 	absoluteCursor += relativeCursor
 	switch {
 	case pot == PackedBlob || pot == PackedCommit || pot == PackedTree || pot == PackedTag:
-		object = parseNonDeltaEntry(&bytes, pot, &v.ObjectId, size)
+		obj = parseNonDeltaEntry(&bytes, pot, &v.ObjectId, size)
 	default:
 		var (
 			deltaDeflated packedDelta
-			base          *packedObject
+			base          *PackedObject
 			offset        int64
 			dp            *packedObjectParser
 		)
@@ -351,12 +361,12 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*packedObject) (o
 		if dp, err = newPackedObjectParser(&bytes, &v.ObjectId); err != nil {
 			panicErr(err.Error())
 		}
-		object = dp.parseDelta(base, &v.ObjectId)
+		obj = dp.parseDelta(base, &v.ObjectId)
 	}
 	return
 }
 
-func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size int64) (po *packedObject) {
+func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size int64) (po *PackedObject) {
 	var (
 		dp  *packedObjectParser
 		err error
@@ -377,31 +387,33 @@ func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size
 	return
 }
 
-func (dp *packedObjectParser) parseCommit(size int64) *packedObject {
+func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 	dp.hdr = &objectHeader{
 		ObjectCommit,
 		size,
 	}
 	commit := dp.objectParser.parseCommit()
 
-	return &packedObject{
+	return &PackedObject{
 		commit,
 		dp.bytes,
+		nil,
 	}
 }
-func (dp *packedObjectParser) parseTag(size int64) *packedObject {
+func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 	dp.hdr = &objectHeader{
 		ObjectTag,
 		size,
 	}
 	tag := dp.objectParser.parseTag()
-	return &packedObject{
+	return &PackedObject{
 		tag,
 		dp.bytes,
+		nil,
 	}
 }
 
-func (dp *packedObjectParser) parseBlob(size int64) *packedObject {
+func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 	blob := new(Blob)
 	blob.data = dp.Bytes()
 	blob.oid = dp.objectParser.oid
@@ -409,21 +421,23 @@ func (dp *packedObjectParser) parseBlob(size int64) *packedObject {
 		ObjectBlob,
 		size,
 	}
-	return &packedObject{
+	return &PackedObject{
 		blob,
 		blob.data,
+		nil,
 	}
 }
 
-func (dp *packedObjectParser) parseTree(size int64) *packedObject {
+func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
 	dp.hdr = &objectHeader{
 		ObjectTree,
 		size,
 	}
 	tree := dp.objectParser.parseTree()
-	return &packedObject{
+	return &PackedObject{
 		tree,
 		dp.bytes,
+		nil,
 	}
 }
 
@@ -477,7 +491,7 @@ func (p *objectParser) readByteAsInt() int64 {
 	return int64(p.ReadByte())
 }
 
-func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (object *packedObject) {
+func (dp *packedObjectParser) parseDelta(base *PackedObject, id *ObjectId) (object *PackedObject) {
 	p := dp.objectParser
 
 	baseSize := p.parseIntWhileMSB()
@@ -544,9 +558,10 @@ func (dp *packedObjectParser) parseDelta(base *packedObject, id *ObjectId) (obje
 	case ObjectTag:
 		obj = outputParser.parseTag()
 	}
-	return &packedObject{
+	return &PackedObject{
 		obj,
 		out,
+		base.Object.ObjectId(),
 	}
 }
 

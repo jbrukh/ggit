@@ -39,6 +39,10 @@ func (b *VerifyPackedObjectsBuiltin) Execute(p *Params, args []string) {
 	}
 	for i := range objects {
 		object := objects[i]
-		fmt.Fprintln(p.Wout, object.ObjectId(), object.Header().Type())
+		base := ""
+		if oid := object.DeltaOf; oid != nil {
+			base = fmt.Sprintf("base %s", oid)
+		}
+		fmt.Fprintln(p.Wout, object.ObjectId(), object.Header().Type(), base)
 	}
 }
