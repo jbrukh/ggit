@@ -196,16 +196,16 @@ func (r *DiskRepository) loadPacks() (err error) {
 	}
 	packs := make([]*Pack, len(packNames), len(packNames))
 	for i, name := range packNames {
-		idxFile, e := os.Open(path.Join(packRoot, "pack-"+name+".idx"))
-		if e != nil {
+		if idxFile, e := os.Open(path.Join(packRoot, "pack-"+name+".idx")); e != nil {
 			return e
-		}
-		packFile, e := os.Open(path.Join(packRoot, "pack-"+name+".pack"))
-		if e != nil {
+		} else if packFile, e := os.Open(path.Join(packRoot, "pack-"+name+".pack")); e != nil {
+			defer idxFile.Close()
 			return e
+		} else {
+			defer packFile.Close()
+			pp := newPackIdxParser(bufio.NewReader(idxFile), bufio.NewReader(packFile), name)
+			packs[i] = pp.parsePack()
 		}
-		pp := newPackIdxParser(bufio.NewReader(idxFile), bufio.NewReader(packFile), name)
-		packs[i] = pp.parsePack()
 	}
 	r.packs = packs
 	return
