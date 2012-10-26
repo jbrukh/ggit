@@ -22,8 +22,9 @@ import (
 
 // a representation of a git repository
 type DiskRepository struct {
-	path string
-	pr   []Ref
+	path  string
+	packs []*Pack
+	pr    []Ref
 }
 
 // Open a reprository that is located at the given path. The
@@ -54,6 +55,8 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 		rz io.ReadCloser
 	)
 	if f, e = repo.objectFile(oid); e != nil {
+		if !os.IsExist(e) {
+		}
 		return nil, e
 	}
 	defer f.Close() // just in case
@@ -144,23 +147,23 @@ func (r *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, v := range lOids {
-		oids = append(oids, v)
-	}
-	for _, v := range pOids {
-		oids = append(oids, &(v.ObjectId))
-	}
+	oids = append(oids, lOids...)
+	oids = append(oids, pOids...)
 	return
 }
 
-func (r *DiskRepository) PackedObjectIds() (oids []*PackedObjectId, err error) {
-	oids, _, err = r.unpack(false)
-	return oids, err
+func (r *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
+	if err := r.loadPacks(); err != nil {
+		return nil, err
+	}
+	return objectIdsFromPacks(r.packs), nil
 }
 
-func (r *DiskRepository) VerifyPackedObjects() (oids []*PackedObjectId, objects []Object, err error) {
-	oids, objects, err = r.unpack(true)
-	return oids, objects, err
+func (r *DiskRepository) PackedObjects() ([]Object, error) {
+	if err := r.loadPacks(); err != nil {
+		return nil, err
+	}
+	return objectsFromPacks(r.packs), nil
 }
 
 func packName(fileName string) string {
@@ -168,7 +171,10 @@ func packName(fileName string) string {
 }
 
 //extract object ids from a pack file. also extract objects if everything is true.
-func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, objects []Object, err error) {
+func (r *DiskRepository) loadPacks() (err error) {
+	if r.packs != nil {
+		return
+	}
 	objectsRoot := path.Join(r.path, DefaultObjectsDir)
 	packRoot := path.Join(objectsRoot, DefaultPackDir)
 	packNames := make([]string, 0)
@@ -181,30 +187,20 @@ func (r *DiskRepository) unpack(everything bool) (oids []*PackedObjectId, object
 	}); err != nil {
 		return
 	}
-	for i := range packNames {
-		idxFile, e := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".idx"))
+	packs := make([]*Pack, len(packNames), len(packNames))
+	for i, name := range packNames {
+		idxFile, e := os.Open(path.Join(packRoot, "pack-"+name+".idx"))
 		if e != nil {
-			return nil, nil, e
+			return e
 		}
-		packFile, e := os.Open(path.Join(packRoot, "pack-"+packNames[i]+".pack"))
+		packFile, e := os.Open(path.Join(packRoot, "pack-"+name+".pack"))
 		if e != nil {
-			return nil, nil, e
+			return e
 		}
-		pp := newPackIdxParser(bufio.NewReader(idxFile), bufio.NewReader(packFile), packNames[i])
-		if everything {
-			pack := pp.parsePack()
-			oids = make([]*PackedObjectId, pack.Idx.count)
-			objects = make([]Object, len(pack.content))
-			for i, v := range pack.content {
-				object := v.Object
-				objects[i] = object
-				oids[i] = pack.Idx.entriesById[object.ObjectId().repr]
-			}
-		} else {
-			idx := pp.parseIdx()
-			oids = idx.entries
-		}
+		pp := newPackIdxParser(bufio.NewReader(idxFile), bufio.NewReader(packFile), name)
+		packs[i] = pp.parsePack()
 	}
+	r.packs = packs
 	return
 }
 

@@ -32,14 +32,13 @@ func (b *VerifyPackedObjectsBuiltin) Execute(p *Params, args []string) {
 		fmt.Fprintf(p.Werr, "verify-packed-objects applies only to DiskRepository; found: %s", t)
 		return
 	}
-	oids, objects, e := repo.VerifyPackedObjects()
+	objects, e := repo.PackedObjects()
 	if e != nil {
 		fmt.Fprintf(p.Werr, "Error: %s\n", e.Error())
 		return
 	}
-	for i := range oids {
-		oid := oids[i]
+	for i := range objects {
 		object := objects[i]
-		fmt.Fprintln(p.Wout, oid.String(), object.Header().Type())
+		fmt.Fprintln(p.Wout, object.ObjectId(), object.Header().Type())
 	}
 }

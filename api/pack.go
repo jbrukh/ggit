@@ -19,12 +19,12 @@ const (
 type PackedObjectType byte
 
 const (
-	COMMIT              PackedObjectType = 1
-	TREE                PackedObjectType = 2
-	BLOB                PackedObjectType = 3
-	TAG                 PackedObjectType = 4
-	OBJECT_OFFSET_DELTA PackedObjectType = 6
-	OBJECT_REF_DELTA    PackedObjectType = 7
+	PackedCommit      PackedObjectType = 1
+	PackedTree        PackedObjectType = 2
+	PackedBlob        PackedObjectType = 3
+	PackedTag         PackedObjectType = 4
+	ObjectOffsetDelta PackedObjectType = 6
+	ObjectRefDelta    PackedObjectType = 7
 )
 
 type packedObject struct {
@@ -38,7 +38,8 @@ type Pack struct {
 	version int32
 	// the unpacked objects sorted by offset
 	content []*packedObject
-	*Idx    //TODO: hide Idx, the Pack can expose index functionality itself.
+	idx     *Idx
+	name    string
 }
 
 type Idx struct {
@@ -65,8 +66,8 @@ type PackedObjectId struct {
 
 // Return the Object in this pack with the given ObjectId,
 // or nil if no such Object is in this pack.
-func (pack *Pack) Unpack(oid *ObjectId) Object {
-	entry := pack.Idx.entriesById[oid.String()]
+func (pack *Pack) unpack(oid *ObjectId) Object {
+	entry := pack.idx.entriesById[oid.String()]
 	if entry == nil {
 		return nil
 	}
@@ -75,6 +76,38 @@ func (pack *Pack) Unpack(oid *ObjectId) Object {
 		return nil
 	}
 	return pack.content[index].Object
+}
+
+func objectIdsFromPacks(packs []*Pack) (ids []*ObjectId) {
+	var count int64
+	for _, pack := range packs {
+		count += pack.idx.count
+	}
+	ids = make([]*ObjectId, count, count)
+	for _, pack := range packs {
+		i := 0
+		for _, id := range pack.idx.entries {
+			ids[i] = &id.ObjectId
+			i++
+		}
+	}
+	return ids
+}
+
+func objectsFromPacks(packs []*Pack) (objects []Object) {
+	var count int64
+	for _, pack := range packs {
+		count += pack.idx.count
+	}
+	objects = make([]Object, count, count)
+	i := 0
+	for _, pack := range packs {
+		for _, entry := range pack.content {
+			objects[i] = entry.Object
+			i++
+		}
+	}
+	return objects
 }
 
 // ================================================================= //
@@ -233,6 +266,7 @@ func (p *packIdxParser) parsePack() *Pack {
 		PackVersion,
 		objects,
 		idx,
+		p.name,
 	}
 }
 
@@ -279,7 +313,7 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*packedObject) (o
 	}
 	absoluteCursor += relativeCursor
 	switch {
-	case pot == BLOB || pot == COMMIT || pot == TREE || pot == TAG:
+	case pot == PackedBlob || pot == PackedCommit || pot == PackedTree || pot == PackedTag:
 		object = parseNonDeltaEntry(&bytes, pot, &v.ObjectId, size)
 	default:
 		var (
@@ -289,11 +323,11 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*packedObject) (o
 			dp            *packedObjectParser
 		)
 		switch pot {
-		case OBJECT_REF_DELTA:
+		case ObjectRefDelta:
 			var oid *ObjectId
 			deltaDeflated, oid = readPackedRefDelta(&bytes)
 			offset = idx.entriesById[oid.String()].offset
-		case OBJECT_OFFSET_DELTA:
+		case ObjectOffsetDelta:
 			if deltaDeflated, offset, err = readPackedOffsetDelta(&bytes); err != nil {
 				panicErrf("Err parsing size: %v. Could not determine size for %s", err, v.repr)
 			}
@@ -331,13 +365,13 @@ func parseNonDeltaEntry(bytes *[]byte, pot PackedObjectType, oid *ObjectId, size
 		panicErr(err.Error())
 	}
 	switch pot {
-	case BLOB:
+	case PackedBlob:
 		po = dp.parseBlob(size)
-	case COMMIT:
+	case PackedCommit:
 		po = dp.parseCommit(size)
-	case TREE:
+	case PackedTree:
 		po = dp.parseTree(size)
-	case TAG:
+	case PackedTag:
 		po = dp.parseTag(size)
 	}
 	return
