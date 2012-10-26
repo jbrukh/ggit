@@ -129,15 +129,15 @@ type packIdxParser struct {
 	name       string
 }
 
-func newPackIdxParser(idx io.Reader, pack io.Reader, name string) *packIdxParser {
+func newPackIdxParser(idx *bufio.Reader, pack *bufio.Reader, name string) *packIdxParser {
 	return &packIdxParser{
 		idxParser: objectIdParser{
 			dataParser{
-				buf: bufio.NewReader(idx),
+				buf: idx,
 			},
 		},
 		packParser: dataParser{
-			buf: bufio.NewReader(pack),
+			buf: pack,
 		},
 		name: name,
 	}
