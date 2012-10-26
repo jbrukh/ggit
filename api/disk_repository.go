@@ -60,7 +60,7 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 			if err := repo.loadPacks(); err != nil {
 				return nil, err
 			}
-			if obj := unpack(repo.packs, oid); obj != nil {
+			if obj, ok := unpack(repo.packs, oid); ok {
 				return obj, nil
 			}
 		}

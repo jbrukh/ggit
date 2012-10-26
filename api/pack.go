@@ -65,27 +65,26 @@ type PackedObjectId struct {
 	index  int
 }
 
-func unpack(packs []*Pack, oid *ObjectId) Object {
+func unpack(packs []*Pack, oid *ObjectId) (obj Object, ok bool) {
 	for _, pack := range packs {
-		if obj := pack.unpack(oid); obj != nil {
-			return obj
+		if obj, ok = pack.unpack(oid); ok {
+			return
 		}
 	}
-	return nil
+	return
 }
 
 // Return the Object in this pack with the given ObjectId,
 // or nil if no such Object is in this pack.
-func (pack *Pack) unpack(oid *ObjectId) Object {
-	entry := pack.idx.entriesById[oid.String()]
-	if entry == nil {
-		return nil
+func (pack *Pack) unpack(oid *ObjectId) (obj Object, ok bool) {
+	if entry := pack.idx.entriesById[oid.String()]; entry == nil {
+		ok = false
+	} else if index := entry.index; len(pack.content) <= index {
+		ok = false
+	} else {
+		obj = pack.content[index].Object
 	}
-	index := entry.index
-	if len(pack.content) <= index {
-		return nil
-	}
-	return pack.content[index].Object
+	return
 }
 
 func objectIdsFromPacks(packs []*Pack) (ids []*ObjectId) {
