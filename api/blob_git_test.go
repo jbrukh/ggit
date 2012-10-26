@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-var blobContents = []string{
+var testCasesBlobContents = []string{
 	`'Tis better to have loved and lost than never
 	to     have
 	lov3d
@@ -55,7 +55,7 @@ func Test_readBlobs(t *testing.T) {
 	ggrepo := Open(repo)
 
 	// hash the test objects
-	for _, contents := range blobContents {
+	for _, contents := range testCasesBlobContents {
 		oidStr, err := util.HashBlob(repo, contents)
 		util.AssertNoErr(t, err)
 		oid := OidNow(oidStr)

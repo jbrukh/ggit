@@ -41,7 +41,7 @@ func Test_parseCommit(t *testing.T) {
 		fmt.Println("error was: ", err.Error())
 	}
 	util.Assertf(t, err == nil, "failed due to error")
-	util.Assert(t, parsed != nil, "parsed is nul")
+	util.Assert(t, parsed != nil, "parsed is null")
 
 	c, ok := parsed.(*Commit)
 	util.Assert(t, ok)

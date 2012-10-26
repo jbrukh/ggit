@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+file_mode.go implements the git-supported file modes used mainly in trees.
+*/
 package api
 
 // ================================================================= //
