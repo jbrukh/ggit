@@ -12,6 +12,8 @@ alias gf="gofmt -tabs=false -tabwidth=4 -w *.go"
 # the most up-to-date ggit command
 alias gg="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
 
+alias build_ggit="go install ./... && go test ./..."
+alias bgg="build_ggit"
 
 # list some objects... this is slow, so use on small repos
 objects() {
