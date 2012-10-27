@@ -17,7 +17,7 @@ func main() {
 	// build the test case repos
 	err := util.CreateRepoTestCases()
 	defer func() {
-		fmt.Println("Removing test case repos.")
+		fmt.Println("\nRemoving test case repos.")
 		util.RemoveRepoTestCases()
 	}()
 	if err != nil {
@@ -26,6 +26,6 @@ func main() {
 	}
 	fmt.Println("Done.")
 
-	fmt.Println("Running tests...")
+	fmt.Println("Running tests...\n")
 	cmd.Run()
 }
