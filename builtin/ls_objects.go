@@ -8,35 +8,76 @@
 package builtin
 
 import (
+	"flag"
 	"fmt"
+	"github.com/jbrukh/ggit/api"
 )
-
-func init() {
-	// add to command list
-	Add(LsObjects)
-}
 
 type LsObjectsBuiltin struct {
 	HelpInfo
+	flag.FlagSet
+	flagLoose  bool
+	flagPacked bool
 }
 
 var LsObjects = &LsObjectsBuiltin{
 	HelpInfo: HelpInfo{
 		Name:        "ls-objects",
 		Description: "Provide a debug dump of all loose object ids", //TODO all object ids
-		UsageLine:   "",
+		UsageLine:   "[--loose] [--packed]",
 		ManPage:     "TODO",
 	},
 }
 
+func init() {
+	LsObjects.BoolVar(&LsObjects.flagLoose, "loose", false, "Print loose objects.")
+	LsObjects.BoolVar(&LsObjects.flagPacked, "packed", false, "Print packed objects.")
+	// add to command list
+	Add(LsObjects)
+}
+
 func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {
-	oids, e := p.Repo.ObjectIds()
+	b.Parse(args)
+	args = b.Args()
+
+	var (
+		diskRepo *api.DiskRepository
+		err      error
+	)
+
+	// make sure this is a disk repo
+	if b.flagLoose || b.flagPacked {
+		println("haha")
+		if diskRepo, err = api.AssertDiskRepo(p.Repo); err != nil {
+			fmt.Fprintf(p.Werr, err.Error())
+			return
+		}
+	}
+
+	var (
+		oids []*api.ObjectId
+		e    error
+	)
+	if b.flagLoose {
+		println("loose")
+		oids, e = diskRepo.LooseObjectIds()
+	} else if b.flagPacked {
+		println("packed")
+		oids, e = diskRepo.PackedObjectIds()
+	} else {
+		println("default")
+		oids, e = diskRepo.ObjectIds()
+	}
+
 	if e != nil {
 		fmt.Fprintf(p.Werr, "Error: %s\n", e.Error())
 		return
 	}
-	for i := range oids {
-		oid := oids[i]
+	printAll(p, oids)
+}
+
+func printAll(p *Params, oids []*api.ObjectId) {
+	for _, oid := range oids {
 		fmt.Fprintln(p.Wout, oid.String())
 	}
 }
