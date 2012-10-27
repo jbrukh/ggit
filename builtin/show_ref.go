@@ -87,7 +87,7 @@ func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
 	}
 
 	if b.flagHelp {
-		b.Usage(p.Wout)
+		b.WriteUsage(p.Wout)
 		return
 	}
 

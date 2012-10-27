@@ -44,7 +44,7 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 	args = CatFile.flags.Args()
 
 	if len(args) != 1 {
-		b.HelpInfo.Usage(p.Werr)
+		b.HelpInfo.WriteUsage(p.Werr)
 		return
 	}
 	id := args[0]
@@ -63,7 +63,7 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 	case b.flagShowSize:
 		fmt.Fprintln(p.Wout, o.Header().Size())
 	default:
-		b.HelpInfo.Usage(p.Werr)
+		b.HelpInfo.WriteUsage(p.Werr)
 		return
 	}
 }

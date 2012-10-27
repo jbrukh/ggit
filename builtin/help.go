@@ -31,13 +31,13 @@ var Help = &HelpBuiltin{
 
 func (b *HelpBuiltin) Execute(p *Params, args []string) {
 	if len(args) < 1 {
-		b.Usage(p.Werr)
+		b.WriteUsage(p.Werr)
 		return
 	}
 	name := args[0]
 	cmd, ok := Get(name)
 	if ok {
-		cmd.Info().Usage(p.Wout)
+		cmd.Info().WriteUsage(p.Wout)
 	} else {
 		fmt.Fprintf(p.Werr, "No manual entry for poop %s\n", name)
 	}

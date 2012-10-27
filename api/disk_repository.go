@@ -10,7 +10,6 @@ package api
 import (
 	"bufio"
 	"compress/zlib"
-	"errors"
 	"fmt"
 	"github.com/jbrukh/ggit/util"
 	"io"
@@ -323,20 +322,6 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 	}
 	sort.Sort(refByName(refList))
 	return refList, nil
-}
-
-// ================================================================= //
-// UTILITY METHODS
-// ================================================================= //
-
-// AssertDiskRepo returns the DiskRepository if this is a DiskRepository,
-// and an error otherwise.
-func AssertDiskRepo(repo Repository) (*DiskRepository, error) {
-	switch r := repo.(type) {
-	case *DiskRepository:
-		return r, nil
-	}
-	return nil, errors.New("fatal: not a disk repository")
 }
 
 // ================================================================= //

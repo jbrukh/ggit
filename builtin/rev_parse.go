@@ -32,7 +32,7 @@ var RevParse = &RevParseBuiltin{
 
 func (b *RevParseBuiltin) Execute(p *Params, args []string) {
 	if len(args) != 1 {
-		b.Usage(p.Werr)
+		b.WriteUsage(p.Werr)
 		return
 	}
 	rev := args[0]

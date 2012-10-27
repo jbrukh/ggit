@@ -78,7 +78,7 @@ type HelpInfo struct {
 	ManPage string
 }
 
-func (info *HelpInfo) Usage(w io.Writer) {
+func (info *HelpInfo) WriteUsage(w io.Writer) {
 	// TODO: review
 	fmt.Fprintf(w, "usage: %s %s\n\n", info.Name, info.UsageLine)
 	fmt.Fprintf(w, "%s\n", strings.TrimSpace(info.ManPage))
