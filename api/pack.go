@@ -133,8 +133,8 @@ func objectIdsFromPacks(packs []*Pack) (ids []*ObjectId) {
 		count += pack.idx.count
 	}
 	ids = make([]*ObjectId, count, count)
+	i := 0
 	for _, pack := range packs {
-		i := 0
 		for _, id := range pack.idx.entries {
 			ids[i] = id.ObjectId
 			i++
