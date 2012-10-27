@@ -15,7 +15,7 @@ import (
 
 type CatFileBuiltin struct {
 	HelpInfo
-	flags           flag.FlagSet
+	flag.FlagSet
 	flagShowType    bool
 	flagShowSize    bool
 	flagPrettyPrint bool
@@ -31,17 +31,17 @@ var CatFile = &CatFileBuiltin{
 }
 
 func init() {
-	CatFile.flags.BoolVar(&CatFile.flagShowType, "t", false, "show object type")
-	CatFile.flags.BoolVar(&CatFile.flagPrettyPrint, "p", false, "pretty-print object's contents")
-	CatFile.flags.BoolVar(&CatFile.flagShowSize, "s", false, "show object size")
+	CatFile.BoolVar(&CatFile.flagShowType, "t", false, "show object type")
+	CatFile.BoolVar(&CatFile.flagPrettyPrint, "p", false, "pretty-print object's contents")
+	CatFile.BoolVar(&CatFile.flagShowSize, "s", false, "show object size")
 
 	// add to command list
 	Add(CatFile)
 }
 
 func (b *CatFileBuiltin) Execute(p *Params, args []string) {
-	CatFile.flags.Parse(args)
-	args = CatFile.flags.Args()
+	CatFile.Parse(args)
+	args = CatFile.Args()
 
 	if len(args) != 1 {
 		b.HelpInfo.WriteUsage(p.Werr)
