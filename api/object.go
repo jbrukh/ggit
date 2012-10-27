@@ -69,3 +69,17 @@ func ObjectFromRef(repo Repository, spec string) (Object, error) {
 	}
 	return repo.ObjectFromOid(ref.ObjectId())
 }
+
+// ObjectFromRevision takes a revision specification and obtains the
+// object that this revision specifies.
+func ObjectFromRevision(repo Repository, rev string) (Object, error) {
+	p := &revParser{
+		repo: repo,
+		rev:  rev,
+	}
+	e := p.revParse()
+	if e != nil {
+		return nil, e
+	}
+	return p.Object(), nil
+}

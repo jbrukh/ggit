@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+filter_test.go implements tests for filters.
+*/
 package api
 
 import (

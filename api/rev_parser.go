@@ -212,22 +212,6 @@ func (r *revParser) parseNumber() (int, error) {
 }
 
 // ================================================================= //
-// OPERATIONS
-// ================================================================= //
-
-func ObjectFromRevision(repo Repository, rev string) (Object, error) {
-	p := &revParser{
-		repo: repo,
-		rev:  rev,
-	}
-	e := p.revParse()
-	if e != nil {
-		return nil, e
-	}
-	return p.Object(), nil
-}
-
-// ================================================================= //
 // UTILITY METHODS
 // ================================================================= //
 

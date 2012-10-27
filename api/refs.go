@@ -145,7 +145,7 @@ func (f *Format) Deref(r Ref) (int, error) {
 // ================================================================= //
 
 func FilterRefs(refs []Ref, f Filter) []Ref {
-	r := make([]Ref, 0)
+	var r []Ref
 	for _, v := range refs {
 		if f(v) {
 			r = append(r, v)
