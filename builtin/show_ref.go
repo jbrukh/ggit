@@ -23,7 +23,7 @@ import (
 // as well as the packed refs file.
 type ShowRefBuiltin struct {
 	HelpInfo
-	flags     flag.FlagSet
+	flag.FlagSet
 	flagQuiet bool
 	flagWhich bool
 	flagHeads bool
@@ -47,15 +47,15 @@ var ShowRef = &ShowRefBuiltin{
 // ================================================================= //
 
 func init() {
-	ShowRef.flags.BoolVar(&ShowRef.flagQuiet, "q", false, "Do not print any results to stdout.")
-	ShowRef.flags.BoolVar(&ShowRef.flagWhich, "which", false, "Show which refs are loose and which are packed.")
-	ShowRef.flags.BoolVar(&ShowRef.flagHeads, "heads", false, "Show only heads.")
-	ShowRef.flags.BoolVar(&ShowRef.flagTags, "tags", false, "Show only tags.")
-	ShowRef.flags.BoolVar(&ShowRef.flagHelp, "help", false, "Show help.")
-	ShowRef.flags.BoolVar(&ShowRef.flagDeref, "d", false, "Dereference tags into object IDs as well.")
-	ShowRef.flags.BoolVar(&ShowRef.flagHead, "head", false, "Show the head reference.")
+	ShowRef.BoolVar(&ShowRef.flagQuiet, "q", false, "Do not print any results to stdout.")
+	ShowRef.BoolVar(&ShowRef.flagWhich, "which", false, "Show which refs are loose and which are packed.")
+	ShowRef.BoolVar(&ShowRef.flagHeads, "heads", false, "Show only heads.")
+	ShowRef.BoolVar(&ShowRef.flagTags, "tags", false, "Show only tags.")
+	ShowRef.BoolVar(&ShowRef.flagHelp, "help", false, "Show help.")
+	ShowRef.BoolVar(&ShowRef.flagDeref, "d", false, "Dereference tags into object IDs as well.")
+	ShowRef.BoolVar(&ShowRef.flagHead, "head", false, "Show the head reference.")
 
-	ShowRef.flags.Usage = func() {}
+	ShowRef.Usage = func() {}
 
 	// add to command list
 	Add(ShowRef)
@@ -78,8 +78,8 @@ var TagsFilter = api.FilterRefPrefix(prefixTags)
 // ================================================================= //
 
 func (b *ShowRefBuiltin) Execute(p *Params, args []string) {
-	b.flags.Parse(args)
-	args = b.flags.Args()
+	b.Parse(args)
+	args = b.Args()
 
 	if b.flagWhich {
 		b.Which(p)
