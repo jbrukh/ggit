@@ -8,6 +8,7 @@ import (
 	"io"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -59,30 +60,69 @@ type Idx struct {
 }
 
 type PackedObjectId struct {
-	ObjectId
+	*ObjectId
 	offset int64
 	crc32  int64
 	index  int
 }
 
-func unpack(packs []*Pack, oid *ObjectId) (obj Object, ok bool) {
-	for _, pack := range packs {
-		if obj, ok = pack.unpack(oid); ok {
-			return
+// Returns the one Object in this pack with the given ObjectId,
+// or nil, NoSuchObject if no such Object is in this pack.
+func (pack *Pack) unpack(oid *ObjectId) (obj Object, result packSearch) {
+	s := oid.String()
+	if entry := pack.idx.entriesById[s]; entry != nil {
+		obj, result = pack.content[entry.index].Object, OneSuchObject
+	}
+	return
+}
+
+type packSearch byte
+
+const (
+	NoSuchObject    packSearch = 0
+	OneSuchObject   packSearch = 1
+	MultipleObjects packSearch = 2
+)
+
+func (pack *Pack) unpackFromShortOid(short string) (obj Object, result packSearch) {
+	var already bool
+	for _, oid := range pack.idx.entries {
+		if s := oid.String(); strings.HasPrefix(s, short) {
+			if already {
+				return nil, MultipleObjects
+			}
+			obj, result = pack.unpack(oid.ObjectId)
+			already = true
 		}
 	}
 	return
 }
 
-// Return the Object in this pack with the given ObjectId,
-// or nil if no such Object is in this pack.
-func (pack *Pack) unpack(oid *ObjectId) (obj Object, ok bool) {
-	if entry := pack.idx.entriesById[oid.String()]; entry == nil {
-		ok = false
-	} else if index := entry.index; len(pack.content) <= index {
-		ok = false
-	} else {
-		obj = pack.content[index].Object
+// Returns the object for the given short oid, if exactly one such object exists.
+// Otherwise returns nil, false.
+func unpackFromShortOid(packs []*Pack, short string) (obj Object, ok bool) {
+	//this function could be O(1) if we... tried... hard enough. tried. get it?
+	//awwwwwwwwwwwwwwwww yeh
+	var already bool
+	for _, pack := range packs {
+		var result packSearch
+		if obj, result = pack.unpackFromShortOid(short); result != NoSuchObject {
+			if already || result == MultipleObjects {
+				return nil, false
+			}
+			already = true
+		}
+	}
+	return obj, already
+}
+
+func unpack(packs []*Pack, oid *ObjectId) (obj Object, ok bool) {
+	var result packSearch
+	for _, pack := range packs {
+		if obj, result = pack.unpack(oid); result == OneSuchObject {
+			//trust for now that there will only be one matching object among the packs.
+			return obj, true
+		}
 	}
 	return
 }
@@ -96,7 +136,7 @@ func objectIdsFromPacks(packs []*Pack) (ids []*ObjectId) {
 	for _, pack := range packs {
 		i := 0
 		for _, id := range pack.idx.entries {
-			ids[i] = &id.ObjectId
+			ids[i] = id.ObjectId
 			i++
 		}
 	}
@@ -185,7 +225,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 		b := p.idxParser.ReadNBytes(20)
 		representation := fmt.Sprintf("%x", b)
 		entries[i] = &PackedObjectId{
-			ObjectId: ObjectId{
+			ObjectId: &ObjectId{
 				b,
 				representation,
 			},
@@ -266,9 +306,8 @@ func (p *packIdxParser) parsePack() *Pack {
 	if count != idx.count {
 		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
 	}
-	entries := idx.entries
 	data := p.packParser.Bytes()
-	for i := range entries {
+	for i := range idx.entries {
 		objects[i] = parseEntry(&data, i, idx, objects)
 	}
 	return &Pack{
@@ -323,7 +362,7 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*PackedObject) (o
 	absoluteCursor += relativeCursor
 	switch {
 	case pot == PackedBlob || pot == PackedCommit || pot == PackedTree || pot == PackedTag:
-		obj = parseNonDeltaEntry(&bytes, pot, &v.ObjectId, size)
+		obj = parseNonDeltaEntry(&bytes, pot, v.ObjectId, size)
 	default:
 		var (
 			deltaDeflated packedDelta
@@ -357,10 +396,10 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*PackedObject) (o
 		}
 		base = objects[objectIndex]
 		bytes = *((*[]byte)(deltaDeflated))
-		if dp, err = newPackedObjectParser(&bytes, &v.ObjectId); err != nil {
+		if dp, err = newPackedObjectParser(&bytes, v.ObjectId); err != nil {
 			panicErr(err.Error())
 		}
-		obj = dp.parseDelta(base, &v.ObjectId)
+		obj = dp.parseDelta(base, v.ObjectId)
 	}
 	return
 }
@@ -621,4 +660,8 @@ func (p *objectParser) parseIntWhileMSB() (i int64) {
 //return true if the most significant bit is set, false otherwise
 func isSetMSB(b byte) bool {
 	return b > 127
+}
+
+func packName(fileName string) string {
+	return fileName[5 : len(fileName)-4]
 }

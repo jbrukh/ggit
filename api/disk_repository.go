@@ -110,6 +110,12 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 		return nil
 	})
 	if e != nil {
+		if os.IsNotExist(e) {
+			repo.loadPacks()
+			if obj, ok := unpackFromShortOid(repo.packs, short); ok {
+				return obj, nil
+			}
+		}
 		return nil, e
 	}
 	if len(matching) != 1 {
@@ -171,10 +177,6 @@ func (r *DiskRepository) PackedObjects() ([]*PackedObject, error) {
 		return nil, err
 	}
 	return objectsFromPacks(r.packs), nil
-}
-
-func packName(fileName string) string {
-	return fileName[5 : len(fileName)-4]
 }
 
 //extract object ids from a pack file. also extract objects if everything is true.
