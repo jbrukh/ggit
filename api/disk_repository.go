@@ -61,6 +61,7 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 				return nil, err
 			}
 			if obj, ok := unpack(repo.packs, oid); ok {
+				defer close(repo.packs)
 				return obj, nil
 			}
 		}
@@ -112,6 +113,7 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 	if e != nil {
 		if os.IsNotExist(e) {
 			repo.loadPacks()
+			defer close(repo.packs)
 			if obj, ok := unpackFromShortOid(repo.packs, short); ok {
 				return obj, nil
 			}
@@ -166,6 +168,7 @@ func (r *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
 }
 
 func (r *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
+	defer close(r.packs)
 	if err := r.loadPacks(); err != nil {
 		return nil, err
 	}
@@ -173,6 +176,7 @@ func (r *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
 }
 
 func (r *DiskRepository) PackedObjects() ([]*PackedObject, error) {
+	defer close(r.packs)
 	if err := r.loadPacks(); err != nil {
 		return nil, err
 	}
@@ -200,12 +204,11 @@ func (r *DiskRepository) loadPacks() (err error) {
 	for i, name := range packNames {
 		if idxFile, e := os.Open(path.Join(packRoot, "pack-"+name+".idx")); e != nil {
 			return e
-		} else if packFile, e := os.Open(path.Join(packRoot, "pack-"+name+".pack")); e != nil {
-			defer idxFile.Close()
-			return e
 		} else {
-			defer packFile.Close()
-			pp := newPackIdxParser(bufio.NewReader(idxFile), packFile, name)
+			open := func() (*os.File, error) {
+				return os.Open(path.Join(packRoot, "pack-"+name+".pack"))
+			}
+			pp := newPackIdxParser(bufio.NewReader(idxFile), opener(open), name)
 			packs[i] = pp.parsePack()
 		}
 	}

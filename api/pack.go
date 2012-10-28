@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/zlib"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -43,6 +44,8 @@ type Pack struct {
 	content []*PackedObject
 	idx     *Idx
 	name    string
+	opener  opener
+	file    *os.File
 }
 
 type Idx struct {
@@ -67,11 +70,47 @@ type PackedObjectId struct {
 	index  int
 }
 
+type opener func() (*os.File, error)
+
+func (pack *Pack) open() error {
+	if pack.file != nil {
+		//already open
+		return nil
+	}
+	if file, err := pack.opener(); err != nil {
+		return err
+	} else {
+		pack.file = file
+	}
+	return nil
+}
+
+func (pack *Pack) Close() error {
+	defer func() { pack.file = nil }()
+	return pack.file.Close()
+}
+
+func close(packs []*Pack) error {
+	var errs []string
+	for _, pack := range packs {
+		if err := pack.Close(); err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+	if len(errs) > 0 {
+		return errors.New(fmt.Sprintf("%x", errs))
+	}
+	return nil
+}
+
 // Returns the one Object in this pack with the given ObjectId,
 // or nil, NoSuchObject if no such Object is in this pack.
 func (pack *Pack) unpack(oid *ObjectId) (obj Object, result packSearch) {
 	s := oid.String()
 	if entry := pack.idx.entriesById[s]; entry != nil {
+		if pack.content[entry.index] == nil {
+			pack.content[entry.index] = pack.parseEntry(entry.index)
+		}
 		obj, result = pack.content[entry.index].Object, OneSuchObject
 	}
 	return
@@ -152,8 +191,9 @@ func objectsFromPacks(packs []*Pack) (objects []*PackedObject) {
 	objects = make([]*PackedObject, count, count)
 	i := 0
 	for _, pack := range packs {
-		for _, entry := range pack.content {
-			objects[i] = entry
+		for j := range pack.idx.entries {
+			pack.content[j] = pack.parseEntry(j)
+			objects[i] = pack.content[j]
 			i++
 		}
 	}
@@ -168,21 +208,29 @@ type packIdxParser struct {
 	idxParser  objectIdParser
 	packParser dataParser
 	name       string
+	packOpener opener
 	packFile   *os.File
 }
 
-func newPackIdxParser(idx *bufio.Reader, pack *os.File, name string) *packIdxParser {
+func newPackIdxParser(idx *bufio.Reader, packOpener opener, name string) *packIdxParser {
+	file, err := packOpener()
+	if err != nil {
+		panicErrf("Could not open pack file %s: %s", name, err)
+	}
+	oidParser := objectIdParser{
+		dataParser{
+			buf: idx,
+		},
+	}
+	dataParser := dataParser{
+		buf: bufio.NewReader(file),
+	}
 	return &packIdxParser{
-		idxParser: objectIdParser{
-			dataParser{
-				buf: idx,
-			},
-		},
-		packParser: dataParser{
-			buf: bufio.NewReader(pack),
-		},
-		name:     name,
-		packFile: pack,
+		idxParser:  oidParser,
+		packParser: dataParser,
+		name:       name,
+		packOpener: packOpener,
+		packFile:   file,
 	}
 }
 
@@ -309,19 +357,22 @@ func (p *packIdxParser) parsePack() *Pack {
 	if count != idx.count {
 		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
 	}
-	for i := range idx.entries {
-		objects[i] = parseEntry(p.packFile, i, idx, objects)
-	}
 	return &Pack{
 		PackVersion,
 		objects,
 		idx,
 		p.name,
+		p.packOpener,
+		p.packFile,
 	}
 }
 
-func parseEntry(file *os.File, i int, idx *Idx, objects []*PackedObject) (obj *PackedObject) {
+func (pack *Pack) parseEntry(i int) (obj *PackedObject) {
 	//TODO: break this function up... or at least segment it more clearly
+	if pack.file == nil {
+		pack.open()
+	}
+	file, objects, idx := pack.file, pack.content, pack.idx
 	if len(objects) > i && objects[i] != nil {
 		//sometimes (for ref delta objects) we jump ahead in the []byte
 		return objects[i]
@@ -403,7 +454,7 @@ func parseEntry(file *os.File, i int, idx *Idx, objects []*PackedObject) (obj *P
 				v.offset+baseOffset, v.offset, idx.entries[i].offset)
 		}
 		if objects[objectIndex] == nil {
-			objects[objectIndex] = parseEntry(file, objectIndex, idx, objects)
+			objects[objectIndex] = pack.parseEntry(objectIndex)
 			if objects[objectIndex] == nil {
 				panicErrf("Ref deltas not yet implemented!")
 			}
