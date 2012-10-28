@@ -92,7 +92,7 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 	}
 
 	head, tail := short[:2], short[2:]
-	root := path.Join(DefaultGitDir, DefaultObjectsDir, head)
+	root := path.Join(repo.path, DefaultObjectsDir, head)
 	var matching []*ObjectId
 	e := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		// root doesn't exist, or there was a problem reading it

@@ -8,21 +8,25 @@
 package api
 
 import (
+	"fmt"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
 	"testing"
 )
 
+// this test implements basic blob reading from
+// a git repository.
 func Test_readBlobs(t *testing.T) {
 	testRepo := test.Blobs
 
-	// create a ggit repo
 	repo := Open(testRepo.Repo())
 	output := testRepo.Output().([]*test.OutputBlob)
 
-	// hash the test objects
-	for _, out := range output {
+	if len(output) < 1 {
+		fmt.Println("warning: no blobs to test")
+	}
 
+	for _, out := range output {
 		// read the blob
 		oid := OidNow(out.Oid)
 		o, err := repo.ObjectFromOid(oid)

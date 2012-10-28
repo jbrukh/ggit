@@ -15,11 +15,22 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jbrukh/ggit/util"
+	"strings"
 )
 
 // ================================================================= //
 // TEST CASE: A FEW LINEAR COMMITS
 // ================================================================= //
+
+type CommitAndParent struct {
+	Oid       string
+	ParentOid string
+}
+
+type OutputCommits struct {
+	Commits []*CommitAndParent
+	N       int
+}
 
 var Linear = NewRepoTestCase(
 	"__linear",
@@ -33,6 +44,10 @@ var Linear = NewRepoTestCase(
 			return errors.New("n must be > 0")
 		}
 		repo := testCase.repo
+		output := &OutputCommits{
+			Commits: make([]*CommitAndParent, n),
+			N:       n,
+		}
 		for i := 0; i < n; i++ {
 			name := fmt.Sprintf("%d.txt", i)
 			err = util.TestFile(repo, name, string(i))
@@ -48,7 +63,26 @@ var Linear = NewRepoTestCase(
 				return fmt.Errorf("could not commit to repo: %s", err)
 			}
 
+			// get the output data
+			var oid, parentOid string
+			oid = RevOid(repo, "HEAD")
+			if i != 0 {
+				parentOid = RevOid(repo, "HEAD~1")
+			}
+			output.Commits[i] = &CommitAndParent{
+				oid,
+				parentOid,
+			}
 		}
+		testCase.output = output
 		return
 	},
 )
+
+func RevOid(repo string, rev string) string {
+	oid, err := util.GitExec(repo, "rev-parse", rev)
+	if err != nil {
+		panic("can't get oid for: " + rev)
+	}
+	return strings.TrimSpace(oid)
+}

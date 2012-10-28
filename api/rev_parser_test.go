@@ -27,5 +27,4 @@ func Test_parseNumber(t *testing.T) {
 	test("^^", 1)
 	test("^1", 1)
 	test("^1001^1", 1001)
-
 }
