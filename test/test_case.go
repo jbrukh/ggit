@@ -12,9 +12,7 @@ test_case.go implements methods for building up test repos.
 package test
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 )
 
 const (
