@@ -53,6 +53,8 @@ func testParentlessCommit(t *testing.T, repo Repository, oid string) {
 	testCommit(t, repo, oid)
 	_, err := ObjectFromRevision(repo, oid+"~1")
 	util.Assert(t, err != nil)
+	_, err = ObjectFromRevision(repo, oid+"^")
+	util.Assert(t, err != nil)
 }
 
 func testCommit(t *testing.T, repo Repository, oid string) {

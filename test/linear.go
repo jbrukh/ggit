@@ -67,7 +67,7 @@ var Linear = NewRepoTestCase(
 			var oid, parentOid string
 			oid = RevOid(repo, "HEAD")
 			if i != 0 {
-				parentOid = RevOid(repo, "HEAD~1")
+				parentOid = RevOid(repo, "HEAD^")
 			}
 			output.Commits[i] = &CommitAndParent{
 				oid,
