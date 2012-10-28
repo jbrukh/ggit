@@ -11,4 +11,4 @@ package main
 // GGIT VERSION
 // ================================================================= //
 
-const Version = "0.0.0"
+const Version = "0.0.2"
