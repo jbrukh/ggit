@@ -40,10 +40,13 @@ func testShortOid(t *testing.T, repo Repository, oid string) {
 
 func testFirstParent(t *testing.T, repo Repository, oid string, parentOid string) {
 	testCommit(t, repo, oid)
-	parent, err := ObjectFromRevision(repo, oid+"^")
-	util.AssertNoErr(t, err)
-	util.Assert(t, parent.Header().Type() == ObjectCommit)
-	util.AssertEqualString(t, parent.ObjectId().String(), parentOid)
+
+	for i := 4; i <= 40; i++ {
+		parent, err := ObjectFromRevision(repo, oid[:i]+"^")
+		util.AssertNoErr(t, err)
+		util.Assert(t, parent.Header().Type() == ObjectCommit)
+		util.AssertEqualString(t, parent.ObjectId().String(), parentOid)
+	}
 }
 
 func testParentlessCommit(t *testing.T, repo Repository, oid string) {
