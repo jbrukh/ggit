@@ -66,7 +66,7 @@ func main() {
 			}
 			fmt.Println(dashP[:i])
 			fmt.Println(dashP[i:i+10], "\n", str[i:i+10])
-			fmt.Println("-=====---==-==")
+			fmt.Println("-----------------------")
 			fmt.Println(str)
 			os.Exit(2)
 		}

@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+util.go implements miscellaneous common functions.
+*/
 package util
 
 import (
