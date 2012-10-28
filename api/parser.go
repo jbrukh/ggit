@@ -10,6 +10,7 @@ package api
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"strconv"
@@ -265,6 +266,12 @@ func (p *dataParser) ParseAtoi(delim byte) (n int64) {
 
 // Returns the int64 represented by the next n bytes in network byte order (most significant first).
 func (p *dataParser) ParseIntBigEndian(n int) (i64 int64) {
+	switch {
+	case n == 4:
+		return int64(binary.BigEndian.Uint32(p.consume(4)))
+	case n == 8:
+		return int64(binary.BigEndian.Uint64(p.consume(8)))
+	}
 	bytes := p.consume(n)
 	value := fmt.Sprintf("%x", bytes)
 	return parseInt(value, 16, 64)
