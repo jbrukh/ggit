@@ -39,7 +39,6 @@ func Test_revParse__secondAncestor(t *testing.T) {
 
 	// test the first, parentless commit
 	for i, c := range output.Commits[2:] {
-		testShortOid(t, repo, c.Oid)
 		testSecondAncestor(t, repo, c.Oid, output.Commits[i].Oid)
 	}
 }
