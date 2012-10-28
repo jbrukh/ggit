@@ -6,6 +6,7 @@ import (
 	"compress/zlib"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -167,9 +168,10 @@ type packIdxParser struct {
 	idxParser  objectIdParser
 	packParser dataParser
 	name       string
+	packFile   *os.File
 }
 
-func newPackIdxParser(idx *bufio.Reader, pack *bufio.Reader, name string) *packIdxParser {
+func newPackIdxParser(idx *bufio.Reader, pack *os.File, name string) *packIdxParser {
 	return &packIdxParser{
 		idxParser: objectIdParser{
 			dataParser{
@@ -177,9 +179,10 @@ func newPackIdxParser(idx *bufio.Reader, pack *bufio.Reader, name string) *packI
 			},
 		},
 		packParser: dataParser{
-			buf: pack,
+			buf: bufio.NewReader(pack),
 		},
-		name: name,
+		name:     name,
+		packFile: pack,
 	}
 }
 
@@ -306,9 +309,8 @@ func (p *packIdxParser) parsePack() *Pack {
 	if count != idx.count {
 		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
 	}
-	data := p.packParser.Bytes()
 	for i := range idx.entries {
-		objects[i] = parseEntry(&data, i, idx, objects)
+		objects[i] = parseEntry(p.packFile, i, idx, objects)
 	}
 	return &Pack{
 		PackVersion,
@@ -318,32 +320,44 @@ func (p *packIdxParser) parsePack() *Pack {
 	}
 }
 
-func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*PackedObject) (obj *PackedObject) {
+func parseEntry(file *os.File, i int, idx *Idx, objects []*PackedObject) (obj *PackedObject) {
 	//TODO: break this function up... or at least segment it more clearly
 	if len(objects) > i && objects[i] != nil {
 		//sometimes (for ref delta objects) we jump ahead in the []byte
 		return objects[i]
 	}
 	entries := idx.entries
-	data := *packedData
 	v := entries[i]
-	absoluteCursor := int(v.offset) - 12 //pack signature + pack version + count = 12 bytes
+	var entryLen int64
+	if i+1 < len(entries) {
+		entryLen = entries[i+1].offset - v.offset
+	} else {
+		if info, err := file.Stat(); err != nil {
+			panicErrf("Could not determine size of pack file %s: %s", file.Name(), err)
+		} else {
+			entryLen = info.Size() - v.offset
+		}
+	}
+	data := make([]byte, entryLen, entryLen)
+	if _, err := file.ReadAt(data, v.offset); err != nil {
+		fmt.Printf("Could not read %d bytes from %d of pack file %s: %s", len(data), v.offset, file.Name(), err)
+	}
 	var (
 		size int64
 		err  error
 	)
 	// keep track of bytes read so that, in conjunction with the next entry's offset, we can know where the next
 	// object in the pack begins.
-	var relativeCursor int
-	headerHeader := data[absoluteCursor]
-	relativeCursor++
+	var cursor int
+	headerHeader := data[cursor]
+	cursor++
 	typeBits := (headerHeader & 127) >> 4
 	sizeBits := (headerHeader & 15)
 	//collect remaining size bytes, if any.
 	sizeBytes := fmt.Sprintf("%04b", sizeBits)
 	for s := headerHeader; isSetMSB(s); {
-		s = data[absoluteCursor+relativeCursor]
-		relativeCursor++
+		s = data[cursor]
+		cursor++
 		sizeBytes = fmt.Sprintf("%07b", s&127) + sizeBytes
 	}
 	if size, err = strconv.ParseInt(sizeBytes, 2, 64); err != nil {
@@ -352,14 +366,12 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*PackedObject) (o
 	pot := PackedObjectType(typeBits)
 	var bytes []byte
 	if i+1 < len(entries) {
-		n := int(entries[i+1].offset - v.offset)
-		bytes = data[absoluteCursor+relativeCursor : absoluteCursor+n]
-		relativeCursor = n
+		n := int(entryLen)
+		bytes = data[cursor:n]
+		cursor = n
 	} else {
-		bytes = data[absoluteCursor+relativeCursor:]
-		absoluteCursor = len(data)
+		bytes = data[cursor:]
 	}
-	absoluteCursor += relativeCursor
 	switch {
 	case pot == PackedBlob || pot == PackedCommit || pot == PackedTree || pot == PackedTag:
 		obj = parseNonDeltaEntry(&bytes, pot, v.ObjectId, size)
@@ -367,29 +379,31 @@ func parseEntry(packedData *[]byte, i int, idx *Idx, objects []*PackedObject) (o
 		var (
 			deltaDeflated packedDelta
 			base          *PackedObject
-			offset        int64
+			baseOffset    int64
 			dp            *packedObjectParser
 		)
 		switch pot {
 		case ObjectRefDelta:
 			var oid *ObjectId
 			deltaDeflated, oid = readPackedRefDelta(&bytes)
-			offset = idx.entriesById[oid.String()].offset
+			baseOffset = idx.entriesById[oid.String()].offset
 		case ObjectOffsetDelta:
-			if deltaDeflated, offset, err = readPackedOffsetDelta(&bytes); err != nil {
+			if deltaDeflated, baseOffset, err = readPackedOffsetDelta(&bytes); err != nil {
 				panicErrf("Err parsing size: %v. Could not determine size for %s", err, v.repr)
 			}
-			offset = v.offset - offset
+			baseOffset = v.offset - baseOffset
+		default:
+			fmt.Printf("Unrecognized pack object type: %b ", pot)
 		}
 		objectIndex := sort.Search(len(idx.entries), func(i int) bool {
-			return idx.entries[i].offset >= int64(offset)
+			return idx.entries[i].offset >= int64(baseOffset)
 		})
-		if idx.entries[objectIndex].offset != offset {
-			panicErrf("Could not find object with offset %d (%d - %d). Closest match was %d.", offset,
-				v.offset+offset, v.offset, idx.entries[i].offset)
+		if idx.entries[objectIndex].offset != baseOffset {
+			panicErrf("Could not find object with offset %d (%d - %d). Closest match was %d.", baseOffset,
+				v.offset+baseOffset, v.offset, idx.entries[i].offset)
 		}
 		if objects[objectIndex] == nil {
-			objects[objectIndex] = parseEntry(packedData, objectIndex, idx, objects)
+			objects[objectIndex] = parseEntry(file, objectIndex, idx, objects)
 			if objects[objectIndex] == nil {
 				panicErrf("Ref deltas not yet implemented!")
 			}

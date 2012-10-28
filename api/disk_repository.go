@@ -205,7 +205,7 @@ func (r *DiskRepository) loadPacks() (err error) {
 			return e
 		} else {
 			defer packFile.Close()
-			pp := newPackIdxParser(bufio.NewReader(idxFile), bufio.NewReader(packFile), name)
+			pp := newPackIdxParser(bufio.NewReader(idxFile), packFile, name)
 			packs[i] = pp.parsePack()
 		}
 	}
