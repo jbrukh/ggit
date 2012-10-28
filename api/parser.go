@@ -84,8 +84,13 @@ func safeParse(f func()) (err error) {
 
 func (p *dataParser) consume(n int) []byte {
 	b := make([]byte, n)
-	if rd, e := p.buf.Read(b); e != nil || rd != n {
+	if rd, e := p.buf.Read(b); e != nil {
 		panicErrf("expected: %d byte(s), read %d, values %x", n, rd, b[0:rd])
+	} else if rd != n {
+		more := p.consume(n - rd)
+		for i, v := range more {
+			b[rd+i] = v
+		}
 	}
 	p.count += int64(n)
 	return b
@@ -213,9 +218,7 @@ func (p *dataParser) ReadByte() byte {
 
 // ReadBytesUntil
 func (p *dataParser) ReadNBytes(n int) []byte {
-	b := p.PeekBytes(n)
-	p.Consume(n)
-	return b
+	return p.consume(n)
 }
 
 // ReadBytesUntil
