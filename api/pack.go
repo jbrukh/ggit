@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"compress/zlib"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -85,27 +84,15 @@ func (pack *Pack) open() error {
 	return nil
 }
 
-func (pack *Pack) Close() error {
+func (pack *Pack) close() error {
 	defer func() { pack.file = nil }()
 	return pack.file.Close()
-}
-
-func close(packs []*Pack) error {
-	var errs []string
-	for _, pack := range packs {
-		if err := pack.Close(); err != nil {
-			errs = append(errs, err.Error())
-		}
-	}
-	if len(errs) > 0 {
-		return errors.New(fmt.Sprintf("%x", errs))
-	}
-	return nil
 }
 
 // Returns the one Object in this pack with the given ObjectId,
 // or nil, NoSuchObject if no such Object is in this pack.
 func (pack *Pack) unpack(oid *ObjectId) (obj Object, result packSearch) {
+	defer pack.close()
 	s := oid.String()
 	if entry := pack.idx.entriesById[s]; entry != nil {
 		if pack.content[entry.index] == nil {
@@ -191,6 +178,7 @@ func objectsFromPacks(packs []*Pack) (objects []*PackedObject) {
 	objects = make([]*PackedObject, count, count)
 	i := 0
 	for _, pack := range packs {
+		defer pack.close()
 		for j := range pack.idx.entries {
 			pack.content[j] = pack.parseEntry(j)
 			objects[i] = pack.content[j]
@@ -348,12 +336,14 @@ func newPackedObjectParser(data *[]byte, oid *ObjectId) (p *packedObjectParser, 
 	return
 }
 
+//parse the pack's meta data and close it
 func (p *packIdxParser) parsePack() *Pack {
 	idx := p.parseIdx()
 	objects := make([]*PackedObject, idx.count)
 	p.packParser.ConsumeString(PackSignature)
 	p.packParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
 	count := p.packParser.ParseIntBigEndian(4)
+	p.packFile.Close()
 	if count != idx.count {
 		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
 	}
@@ -363,20 +353,20 @@ func (p *packIdxParser) parsePack() *Pack {
 		idx,
 		p.name,
 		p.packOpener,
-		p.packFile,
+		nil,
 	}
 }
 
+// parse the ith entry of this pack, opening the pack resource if necessary
 func (pack *Pack) parseEntry(i int) (obj *PackedObject) {
 	//TODO: break this function up... or at least segment it more clearly
+	if len(pack.content) > i && pack.content[i] != nil {
+		return pack.content[i] //already parsed
+	}
 	if pack.file == nil {
 		pack.open()
 	}
 	file, objects, idx := pack.file, pack.content, pack.idx
-	if len(objects) > i && objects[i] != nil {
-		//sometimes (for ref delta objects) we jump ahead in the []byte
-		return objects[i]
-	}
 	entries := idx.entries
 	v := entries[i]
 	var entryLen int64

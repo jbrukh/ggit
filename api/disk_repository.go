@@ -61,7 +61,6 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 				return nil, err
 			}
 			if obj, ok := unpack(repo.packs, oid); ok {
-				defer close(repo.packs)
 				return obj, nil
 			}
 		}
@@ -113,7 +112,6 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 	if e != nil {
 		if os.IsNotExist(e) {
 			repo.loadPacks()
-			defer close(repo.packs)
 			if obj, ok := unpackFromShortOid(repo.packs, short); ok {
 				return obj, nil
 			}
@@ -168,7 +166,6 @@ func (r *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
 }
 
 func (r *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
-	defer close(r.packs)
 	if err := r.loadPacks(); err != nil {
 		return nil, err
 	}
@@ -176,7 +173,6 @@ func (r *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
 }
 
 func (r *DiskRepository) PackedObjects() ([]*PackedObject, error) {
-	defer close(r.packs)
 	if err := r.loadPacks(); err != nil {
 		return nil, err
 	}
