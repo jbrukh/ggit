@@ -12,6 +12,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/jbrukh/ggit"
 	"github.com/jbrukh/ggit/api"
 	"github.com/jbrukh/ggit/builtin"
 	"io"
@@ -53,7 +54,7 @@ func main() {
 
 	// --version
 	if flagVersion {
-		fmt.Fprintln(Wout, "ggit version", Version)
+		fmt.Fprintln(Wout, "ggit version", ggit.Version)
 		os.Exit(0)
 	}
 

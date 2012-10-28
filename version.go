@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package main
+package ggit
 
 // ================================================================= //
 // GGIT VERSION
