@@ -4,8 +4,10 @@
 // see the README file.
 //
 // Copyright (c) 2012 The ggit Authors
-//
-// Code in this package originally based on https://github.com/jordanorelli/multicommand.
+
+/*
+ggit.go implements the commandline ggit.
+*/
 package main
 
 import (

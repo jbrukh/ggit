@@ -5,6 +5,12 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+builtin.go implements the general framework for ggit builtin commands.
+
+Code in this package originally based on https://github.com/jordanorelli/multicommand.
+*/
 package builtin
 
 import (
