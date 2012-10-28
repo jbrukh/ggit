@@ -18,7 +18,7 @@ func Test_revParse__firstParent(t *testing.T) {
 	repo := Open(testCase.Repo())
 	output := testCase.Output().(*test.OutputCommits)
 
-	util.Assert(t, output.N > 0)
+	util.Assert(t, output.N > 1)
 	util.Assert(t, len(output.Commits) == output.N)
 
 	// test the first, parentless commit
@@ -27,7 +27,21 @@ func Test_revParse__firstParent(t *testing.T) {
 		testShortOid(t, repo, c.Oid)
 		testFirstParent(t, repo, c.Oid, c.ParentOid)
 	}
+}
 
+func Test_revParse__secondAncestor(t *testing.T) {
+	testCase := test.Linear
+	repo := Open(testCase.Repo())
+	output := testCase.Output().(*test.OutputCommits)
+
+	util.Assert(t, output.N > 2)
+	util.Assert(t, len(output.Commits) == output.N)
+
+	// test the first, parentless commit
+	for i, c := range output.Commits[2:] {
+		testShortOid(t, repo, c.Oid)
+		testSecondAncestor(t, repo, c.Oid, output.Commits[i].Oid)
+	}
 }
 
 func testShortOid(t *testing.T, repo Repository, oid string) {
@@ -43,6 +57,17 @@ func testFirstParent(t *testing.T, repo Repository, oid string, parentOid string
 
 	for i := 4; i <= 40; i++ {
 		parent, err := ObjectFromRevision(repo, oid[:i]+"^")
+		util.AssertNoErr(t, err)
+		util.Assert(t, parent.Header().Type() == ObjectCommit)
+		util.AssertEqualString(t, parent.ObjectId().String(), parentOid)
+	}
+}
+
+func testSecondAncestor(t *testing.T, repo Repository, oid string, parentOid string) {
+	testCommit(t, repo, oid)
+
+	for i := 4; i <= 40; i++ {
+		parent, err := ObjectFromRevision(repo, oid[:i]+"~2")
 		util.AssertNoErr(t, err)
 		util.Assert(t, parent.Header().Type() == ObjectCommit)
 		util.AssertEqualString(t, parent.ObjectId().String(), parentOid)
