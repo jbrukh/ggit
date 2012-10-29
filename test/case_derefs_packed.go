@@ -7,7 +7,8 @@
 //
 
 /*
-blobs.go implements a test repository.
+case_derefs_packed.go implements a test repository similar to case_derefs.go,
+but with all the objects packed.
 */
 package test
 
@@ -16,7 +17,7 @@ import (
 )
 
 // ================================================================= //
-// TEST CASE: BUNCHES OF BLOBS
+// TEST CASE: DEREFS
 // ================================================================= //
 
 type OutputDerefsPacked struct {
@@ -24,7 +25,7 @@ type OutputDerefsPacked struct {
 }
 
 var DerefsPacked = NewRepoTestCase(
-	"__linear_packed",
+	"__derefs_packed",
 	func(testCase *RepoTestCase) (err error) {
 		err = Derefs.builder(testCase)
 		if err != nil {

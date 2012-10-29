@@ -20,13 +20,13 @@ func Test_readBlobs(t *testing.T) {
 	testRepo := test.Blobs
 
 	repo := Open(testRepo.Repo())
-	output := testRepo.Output().([]*test.OutputBlob)
+	output := testRepo.Output().(*test.OutputBlobs)
 
-	if len(output) < 1 {
+	if len(output.Blobs) < 1 {
 		fmt.Println("warning: no blobs to test")
 	}
 
-	for _, out := range output {
+	for _, out := range output.Blobs {
 		// read the blob
 		oid := OidNow(out.Oid)
 		o, err := repo.ObjectFromOid(oid)

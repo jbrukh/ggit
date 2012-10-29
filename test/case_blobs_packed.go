@@ -7,7 +7,7 @@
 //
 
 /*
-case_linear_packed.go implements a test repository similar to case_linear.go,
+case_blobs_packed.go implements a test repository similar to case_blobs.go,
 but with all the objects packed.
 */
 package test
@@ -20,14 +20,14 @@ import (
 // TEST CASE: BUNCHES OF BLOBS
 // ================================================================= //
 
-type OutputLinearPacked struct {
-	OutputLinear
+type OutputBlobsPacked struct {
+	OutputBlobs
 }
 
-var LinearPacked = NewRepoTestCase(
-	"__linear_packed",
+var BlobsPacked = NewRepoTestCase(
+	"__blobs_packed",
 	func(testCase *RepoTestCase) (err error) {
-		err = Linear.builder(testCase)
+		err = Blobs.builder(testCase)
 		if err != nil {
 			return err
 		}
@@ -38,8 +38,8 @@ var LinearPacked = NewRepoTestCase(
 			[]string{"prune-packed"},
 		)
 
-		testCase.output = &OutputLinearPacked{
-			*testCase.output.(*OutputLinear),
+		testCase.output = &OutputBlobsPacked{
+			*testCase.output.(*OutputBlobs),
 		}
 
 		return

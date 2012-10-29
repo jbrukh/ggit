@@ -7,7 +7,8 @@
 //
 
 /*
-linear.go implements a repo test case.
+case_derefs.go implements a repo test case, which contains a single commit,
+a tag on that commit, and data about the underlying tag, tree, and commit oids.
 */
 package test
 

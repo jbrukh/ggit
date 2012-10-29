@@ -7,7 +7,7 @@
 //
 
 /*
-linear.go implements a repo test case.
+case_linear.go implements a repo test case.
 */
 package test
 

@@ -25,9 +25,10 @@ import (
 // mapping of name => RepoTestCase
 var repoTestCases = []*RepoTestCase{
 	Empty,
+	Blobs,
+	BlobsPacked,
 	Linear,
 	LinearPacked,
-	Blobs,
 	Derefs,
 	DerefsPacked,
 }

@@ -7,7 +7,7 @@
 //
 
 /*
-empty.go implements a repo test case.
+case_empty.go implements a repo test case.
 */
 package test
 

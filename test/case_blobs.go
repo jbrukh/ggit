@@ -7,7 +7,7 @@
 //
 
 /*
-blobs.go implements a test repository.
+case_blobs.go implements a test repository.
 */
 package test
 
@@ -22,6 +22,11 @@ import (
 type OutputBlob struct {
 	Oid      string
 	Contents string
+}
+
+type OutputBlobs struct {
+	Blobs []*OutputBlob
+	N     int
 }
 
 var testCasesBlobContents = []string{
@@ -66,14 +71,17 @@ var Blobs = NewRepoTestCase(
 			return err
 		}
 
-		output := make([]*OutputBlob, 0)
+		output := &OutputBlobs{
+			Blobs: make([]*OutputBlob, 0),
+			N:     len(testCasesBlobContents),
+		}
 
 		// hash the test objects
 		for _, contents := range testCasesBlobContents {
 			if oidStr, err := util.HashBlob(testCase.Repo(), contents); err != nil {
 				return err
 			} else {
-				output = append(output, &OutputBlob{
+				output.Blobs = append(output.Blobs, &OutputBlob{
 					oidStr,
 					contents,
 				})
