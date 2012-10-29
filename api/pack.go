@@ -84,11 +84,14 @@ func (pack *Pack) open() error {
 	return nil
 }
 
-func (pack *Pack) close() error {
+func (pack *Pack) close() (err error) {
 	// TODO: take a look
 	// @jbrukh: this guarantees nil pointer on Close() -- commenting!
 	// defer func() { pack.file = nil }()
-	return pack.file.Close()
+	if pack.file != nil {
+		err = pack.file.Close()
+	}
+	return
 }
 
 // Returns the one Object in this pack with the given ObjectId,

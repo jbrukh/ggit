@@ -40,6 +40,13 @@ func packedCommitOid() (repo Repository, oid *ObjectId) {
 	return
 }
 
+func derefs() (repo Repository, output *test.OutputDerefs) {
+	testRepo := test.Derefs
+	output = testRepo.Output().(*test.OutputDerefs)
+	repo = Open(testRepo.Repo())
+	return
+}
+
 func Benchmark__readLooseBlobByOid(b *testing.B) {
 	b.StopTimer()
 	repo, oid := looseBlobOid()
@@ -48,7 +55,7 @@ func Benchmark__readLooseBlobByOid(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := repo.ObjectFromOid(oid)
 		if err != nil {
-			b.Errorf("could not read blob: %s", oid)
+			b.Fatalf("could not read blob: %s", oid)
 		}
 	}
 }
@@ -62,7 +69,7 @@ func Benchmark__readLooseBlobByShort(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := ObjectFromRevision(repo, rev)
 		if err != nil {
-			b.Errorf("could not read blob: %s", rev)
+			b.Fatalf("could not read blob: %s", rev)
 		}
 	}
 }
@@ -75,7 +82,7 @@ func Benchmark__readLooseCommitByOid(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := repo.ObjectFromOid(oid)
 		if err != nil {
-			b.Errorf("could not read blob: %s", oid)
+			b.Fatalf("could not read blob: %s", oid)
 		}
 	}
 }
@@ -88,7 +95,7 @@ func Benchmark__readPackedCommitByOid(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := repo.ObjectFromOid(oid)
 		if err != nil {
-			b.Errorf("could not read blob: %s", oid)
+			b.Fatalf("could not read blob: %s", oid)
 		}
 	}
 }
@@ -102,7 +109,78 @@ func Benchmark__readPackedCommitByShort(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := ObjectFromRevision(repo, rev)
 		if err != nil {
-			b.Errorf("could not read blob: %s", rev)
+			b.Fatalf("could not read blob: %s", rev)
+		}
+	}
+}
+
+func Benchmark__readLooseTreeByOid(b *testing.B) {
+	b.StopTimer()
+	repo, output := derefs()
+	oid := OidNow(output.TreeOid)
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err := repo.ObjectFromOid(oid)
+		if err != nil {
+			b.Fatalf("could not read blob: %s", oid)
+		}
+	}
+}
+
+func Benchmark__readLooseTreeByShort(b *testing.B) {
+	b.StopTimer()
+	repo, output := derefs()
+	rev := output.TreeOid[:20]
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err := ObjectFromRevision(repo, rev)
+		if err != nil {
+			b.Fatalf("could not read blob: %s", rev)
+		}
+	}
+}
+
+func Benchmark__readPackedTreeByOid(b *testing.B) {
+	b.StopTimer()
+	repo, output := derefs()
+	oid := OidNow(output.TreeOid)
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err := repo.ObjectFromOid(oid)
+		if err != nil {
+			b.Fatalf("could not read blob: %s", oid)
+		}
+	}
+}
+
+func Benchmark__readPackedTreeByShort(b *testing.B) {
+	b.StopTimer()
+	repo, output := derefs()
+	rev := output.TreeOid[:20]
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err := ObjectFromRevision(repo, rev)
+		if err != nil {
+			b.Fatalf("could not read blob: %s", rev)
+		}
+	}
+}
+
+func Benchmark__derefLooseTreeFromCommit(b *testing.B) {
+	b.StopTimer()
+	repo, output := derefs()
+	oid := OidNow(output.CommitOid)
+	rev := oid.String() + "^{tree}"
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err := ObjectFromRevision(repo, rev)
+		if err != nil {
+			b.Fatalf("could not read blob: %s", rev)
 		}
 	}
 }
