@@ -8,6 +8,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
@@ -35,8 +36,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, oid := range oids {
-		fmt.Println(oid)
+	for i, oid := range oids {
+		fmt.Println(i, "git/ggit object:", oid)
 
 		// get the dashP from git
 		dashP, err := util.GitExec(repoPath, "cat-file", "-p", oid.String())
@@ -56,7 +57,13 @@ func main() {
 		f.Object(o)
 		str := f.String()
 		if str != dashP {
-			fmt.Printf("mismatch; expected '%d' but got '%d'\n", len(dashP), len(str))
+			fmt.Printf("\nfound a mismatch in object %d (%s)...\n", i, oid)
+			fmt.Println("GIT -----------------------")
+			fmt.Println(dashP)
+			fmt.Println("GGIT -----------------------")
+			fmt.Println(str)
+			fmt.Println("diff -----------------------")
+
 			i := 0
 			for {
 				if dashP[i] != str[i] {
@@ -64,10 +71,19 @@ func main() {
 				}
 				i++
 			}
-			fmt.Println(dashP[:i])
-			fmt.Println(dashP[i:i+10], "\n", str[i:i+10])
-			fmt.Println("-----------------------")
-			fmt.Println(str)
+
+			ours := bytes.NewBufferString(str)
+			theirs := bytes.NewBufferString(dashP)
+			b := ours.Next(i)
+			theirs.Next(i)
+
+			fmt.Println(string(b))
+			line1, _ := ours.ReadString('\n')
+			line2, _ := theirs.ReadString('\n')
+
+			fmt.Printf("theirs:\t%s", line2)
+			fmt.Printf("ours:\t%s", line1)
+
 			os.Exit(2)
 		}
 	}

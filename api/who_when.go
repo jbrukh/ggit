@@ -61,6 +61,8 @@ func zone(offset int) string {
 	if offset < 0 {
 		sign = MINUS
 		offset = -offset
+	} else {
+		sign = PLUS
 	}
 	hours := int(offset / 60)
 	minutes := offset - hours*60
