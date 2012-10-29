@@ -362,7 +362,7 @@ func (p *Pack) parseEntry(i int) (obj *PackedObject) {
 	if len(p.content) > i && p.content[i] != nil {
 		return p.content[i] //already parsed
 	}
-	size, pot, bytes := p.inflateEntry(i)
+	size, pot, bytes := p.entrySizeTypeData(i)
 	e := p.idx.entries[i]
 	switch {
 	case pot == PackedBlob || pot == PackedCommit || pot == PackedTree || pot == PackedTag:
@@ -373,9 +373,9 @@ func (p *Pack) parseEntry(i int) (obj *PackedObject) {
 	return
 }
 
-// get the size, type, and inflated data of the ith object of the pack file
-func (p *Pack) inflateEntry(i int) (uint64, PackedObjectType, []byte) {
-	data := p.rawEntryData(i)
+// extract the size, type, and compressed data of the ith object of the pack file
+func (p *Pack) entrySizeTypeData(i int) (uint64, PackedObjectType, []byte) {
+	data := p.readEntry(i)
 	// keep track of bytes read so that, in conjunction with the next entry's offset, we can know where the next
 	// object in the pack begins.
 	headerHeader := data[0]
@@ -393,8 +393,8 @@ func (p *Pack) inflateEntry(i int) (uint64, PackedObjectType, []byte) {
 	return size, PackedObjectType(typeBits), data[read:]
 }
 
-// get the metadata and deflated data of the ith object of the pack file
-func (p *Pack) rawEntryData(i int) []byte {
+// read all the bytes of the ith object of the pack file
+func (p *Pack) readEntry(i int) []byte {
 	if p.file == nil {
 		p.open()
 	}
