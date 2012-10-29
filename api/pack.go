@@ -85,7 +85,9 @@ func (pack *Pack) open() error {
 }
 
 func (pack *Pack) close() error {
-	defer func() { pack.file = nil }()
+	// TODO: take a look
+	// @jbrukh: this guarantees nil pointer on Close() -- commenting!
+	// defer func() { pack.file = nil }()
 	return pack.file.Close()
 }
 
