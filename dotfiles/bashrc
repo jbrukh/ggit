@@ -14,6 +14,7 @@ alias gg="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
 
 alias build_ggit="go install -v ./... && go test ./..."
 alias bgg="build_ggit"
+alias ggbench="go test -file api/bechmarks_test.go -test.bench=\".*\" ./api"
 
 # list some objects... this is slow, so use on small repos
 objects() {
