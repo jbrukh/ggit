@@ -8,44 +8,29 @@
 package api
 
 import (
+	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
-	"strings"
 	"testing"
 )
 
-func Test_commitReads(t *testing.T) {
-	repo := util.TempRepo("test_commits")
+// Test_readCommits will compare the commit output of
+// git and ggit for a string of commits.
+func Test_readCommits(t *testing.T) {
+	testCase := test.Linear
+	repo := Open(testCase.Repo())
+	output := testCase.Output().(*test.OutputCommits)
 
-	util.AssertCreateGitRepo(t, repo)
-	defer util.AssertRemoveGitRepo(t, repo)
+	util.Assert(t, output.N > 1)
+	util.Assert(t, len(output.Commits) == output.N)
 
-	testFile := "a.txt"
-	util.TestFile(repo, testFile, "a")
-
-	// create a few commits
-	err := util.GitExecMany(repo,
-		[]string{"add", "--all"},
-		[]string{"commit", "-a", "-m", "First commit."},
-	)
-	util.AssertNoErrOrDie(t, err)
-
-	var head, dashP string
-	head, err = util.GitExec(repo, "rev-parse", "HEAD")
-	util.AssertNoErr(t, err)
-	dashP, err = util.GitExec(repo, "cat-file", "-p", "HEAD")
-	util.AssertNoErr(t, err)
-
-	// create a ggit repo
-	ggrepo := Open(repo)
-
-	var o Object
-	head = strings.TrimSpace(head)
-	o, err = ggrepo.ObjectFromShortOid(head)
-	util.AssertNoErr(t, err)
-	util.Assert(t, o.Header().Type() == ObjectCommit)
-
-	c := o.(*Commit)
 	f := NewStrFormat()
-	f.Commit(c)
-	util.AssertEqualString(t, f.String(), dashP)
+	for _, c := range output.Commits {
+		o, err := repo.ObjectFromOid(OidNow(c.Oid))
+		util.AssertNoErr(t, err)
+		util.Assert(t, o.ObjectId().String() == c.Oid)
+		util.Assert(t, o.Header().Type() == ObjectCommit)
+		f.Reset()
+		f.Object(o)
+		util.AssertEqualString(t, c.Repr, f.String())
+	}
 }

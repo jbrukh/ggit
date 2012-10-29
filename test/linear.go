@@ -24,7 +24,8 @@ import (
 
 type CommitAndParent struct {
 	Oid       string
-	ParentOid string
+	ParentOid string // first parent oid
+	Repr      string // representation of this commit as a string
 }
 
 type OutputCommits struct {
@@ -64,14 +65,19 @@ var Linear = NewRepoTestCase(
 			}
 
 			// get the output data
-			var oid, parentOid string
+			var oid, parentOid, repr string
 			oid = RevOid(repo, "HEAD")
+			repr, err = util.GitExec(repo, "cat-file", "-p", oid)
+			if err != nil {
+				return err
+			}
 			if i != 0 {
 				parentOid = RevOid(repo, "HEAD^")
 			}
 			output.Commits[i] = &CommitAndParent{
 				oid,
 				parentOid,
+				repr,
 			}
 		}
 		testCase.output = output
