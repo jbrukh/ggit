@@ -57,6 +57,54 @@ func RemoveTestCases() {
 	}
 }
 
+// ================================================================= //
+// REPO TEST CASE
+// ================================================================= //
+
+type RepoTestCase struct {
+	name    string
+	repo    string // path
+	builder RepoBuilder
+	output  interface{}
+}
+
+func (tc *RepoTestCase) Repo() string {
+	return tc.repo
+}
+
+func (tc *RepoTestCase) Name() string {
+	return tc.name
+}
+
+func (tc *RepoTestCase) Output() interface{} {
+	return tc.output
+}
+
+func (tc *RepoTestCase) Remove() {
+	os.RemoveAll(tc.repo)
+}
+
+func (tc *RepoTestCase) Build() error {
+	return tc.builder(tc)
+}
+
+func NewRepoTestCase(name string, builder RepoBuilder) *RepoTestCase {
+	return &RepoTestCase{
+		name:    name,
+		builder: builder,
+	}
+}
+
+// ================================================================= //
+// REPO BUILDER
+// ================================================================= //
+
+type RepoBuilder func(testCase *RepoTestCase) error
+
+// ================================================================= //
+// UTIL
+// ================================================================= //
+
 func createRepo(testCase *RepoTestCase) (err error) {
 	repo := util.TempRepo(testCase.name)
 

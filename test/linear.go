@@ -35,7 +35,7 @@ type OutputLinear struct {
 var Linear = NewRepoTestCase(
 	"__linear",
 	func(testCase *RepoTestCase) (err error) {
-		n := paramLinearN
+		n := 10
 		err = createRepo(testCase)
 		if err != nil {
 			return err
