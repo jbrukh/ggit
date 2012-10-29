@@ -9,8 +9,6 @@ package api
 
 import (
 	"errors"
-	//"fmt"
-	//"os"
 	"github.com/jbrukh/ggit/util"
 	"regexp"
 	"strconv"
@@ -38,6 +36,7 @@ func init() {
 
 // revParser is a parser for revision specs.
 type revParser struct {
+	dataParser
 	repo Repository
 
 	inx int
@@ -46,40 +45,50 @@ type revParser struct {
 	o Object
 }
 
+func newRevParser(repo Repository, rev string) *revParser {
+	return &revParser{
+		dataParser: dataParser{
+			buf: readerForString(rev),
+		},
+		repo: repo,
+		rev:  rev,
+	}
+}
+
 // Object returns the object that the rev spec
 // refers to after (and during) parsing.
 func (p *revParser) Object() Object {
 	return p.o
 }
 
-// more returns true if and only if the index
-// of the parser has more characters to read.
-func (p *revParser) more() bool {
-	return p.inx < len(p.rev)
-}
+// // more returns true if and only if the index
+// // of the parser has more characters to read.
+// func (p *revParser) more() bool {
+// 	return p.inx < len(p.rev)
+// }
 
-// next increments the index of the parser.
-func (p *revParser) next() {
-	p.inx++
-}
+// // next increments the index of the parser.
+// func (p *revParser) next() {
+// 	p.inx++
+// }
 
-// curr returns the current character in the
-// revision that the index is pointing to.
-func (p *revParser) curr() byte {
-	return p.rev[p.inx]
-}
+// // curr returns the current character in the
+// // revision that the index is pointing to.
+// func (p *revParser) curr() byte {
+// 	return p.rev[p.inx]
+// }
 
-// symbol returns the revision string until,
-// but not including, the index.
-func (p *revParser) symbol() string {
-	return p.rev[:p.inx]
-}
+// // symbol returns the revision string until,
+// // but not including, the index.
+// func (p *revParser) symbol() string {
+// 	return p.rev[:p.inx]
+// }
 
-// peek peeks ahead a number of characters
-// from the index.
-func (p *revParser) peek(n int) string {
-	return p.rev[p.inx : p.inx+n]
-}
+// // peek peeks ahead a number of characters
+// // from the index.
+// func (p *revParser) peek(n int) string {
+// 	return p.rev[p.inx : p.inx+n]
+// }
 
 // number parses and returns the number that
 // is represented by the string immediately
@@ -87,15 +96,15 @@ func (p *revParser) peek(n int) string {
 // is empty, or we are at the end of the revision
 // sting, then 1 is returned by default.
 func (p *revParser) number() (n int) {
-	p.next()
-	start := p.inx
-	if !p.more() {
+	start := p.Count()
+	if p.EOF() {
 		return 1 // 1 by default
 	}
-	for p.more() && util.IsDigit(p.curr()) {
-		p.next()
+	for !p.EOF() && util.IsDigit(p.PeekByte()) {
+		p.ReadByte()
 	}
-	strNum := p.rev[start:p.inx]
+	end := p.Count()
+	strNum := p.rev[start:end]
 	if strNum == "" {
 		return 1
 	}
@@ -107,39 +116,44 @@ func (p *revParser) number() (n int) {
 	return n
 }
 
-func (p *revParser) revParse() error {
+func (p *revParser) Parse() error {
 	if p.rev == "" {
 		return errors.New("revision spec is empty")
 	}
 
-	if p.peek(1) == ":" {
+	if p.PeekByte() == ':' {
 		return errors.New(": syntaxes not supported") // TODO
 	}
 
+	start := p.Count()
 	// read until modifier or end
-	for p.more() {
-		if !isModifier(p.curr()) {
-			p.next()
+	for !p.EOF() {
+		if !isModifier(p.PeekByte()) {
+			p.ReadByte()
 		} else {
 			break
 		}
 	}
+	end := p.Count()
 
-	rev := p.symbol()
+	rev := p.rev[start:end]
 	if rev == "" {
 		return errors.New("revision is empty")
 	}
-	err := p.findCommit(rev)
+
+	err := p.findObject(rev)
 	if err != nil {
 		return err
 	}
 
-	for p.more() {
+	for !p.EOF() {
 		var parent *Commit
 		var err error
-		if p.curr() == '^' {
+		if p.PeekByte() == '^' {
+			p.ConsumeByte('^')
 			parent, err = applyParentFunc(p, CommitNthParent)
-		} else if p.curr() == '~' {
+		} else if p.PeekByte() == '~' {
+			p.ConsumeByte('~')
 			parent, err = applyParentFunc(p, CommitNthAncestor)
 		} else {
 			panic("unknown modifier, shouldn't get here")
@@ -154,6 +168,11 @@ func (p *revParser) revParse() error {
 	return nil
 }
 
+func (p *revParser) parseObjectType() (objectType ObjectType) {
+	otype := p.ConsumeStrings(objectTypes)
+	return ObjectType(otype)
+}
+
 func applyParentFunc(p *revParser, f parentFunc) (*Commit, error) {
 	n := p.number()
 
@@ -164,7 +183,36 @@ func applyParentFunc(p *revParser, f parentFunc) (*Commit, error) {
 	return f(p.repo, c, n)
 }
 
-func (p *revParser) findCommit(simpleRev string) (err error) {
+func applyDereference(p *revParser, otype ObjectType) error {
+	switch otype {
+	case ObjectCommit:
+		c, err := CommitFromObject(p.repo, p.o)
+		if err != nil {
+			return err
+		}
+		p.o = c
+	case ObjectTree:
+		c, err := CommitFromObject(p.repo, p.o)
+		if err != nil {
+			return err
+		}
+		p.o, err = p.repo.ObjectFromOid(c.tree)
+		if err != nil {
+			return err
+		}
+	case ObjectTag:
+		if p.o.Header().Type() != ObjectTag {
+			return errors.New("cannot dereference non-tag to tag")
+		}
+	case ObjectBlob:
+		if p.o.Header().Type() != ObjectBlob {
+			return errors.New("cannot dereference non-blob to blob")
+		}
+	}
+	return nil
+}
+
+func (p *revParser) findObject(simpleRev string) (err error) {
 	// oid or short oid
 	var o Object
 	switch {
@@ -185,30 +233,6 @@ func (p *revParser) findCommit(simpleRev string) (err error) {
 	}
 	p.o = o
 	return nil
-}
-
-func (r *revParser) parseNumber() (int, error) {
-	c := r.rev[r.inx]
-	if c != '^' && c != '~' {
-		return 0, errors.New("not expecting a number")
-	}
-	i := r.inx + 1
-	for i < len(r.rev) {
-		if !util.IsDigit(r.rev[i]) {
-			break
-		}
-		i++
-	}
-	n := r.rev[r.inx+1 : i]
-	if n == "" {
-		return 1, nil
-	}
-	num, err := strconv.Atoi(n)
-	if err != nil {
-		return 0, err
-	}
-	r.inx = i
-	return num, nil
 }
 
 // ================================================================= //
