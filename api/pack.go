@@ -601,7 +601,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 		panicErrf("Expected size of base object is %d, but actual size is %d")
 	}
 
-	out := make([]byte, 0)
+	out := make([]byte, outputSize, outputSize)
 	var appended int64
 	cmd := p.ReadByte()
 	for {
@@ -613,7 +613,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 			//copy from base to output
 			offset, len = dp.parseCopyCmd(cmd)
 			for i := offset; i < offset+len; i++ {
-				out = append(out, (src)[i])
+				out[appended+(i-offset)] = src[i]
 			}
 			if offset+len > baseSize {
 				panicErrf("Bad delta - references byte %d of a %d-byte source", offset+len, baseSize)
@@ -623,7 +623,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 			//copy from delta to output
 			offset, len = 0, int64(cmd)
 			for i := offset; i < offset+len; i++ {
-				out = append(out, p.ReadByte())
+				out[appended+(i-offset)] = p.ReadByte()
 			}
 		}
 		appended += len
