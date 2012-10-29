@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jbrukh/ggit/util"
-	"strings"
 )
 
 // ================================================================= //
@@ -66,13 +65,13 @@ var Linear = NewRepoTestCase(
 
 			// get the output data
 			var oid, parentOid, repr string
-			oid = RevOid(repo, "HEAD")
+			oid = util.RevOid(repo, "HEAD")
 			repr, err = util.GitExec(repo, "cat-file", "-p", oid)
 			if err != nil {
 				return err
 			}
 			if i != 0 {
-				parentOid = RevOid(repo, "HEAD^")
+				parentOid = util.RevOid(repo, "HEAD^")
 			}
 			output.Commits[i] = &CommitAndParent{
 				oid,
@@ -84,11 +83,3 @@ var Linear = NewRepoTestCase(
 		return
 	},
 )
-
-func RevOid(repo string, rev string) string {
-	oid, err := util.GitExec(repo, "rev-parse", rev)
-	if err != nil {
-		panic("can't get oid for: " + rev)
-	}
-	return strings.TrimSpace(oid)
-}

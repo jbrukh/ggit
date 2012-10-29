@@ -26,6 +26,7 @@ var repoTestCases = []*RepoTestCase{
 	Empty,
 	Linear,
 	Blobs,
+	Derefs,
 }
 
 // init initializes all the repo test cases, if they haven't been

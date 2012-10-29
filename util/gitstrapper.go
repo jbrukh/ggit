@@ -115,3 +115,20 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 	}
 	return strings.TrimSpace(oid), err
 }
+
+// TODO: turn the following two methods into GitNow()
+func RevOid(repo string, rev string) string {
+	oid, err := GitExec(repo, "rev-parse", rev)
+	if err != nil {
+		panic("can't get oid for: " + rev)
+	}
+	return strings.TrimSpace(oid)
+}
+
+func ObjectRepr(repo string, rev string) string {
+	oid, err := GitExec(repo, "cat-file", "-p", rev)
+	if err != nil {
+		panic("can't get oid for: " + rev)
+	}
+	return strings.TrimSpace(oid)
+}
