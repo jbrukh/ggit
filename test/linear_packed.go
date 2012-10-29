@@ -19,6 +19,10 @@ import (
 // TEST CASE: BUNCHES OF BLOBS
 // ================================================================= //
 
+type OutputLinearPacked struct {
+	OutputLinear
+}
+
 var LinearPacked = NewRepoTestCase(
 	"__linear_packed",
 	func(testCase *RepoTestCase) (err error) {
@@ -32,6 +36,11 @@ var LinearPacked = NewRepoTestCase(
 			[]string{"repack", "-a"},
 			[]string{"prune-packed"},
 		)
+
+		testCase.output = &OutputLinearPacked{
+			*testCase.output.(*OutputLinear),
+		}
+
 		return
 	},
 )

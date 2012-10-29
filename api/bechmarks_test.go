@@ -16,78 +16,93 @@ import (
 	"testing"
 )
 
+func looseBlobOid() (repo Repository, oid *ObjectId) {
+	testRepo := test.Blobs
+	output := testRepo.Output().([]*test.OutputBlob)
+	repo = Open(testRepo.Repo())
+	oid = OidNow(output[0].Oid)
+	return
+}
+
+func looseCommitOid() (repo Repository, oid *ObjectId) {
+	testRepo := test.Linear
+	output := testRepo.Output().(*test.OutputLinear)
+	repo = Open(testRepo.Repo())
+	oid = OidNow(output.Commits[0].Oid)
+	return
+}
+
+func packedCommitOid() (repo Repository, oid *ObjectId) {
+	testRepo := test.LinearPacked
+	output := testRepo.Output().(*test.OutputLinearPacked)
+	repo = Open(testRepo.Repo())
+	oid = OidNow(output.Commits[0].Oid)
+	return
+}
+
 func Benchmark__readLooseBlobByOid(b *testing.B) {
 	b.StopTimer()
-	testRepo := test.Blobs
-	repo := Open(testRepo.Repo())
-	output := testRepo.Output().([]*test.OutputBlob)
-	oid := OidNow(output[0].Oid)
-
-	// make sure this operation is valid
-	_, err := repo.ObjectFromOid(oid)
-	if err != nil {
-		b.Errorf("could not read blob: %s", oid)
-	}
+	repo, oid := looseBlobOid()
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		repo.ObjectFromOid(oid)
+		_, err := repo.ObjectFromOid(oid)
+		if err != nil {
+			b.Errorf("could not read blob: %s", oid)
+		}
 	}
 }
 
 func Benchmark__readLooseBlobByShort(b *testing.B) {
 	b.StopTimer()
-	testRepo := test.Blobs
-	repo := Open(testRepo.Repo())
-	output := testRepo.Output().([]*test.OutputBlob)
-	oid := output[0].Oid[:20]
-
-	// make sure this operation is valid
-	_, err := ObjectFromRevision(repo, oid)
-	if err != nil {
-		b.Errorf("could not read blob: %s", oid)
-	}
+	repo, oid := looseBlobOid()
+	rev := oid.String()[:20]
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		ObjectFromRevision(repo, oid)
+		_, err := ObjectFromRevision(repo, rev)
+		if err != nil {
+			b.Errorf("could not read blob: %s", rev)
+		}
 	}
 }
 
 func Benchmark__readLooseCommitByOid(b *testing.B) {
 	b.StopTimer()
-	testRepo := test.Linear
-	repo := Open(testRepo.Repo())
-	output := testRepo.Output().(*test.OutputLinear)
-	oid := OidNow(output.Commits[0].Oid)
-
-	// make sure this operation is valid
-	_, err := repo.ObjectFromOid(oid)
-	if err != nil {
-		b.Errorf("could not read blob: %s", oid)
-	}
+	repo, oid := looseCommitOid()
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		repo.ObjectFromOid(oid)
+		_, err := repo.ObjectFromOid(oid)
+		if err != nil {
+			b.Errorf("could not read blob: %s", oid)
+		}
 	}
 }
 
 func Benchmark__readPackedCommitByOid(b *testing.B) {
 	b.StopTimer()
-	testRepo := test.LinearPacked
-	repo := Open(testRepo.Repo())
-	output := testRepo.Output().(*test.OutputLinear)
-	oid := OidNow(output.Commits[0].Oid)
-
-	// make sure this operation is valid
-	_, err := repo.ObjectFromOid(oid)
-	if err != nil {
-		b.Errorf("could not read blob: %s", oid)
-	}
+	repo, oid := packedCommitOid()
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		repo.ObjectFromOid(oid)
+		_, err := repo.ObjectFromOid(oid)
+		if err != nil {
+			b.Errorf("could not read blob: %s", oid)
+		}
+	}
+}
+
+func Benchmark__readPackedCommitByShort(b *testing.B) {
+	b.StopTimer()
+	repo, oid := packedCommitOid()
+	rev := oid.String()[:20]
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err := ObjectFromRevision(repo, rev)
+		if err != nil {
+			b.Errorf("could not read blob: %s", rev)
+		}
 	}
 }
