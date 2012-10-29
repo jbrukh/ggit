@@ -357,77 +357,72 @@ func (p *packIdxParser) parsePack() *Pack {
 	}
 }
 
-// parse the ith entry of this pack, opening the pack resource if necessary
-func (pack *Pack) parseEntry(i int) (obj *PackedObject) {
-	//TODO: break this function up... or at least segment it more clearly
-	if len(pack.content) > i && pack.content[i] != nil {
-		return pack.content[i] //already parsed
+func (p *Pack) getEntryData(i int) []byte {
+	if p.file == nil {
+		p.open()
 	}
-	if pack.file == nil {
-		pack.open()
-	}
-	file, objects, idx := pack.file, pack.content, pack.idx
-	entries := idx.entries
+	entries := p.idx.entries
 	v := entries[i]
 	var entryLen int64
 	if i+1 < len(entries) {
 		entryLen = entries[i+1].offset - v.offset
 	} else {
-		if info, err := file.Stat(); err != nil {
-			panicErrf("Could not determine size of pack file %s: %s", file.Name(), err)
+		if info, err := p.file.Stat(); err != nil {
+			panicErrf("Could not determine size of pack file %s: %s", p.file.Name(), err)
 		} else {
 			entryLen = info.Size() - v.offset
 		}
 	}
 	data := make([]byte, entryLen, entryLen)
-	if _, err := file.ReadAt(data, v.offset); err != nil {
-		fmt.Printf("Could not read %d bytes from %d of pack file %s: %s", len(data), v.offset, file.Name(), err)
+	if _, err := p.file.ReadAt(data, v.offset); err != nil {
+		panicErrf("Could not read %d bytes from %d of pack file %s: %s", len(data), v.offset, p.file.Name(), err)
 	}
-	var (
-		size int64
-		err  error
-	)
+	return data
+}
+
+// parse the ith entry of this pack, opening the pack resource if necessary
+func (p *Pack) parseEntry(i int) (obj *PackedObject) {
+	//TODO: break this function up... or at least segment it more clearly
+	if len(p.content) > i && p.content[i] != nil {
+		return p.content[i] //already parsed
+	}
+	data := p.getEntryData(i)
 	// keep track of bytes read so that, in conjunction with the next entry's offset, we can know where the next
 	// object in the pack begins.
-	var cursor int
-	headerHeader := data[cursor]
-	cursor++
+	headerHeader := data[0]
+	read := 1
 	typeBits := (headerHeader & 127) >> 4
 	sizeBits := (headerHeader & 15)
 	//collect remaining size bytes, if any.
-	sizeBytes := fmt.Sprintf("%04b", sizeBits)
+	size := uint64(0)
 	for s := headerHeader; isSetMSB(s); {
-		s = data[cursor]
-		cursor++
-		sizeBytes = fmt.Sprintf("%07b", s&127) + sizeBytes
+		s = data[read]
+		size |= uint64(s&127) << (uint64(read-1) * 7)
+		read++
 	}
-	if size, err = strconv.ParseInt(sizeBytes, 2, 64); err != nil {
+	size = (size << 4) + uint64(sizeBits)
+	v := p.idx.entries[i]
+	/*if size, err = strconv.ParseInt(sizeBytes, 2, 64); err != nil {
 		panicErrf("Err parsing size: %v. Could not determine size for %s", err, v.repr)
-	}
+	}*/
 	pot := PackedObjectType(typeBits)
-	var bytes []byte
-	if i+1 < len(entries) {
-		n := int(entryLen)
-		bytes = data[cursor:n]
-		cursor = n
-	} else {
-		bytes = data[cursor:]
-	}
+	bytes := data[read:]
 	switch {
 	case pot == PackedBlob || pot == PackedCommit || pot == PackedTree || pot == PackedTag:
-		obj = parseNonDeltaEntry(&bytes, pot, v.ObjectId, size)
+		obj = parseNonDeltaEntry(&bytes, pot, v.ObjectId, int64(size))
 	default:
 		var (
 			deltaDeflated packedDelta
 			base          *PackedObject
 			baseOffset    int64
 			dp            *packedObjectParser
+			err           error
 		)
 		switch pot {
 		case ObjectRefDelta:
 			var oid *ObjectId
 			deltaDeflated, oid = readPackedRefDelta(&bytes)
-			baseOffset = idx.entriesById[oid.String()].offset
+			baseOffset = p.idx.entriesById[oid.String()].offset
 		case ObjectOffsetDelta:
 			if deltaDeflated, baseOffset, err = readPackedOffsetDelta(&bytes); err != nil {
 				panicErrf("Err parsing size: %v. Could not determine size for %s", err, v.repr)
@@ -436,20 +431,20 @@ func (pack *Pack) parseEntry(i int) (obj *PackedObject) {
 		default:
 			fmt.Printf("Unrecognized pack object type: %b ", pot)
 		}
-		objectIndex := sort.Search(len(idx.entries), func(i int) bool {
-			return idx.entries[i].offset >= int64(baseOffset)
+		objectIndex := sort.Search(len(p.idx.entries), func(i int) bool {
+			return p.idx.entries[i].offset >= int64(baseOffset)
 		})
-		if idx.entries[objectIndex].offset != baseOffset {
+		if p.idx.entries[objectIndex].offset != baseOffset {
 			panicErrf("Could not find object with offset %d (%d - %d). Closest match was %d.", baseOffset,
-				v.offset+baseOffset, v.offset, idx.entries[i].offset)
+				v.offset+baseOffset, v.offset, p.idx.entries[i].offset)
 		}
-		if objects[objectIndex] == nil {
-			objects[objectIndex] = pack.parseEntry(objectIndex)
-			if objects[objectIndex] == nil {
+		if p.content[objectIndex] == nil {
+			p.content[objectIndex] = p.parseEntry(objectIndex)
+			if p.content[objectIndex] == nil {
 				panicErrf("Ref deltas not yet implemented!")
 			}
 		}
-		base = objects[objectIndex]
+		base = p.content[objectIndex]
 		bytes = *((*[]byte)(deltaDeflated))
 		if dp, err = newPackedObjectParser(&bytes, v.ObjectId); err != nil {
 			panicErr(err.Error())
