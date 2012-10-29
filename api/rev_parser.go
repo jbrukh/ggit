@@ -61,35 +61,6 @@ func (p *revParser) Object() Object {
 	return p.o
 }
 
-// // more returns true if and only if the index
-// // of the parser has more characters to read.
-// func (p *revParser) more() bool {
-// 	return p.inx < len(p.rev)
-// }
-
-// // next increments the index of the parser.
-// func (p *revParser) next() {
-// 	p.inx++
-// }
-
-// // curr returns the current character in the
-// // revision that the index is pointing to.
-// func (p *revParser) curr() byte {
-// 	return p.rev[p.inx]
-// }
-
-// // symbol returns the revision string until,
-// // but not including, the index.
-// func (p *revParser) symbol() string {
-// 	return p.rev[:p.inx]
-// }
-
-// // peek peeks ahead a number of characters
-// // from the index.
-// func (p *revParser) peek(n int) string {
-// 	return p.rev[p.inx : p.inx+n]
-// }
-
 // number parses and returns the number that
 // is represented by the string immediately
 // following the index. If the string in question
@@ -117,60 +88,61 @@ func (p *revParser) number() (n int) {
 }
 
 func (p *revParser) Parse() error {
-	if p.rev == "" {
-		return errors.New("revision spec is empty")
-	}
-
-	if p.PeekByte() == ':' {
-		return errors.New(": syntaxes not supported") // TODO
-	}
-
-	start := p.Count()
-	// read until modifier or end
-	for !p.EOF() {
-		if !isModifier(p.PeekByte()) {
-			p.ReadByte()
-		} else {
-			break
-		}
-	}
-	end := p.Count()
-
-	rev := p.rev[start:end]
-	if rev == "" {
-		return errors.New("revision is empty")
-	}
-
-	err := p.findObject(rev)
-	if err != nil {
-		return err
-	}
-
-	for !p.EOF() {
-		var parent *Commit
-		var err error
-		if p.PeekByte() == '^' {
-			p.ConsumeByte('^')
-			parent, err = applyParentFunc(p, CommitNthParent)
-		} else if p.PeekByte() == '~' {
-			p.ConsumeByte('~')
-			parent, err = applyParentFunc(p, CommitNthAncestor)
-		} else {
-			panic("unknown modifier, shouldn't get here")
+	e := safeParse(func() {
+		if p.rev == "" {
+			panicErr("revision spec is empty")
 		}
 
+		if p.PeekByte() == ':' {
+			panicErr(": syntaxes not supported") // TODO
+		}
+
+		start := p.Count()
+		// read until modifier or end
+		for !p.EOF() {
+			if !isModifier(p.PeekByte()) {
+				p.ReadByte()
+			} else {
+				break
+			}
+		}
+		end := p.Count()
+
+		rev := p.rev[start:end]
+		if rev == "" {
+			panicErr("revision is empty")
+		}
+
+		err := p.findObject(rev)
 		if err != nil {
-			return err
+			panicErr(err.Error())
 		}
-		p.o = parent
-	}
 
-	return nil
-}
-
-func (p *revParser) parseObjectType() (objectType ObjectType) {
-	otype := p.ConsumeStrings(objectTypes)
-	return ObjectType(otype)
+		for !p.EOF() {
+			var parent *Commit
+			var err error
+			b := p.ReadByte()
+			if b == '^' {
+				if !p.EOF() && p.PeekByte() == '{' {
+					p.ConsumeByte('{')
+					otype := ObjectType(p.ConsumeStrings(objectTypes))
+					applyDereference(p, otype)
+					p.ConsumeByte('}')
+				} else {
+					parent, err = applyParentFunc(p, CommitNthParent)
+				}
+			} else if b == '~' {
+				parent, err = applyParentFunc(p, CommitNthAncestor)
+			} else {
+				panicErrf("unexpected modifier: '%s'", string(b))
+			}
+			if err != nil {
+				panicErr(err.Error())
+			}
+			p.o = parent
+		}
+	})
+	return e
 }
 
 func applyParentFunc(p *revParser, f parentFunc) (*Commit, error) {
