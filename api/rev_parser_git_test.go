@@ -52,7 +52,7 @@ func Test_revParse__zeros(t *testing.T) {
 	repo := Open(testCase.Repo())
 	output := testCase.Output().(*test.OutputCommits)
 
-	util.Assert(t, output.N > 2)
+	util.Assert(t, output.N > 0)
 	util.Assert(t, len(output.Commits) == output.N)
 
 	// test the first, parentless commit
