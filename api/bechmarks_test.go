@@ -55,7 +55,7 @@ func looseDerefs() (repo Repository, output *test.OutputDerefs) {
 	return
 }
 
-func packedDerefs() (repo Repository, output *test.OutputDerefs) {
+func packedDerefs() (repo Repository, output *test.OutputDerefsPacked) {
 	testRepo := test.DerefsPacked
 	output = testRepo.Output().(*test.OutputDerefsPacked)
 	repo = Open(testRepo.Repo())
@@ -98,7 +98,7 @@ func Benchmark__readLooseCommitByOid(b *testing.B) {
 
 func Benchmark__readLooseTreeByOid(b *testing.B) {
 	b.StopTimer()
-	repo, output := derefs()
+	repo, output := looseDerefs()
 	oid := OidNow(output.TreeOid)
 	for i := 0; i < b.N; i++ {
 		objectFromOid(b, repo, oid)
@@ -116,7 +116,7 @@ func Benchmark__readLooseBlobByShort(b *testing.B) {
 
 func Benchmark__readLooseTreeByShort(b *testing.B) {
 	b.StopTimer()
-	repo, output := derefs()
+	repo, output := looseDerefs()
 	rev := output.TreeOid[:20]
 	for i := 0; i < b.N; i++ {
 		objectFromRev(b, repo, rev)
@@ -150,7 +150,7 @@ func Benchmark__readPackedCommitByOid(b *testing.B) {
 
 func Benchmark__readPackedTreeByOid(b *testing.B) {
 	b.StopTimer()
-	repo, output := derefs()
+	repo, output := packedDerefs()
 	oid := OidNow(output.TreeOid)
 	for i := 0; i < b.N; i++ {
 		objectFromOid(b, repo, oid)
@@ -168,7 +168,7 @@ func Benchmark__readPackedCommitByShort(b *testing.B) {
 
 func Benchmark__readPackedTreeByShort(b *testing.B) {
 	b.StopTimer()
-	repo, output := derefs()
+	repo, output := packedDerefs()
 	rev := output.TreeOid[:20]
 	for i := 0; i < b.N; i++ {
 		objectFromRev(b, repo, rev)
