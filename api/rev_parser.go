@@ -119,40 +119,47 @@ func (p *revParser) Parse() error {
 		}
 
 		for !p.EOF() {
-			var parent *Commit
 			var err error
 			b := p.ReadByte()
 			if b == '^' {
 				if !p.EOF() && p.PeekByte() == '{' {
 					p.ConsumeByte('{')
 					otype := ObjectType(p.ConsumeStrings(objectTypes))
-					applyDereference(p, otype)
+					err = applyDereference(p, otype)
+					if err != nil {
+
+					}
 					p.ConsumeByte('}')
 				} else {
-					parent, err = applyParentFunc(p, CommitNthParent)
+					err = applyParentFunc(p, CommitNthParent)
 				}
 			} else if b == '~' {
-				parent, err = applyParentFunc(p, CommitNthAncestor)
+				err = applyParentFunc(p, CommitNthAncestor)
 			} else {
 				panicErrf("unexpected modifier: '%s'", string(b))
 			}
+
 			if err != nil {
 				panicErr(err.Error())
 			}
-			p.o = parent
 		}
 	})
 	return e
 }
 
-func applyParentFunc(p *revParser, f parentFunc) (*Commit, error) {
+func applyParentFunc(p *revParser, f parentFunc) (err error) {
 	n := p.number()
-
-	c, err := CommitFromObject(p.repo, p.o)
+	var c, parent *Commit
+	c, err = CommitFromObject(p.repo, p.o)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return f(p.repo, c, n)
+	parent, err = f(p.repo, c, n)
+	if err != nil {
+		return err
+	}
+	p.o = parent
+	return
 }
 
 func applyDereference(p *revParser, otype ObjectType) error {
