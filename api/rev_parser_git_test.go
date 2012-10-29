@@ -75,8 +75,9 @@ func Test_revParse__derefs(t *testing.T) {
 	testObjectExpected(t, repo, "HEAD^{tree}", treeOid, ObjectTree)
 	testObjectExpected(t, repo, "HEAD^{commit}^{tree}", treeOid, ObjectTree)
 	testObjectExpected(t, repo, output.TagName, tagOid, ObjectTag)
-	//testObjectExpected(t, repo, output.TagName+"^{tag}", tagOid, ObjectTag)
 	testObjectExpected(t, repo, output.TagName+"^{commit}", commitOid, ObjectCommit)
+	testObjectExpected(t, repo, output.TagName+"^{commit}^{tree}", treeOid, ObjectTree)
+
 }
 
 // testShortOid retrives the object by all possible combinations of
