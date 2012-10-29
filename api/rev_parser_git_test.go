@@ -75,43 +75,43 @@ func testShortOid(t *testing.T, repo Repository, oid *ObjectId) {
 
 func testFirstParent(t *testing.T, repo Repository, oid *ObjectId, parentOid *ObjectId) {
 	rev := oid.String() // rev == oid here
-	testCommitExpected(t, repo, rev, oid)
+	testObjectExpected(t, repo, rev, oid)
 	for i := 4; i <= 40; i++ {
-		testCommitExpected(t, repo, rev[:i]+"^", parentOid)
+		testObjectExpected(t, repo, rev[:i]+"^", parentOid)
 	}
 }
 
 func testFirstParentVariations(t *testing.T, repo Repository, oid *ObjectId, parentOid *ObjectId) {
 	rev := oid.String()
-	testCommitExpected(t, repo, rev+"^", parentOid)
-	testCommitExpected(t, repo, rev+"^1", parentOid)
-	testCommitExpected(t, repo, rev+"~", parentOid)
-	testCommitExpected(t, repo, rev+"~1", parentOid)
+	testObjectExpected(t, repo, rev+"^", parentOid)
+	testObjectExpected(t, repo, rev+"^1", parentOid)
+	testObjectExpected(t, repo, rev+"~", parentOid)
+	testObjectExpected(t, repo, rev+"~1", parentOid)
 }
 
 func testSecondAncestor(t *testing.T, repo Repository, oid *ObjectId, parentOid *ObjectId) {
 	rev := oid.String() // rev == oid here
-	testCommitExpected(t, repo, rev, oid)
+	testObjectExpected(t, repo, rev, oid)
 	for i := 4; i <= 40; i++ {
-		testCommitExpected(t, repo, rev[:i]+"~2", parentOid)
+		testObjectExpected(t, repo, rev[:i]+"~2", parentOid)
 	}
 }
 
 func testSecondAncestorVariations(t *testing.T, repo Repository, oid *ObjectId, parentOid *ObjectId) {
 	rev := oid.String()
-	testCommitExpected(t, repo, rev+"^^", parentOid)
-	testCommitExpected(t, repo, rev+"^1^1", parentOid)
-	testCommitExpected(t, repo, rev+"^^1", parentOid)
-	testCommitExpected(t, repo, rev+"^1^", parentOid)
-	testCommitExpected(t, repo, rev+"~~", parentOid)
-	testCommitExpected(t, repo, rev+"~1~", parentOid)
-	testCommitExpected(t, repo, rev+"~1~1", parentOid)
-	testCommitExpected(t, repo, rev+"~~1", parentOid)
+	testObjectExpected(t, repo, rev+"^^", parentOid)
+	testObjectExpected(t, repo, rev+"^1^1", parentOid)
+	testObjectExpected(t, repo, rev+"^^1", parentOid)
+	testObjectExpected(t, repo, rev+"^1^", parentOid)
+	testObjectExpected(t, repo, rev+"~~", parentOid)
+	testObjectExpected(t, repo, rev+"~1~", parentOid)
+	testObjectExpected(t, repo, rev+"~1~1", parentOid)
+	testObjectExpected(t, repo, rev+"~~1", parentOid)
 }
 
 func testParentlessCommit(t *testing.T, repo Repository, oid *ObjectId) {
 	rev := oid.String()
-	testCommitExpected(t, repo, rev, oid)
+	testObjectExpected(t, repo, rev, oid)
 	_, err := ObjectFromRevision(repo, rev+"~1")
 	util.Assert(t, err != nil)
 	_, err = ObjectFromRevision(repo, rev+"^")
@@ -120,18 +120,18 @@ func testParentlessCommit(t *testing.T, repo Repository, oid *ObjectId) {
 
 func testZeros(t *testing.T, repo Repository, oid *ObjectId) {
 	rev := oid.String()
-	testCommitExpected(t, repo, rev+"^0", oid)
-	testCommitExpected(t, repo, rev+"~0", oid)
+	testObjectExpected(t, repo, rev+"^0", oid)
+	testObjectExpected(t, repo, rev+"~0", oid)
 }
 
 // ================================================================= //
 // UTIL
 // ================================================================= //
 
-// testCommitExpected retrieves the commit with the given revision specification
+// testObjectExpected retrieves the commit with the given revision specification
 // from the given repository and ensures that this operation went well and the
 // returned object in fact has the expected oid.
-func testCommitExpected(t *testing.T, repo Repository, rev string, expOid *ObjectId) {
+func testObjectExpected(t *testing.T, repo Repository, rev string, expOid *ObjectId) {
 	parent, err := ObjectFromRevision(repo, rev)
 	util.AssertNoErr(t, err)
 	util.Assert(t, parent.Header().Type() == ObjectCommit)
