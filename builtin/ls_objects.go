@@ -58,13 +58,10 @@ func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {
 		e    error
 	)
 	if b.flagLoose {
-		println("loose")
 		oids, e = diskRepo.LooseObjectIds()
 	} else if b.flagPacked {
-		println("packed")
 		oids, e = diskRepo.PackedObjectIds()
 	} else {
-		println("default")
 		oids, e = p.Repo.ObjectIds()
 	}
 
