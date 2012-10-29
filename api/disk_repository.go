@@ -151,12 +151,12 @@ func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 }
 
 //find all objects and print their ids
-func (r *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
-	pOids, err := r.PackedObjectIds()
+func (repo *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
+	pOids, err := repo.PackedObjectIds()
 	if err != nil {
 		return nil, err
 	}
-	lOids, err := r.LooseObjectIds()
+	lOids, err := repo.LooseObjectIds()
 	if err != nil {
 		return nil, err
 	}
@@ -165,26 +165,26 @@ func (r *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
 	return
 }
 
-func (r *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
-	if err := r.loadPacks(); err != nil {
+func (repo *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
+	if err := repo.loadPacks(); err != nil {
 		return nil, err
 	}
-	return objectIdsFromPacks(r.packs), nil
+	return objectIdsFromPacks(repo.packs), nil
 }
 
-func (r *DiskRepository) PackedObjects() ([]*PackedObject, error) {
-	if err := r.loadPacks(); err != nil {
+func (repo *DiskRepository) PackedObjects() ([]*PackedObject, error) {
+	if err := repo.loadPacks(); err != nil {
 		return nil, err
 	}
-	return objectsFromPacks(r.packs), nil
+	return objectsFromPacks(repo.packs), nil
 }
 
 //extract object ids from a pack file. also extract objects if everything is true.
-func (r *DiskRepository) loadPacks() (err error) {
-	if r.packs != nil {
+func (repo *DiskRepository) loadPacks() (err error) {
+	if repo.packs != nil {
 		return
 	}
-	objectsRoot := path.Join(r.path, DefaultObjectsDir)
+	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
 	packRoot := path.Join(objectsRoot, DefaultPackDir)
 	packNames := make([]string, 0)
 	if err = filepath.Walk(packRoot, func(path string, info os.FileInfo, ignored error) error {
@@ -208,12 +208,12 @@ func (r *DiskRepository) loadPacks() (err error) {
 			packs[i] = pp.parsePack()
 		}
 	}
-	r.packs = packs
+	repo.packs = packs
 	return
 }
 
-func (r *DiskRepository) LooseObjectIds() (oids []*ObjectId, err error) {
-	objectsRoot := path.Join(r.path, DefaultObjectsDir)
+func (repo *DiskRepository) LooseObjectIds() (oids []*ObjectId, err error) {
+	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
 	oids = make([]*ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
 	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
