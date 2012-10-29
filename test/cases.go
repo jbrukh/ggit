@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"github.com/jbrukh/ggit/util"
 	"os"
+	"time"
 )
 
 // ================================================================= //
@@ -25,6 +26,7 @@ import (
 var repoTestCases = []*RepoTestCase{
 	Empty,
 	Linear,
+	LinearPacked,
 	Blobs,
 	Derefs,
 }
@@ -35,13 +37,14 @@ var repoTestCases = []*RepoTestCase{
 func init() {
 	fmt.Println("Creating repo test cases...\n")
 	for _, testCase := range repoTestCases {
+		start := time.Now()
 		err := testCase.Build()
 		if err != nil {
 			fmt.Printf("error (exiting!): %s\n", err)
 			RemoveTestCases()
 			os.Exit(1)
 		}
-		fmt.Printf("Created case: %s\n\n", testCase.Name())
+		fmt.Printf("Created case: %s (%d ms)\n\n", testCase.Name(), int64(time.Since(start))/int64(time.Millisecond))
 	}
 	fmt.Println("Done.\n")
 }

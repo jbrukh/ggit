@@ -18,7 +18,7 @@ import (
 func Test_readCommits(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputCommits)
+	output := testCase.Output().(*test.OutputLinear)
 
 	util.Assert(t, output.N > 1)
 	util.Assert(t, len(output.Commits) == output.N)

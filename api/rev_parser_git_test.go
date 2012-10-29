@@ -16,7 +16,7 @@ import (
 func Test_revParse__firstParent(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputCommits)
+	output := testCase.Output().(*test.OutputLinear)
 
 	util.Assert(t, output.N > 1)
 	util.Assert(t, len(output.Commits) == output.N)
@@ -34,7 +34,7 @@ func Test_revParse__firstParent(t *testing.T) {
 func Test_revParse__secondAncestor(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputCommits)
+	output := testCase.Output().(*test.OutputLinear)
 
 	util.Assert(t, output.N > 2)
 	util.Assert(t, len(output.Commits) == output.N)
@@ -50,7 +50,7 @@ func Test_revParse__secondAncestor(t *testing.T) {
 func Test_revParse__zeros(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputCommits)
+	output := testCase.Output().(*test.OutputLinear)
 
 	util.Assert(t, output.N > 0)
 	util.Assert(t, len(output.Commits) == output.N)

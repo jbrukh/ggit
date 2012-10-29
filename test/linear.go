@@ -27,7 +27,7 @@ type CommitAndParent struct {
 	Repr      string // representation of this commit as a string
 }
 
-type OutputCommits struct {
+type OutputLinear struct {
 	Commits []*CommitAndParent
 	N       int
 }
@@ -44,7 +44,7 @@ var Linear = NewRepoTestCase(
 			return errors.New("n must be > 0")
 		}
 		repo := testCase.repo
-		output := &OutputCommits{
+		output := &OutputLinear{
 			Commits: make([]*CommitAndParent, n),
 			N:       n,
 		}
