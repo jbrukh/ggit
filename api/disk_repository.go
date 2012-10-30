@@ -23,9 +23,9 @@ import (
 
 // a representation of a git repository
 type DiskRepository struct {
-	path  string
-	packs []*Pack
-	pr    []Ref
+	path       string
+	packs      []*Pack
+	packedRefs []Ref
 }
 
 // Open a reprository that is located at the given path. The
@@ -241,20 +241,20 @@ func (repo *DiskRepository) Index() (idx *Index, err error) {
 	return toIndex(bufio.NewReader(file))
 }
 
-func (repo *DiskRepository) PackedRefs() (pr []Ref, err error) {
-	if repo.pr == nil {
+func (repo *DiskRepository) PackedRefs() (packedRefs []Ref, err error) {
+	if repo.packedRefs == nil {
 		file, e := repo.relativeFile(PackedRefsFile)
 		if e != nil {
 			return nil, e
 		}
 		defer file.Close()
 		p := newRefParser(bufio.NewReader(file), "")
-		if pr, e = p.ParsePackedRefs(); e != nil {
+		if packedRefs, e = p.ParsePackedRefs(); e != nil {
 			return nil, e
 		}
-		repo.pr = pr
+		repo.packedRefs = packedRefs
 	}
-	return pr, nil
+	return packedRefs, nil
 }
 
 func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
