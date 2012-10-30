@@ -84,11 +84,16 @@ func (pack *Pack) open() error {
 	return nil
 }
 
+// close will nil-ify and close the 
+// pack file resource, but not in that
+// order
 func (pack *Pack) close() (err error) {
-	// TODO: take a look
-	// @jbrukh: this guarantees nil pointer on Close() -- commenting!
-	// defer func() { pack.file = nil }()
-	return pack.file.Close()
+	file := pack.file
+	pack.file = nil
+	if file != nil {
+		err = file.Close()
+	}
+	return
 }
 
 // Returns the one Object in this pack with the given ObjectId,
