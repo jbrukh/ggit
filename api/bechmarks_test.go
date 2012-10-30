@@ -157,6 +157,15 @@ func Benchmark__readPackedTreeByOid(b *testing.B) {
 	}
 }
 
+func Benchmark__readPackedBlobByShort(b *testing.B) {
+	b.StopTimer()
+	repo, oid := packedBlobOid()
+	rev := oid.String()[:20]
+	for i := 0; i < b.N; i++ {
+		objectFromRev(b, repo, rev)
+	}
+}
+
 func Benchmark__readPackedCommitByShort(b *testing.B) {
 	b.StopTimer()
 	repo, oid := packedCommitOid()
