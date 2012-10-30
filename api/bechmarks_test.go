@@ -20,7 +20,7 @@ func looseBlobOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.Blobs
 	output := testRepo.Output().(*test.OutputBlobs)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(output.Blobs[0].Oid)
+	oid = OidNow(output.Blobs[1].Oid)
 	return
 }
 
@@ -28,7 +28,7 @@ func looseCommitOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.Linear
 	output := testRepo.Output().(*test.OutputLinear)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(output.Commits[0].Oid)
+	oid = OidNow(output.Commits[1].Oid)
 	return
 }
 
@@ -36,7 +36,7 @@ func packedBlobOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.BlobsPacked
 	output := testRepo.Output().(*test.OutputBlobsPacked)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(output.Blobs[0].Oid)
+	oid = OidNow(output.Blobs[1].Oid)
 	return
 }
 
@@ -44,7 +44,7 @@ func packedCommitOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.LinearPacked
 	output := testRepo.Output().(*test.OutputLinearPacked)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(output.Commits[0].Oid)
+	oid = OidNow(output.Commits[1].Oid)
 	return
 }
 
@@ -76,6 +76,15 @@ func objectFromRev(b *testing.B, repo Repository, rev string) {
 	_, err := ObjectFromRevision(repo, rev)
 	if err != nil {
 		b.Fatalf("could not read object: %s", rev)
+	}
+	b.StopTimer()
+}
+
+func listRefs(b *testing.B, repo Repository) {
+	b.StartTimer()
+	_, err := repo.Refs()
+	if err != nil {
+		b.Fatalf("could not list refs: %s", err)
 	}
 	b.StopTimer()
 }
@@ -194,6 +203,15 @@ func Benchmark__derefLooseTreeFromCommit(b *testing.B) {
 	}
 }
 
+func Benchmark__derefLooseTreeFromBranch(b *testing.B) {
+	b.StopTimer()
+	repo, output := looseDerefs()
+	rev := output.BranchName + "^{tree}"
+	for i := 0; i < b.N; i++ {
+		objectFromRev(b, repo, rev)
+	}
+}
+
 func Benchmark__derefPackedTreeFromCommit(b *testing.B) {
 	b.StopTimer()
 	repo, output := packedDerefs()
@@ -201,5 +219,40 @@ func Benchmark__derefPackedTreeFromCommit(b *testing.B) {
 	rev := oid.String() + "^{tree}"
 	for i := 0; i < b.N; i++ {
 		objectFromRev(b, repo, rev)
+	}
+}
+
+func Benchmark__derefPackedTreeFromBranch(b *testing.B) {
+	b.StopTimer()
+	repo, output := packedDerefs()
+	rev := output.BranchName + "^{tree}"
+	for i := 0; i < b.N; i++ {
+		objectFromRev(b, repo, rev)
+	}
+}
+
+func Benchmark__resolveLooseBranch(b *testing.B) {
+	b.StopTimer()
+	repo, output := looseDerefs()
+	rev := output.BranchName
+	for i := 0; i < b.N; i++ {
+		objectFromRev(b, repo, rev)
+	}
+}
+
+func Benchmark__resolvePackedBranch(b *testing.B) {
+	b.StopTimer()
+	repo, output := packedDerefs()
+	rev := output.BranchName
+	for i := 0; i < b.N; i++ {
+		objectFromRev(b, repo, rev)
+	}
+}
+
+func Benchmark__listTenRefs(b *testing.B) {
+	b.StopTimer()
+	repo := Open(test.Linear.Repo())
+	for i := 0; i < b.N; i++ {
+		listRefs(b, repo)
 	}
 }

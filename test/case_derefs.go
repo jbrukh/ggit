@@ -23,10 +23,11 @@ import (
 // ================================================================= //
 
 type OutputDerefs struct {
-	TagName   string
-	CommitOid string
-	TreeOid   string
-	TagOid    string
+	TagName    string
+	CommitOid  string
+	TreeOid    string
+	TagOid     string
+	BranchName string
 }
 
 var Derefs = NewRepoTestCase(
@@ -61,9 +62,17 @@ var Derefs = NewRepoTestCase(
 			return fmt.Errorf("could not create tag: %s", err)
 		}
 
+		// create a branch
+		branchName := "brooklyn"
+		_, err = util.GitExec(repo, "branch", branchName)
+		if err != nil {
+			return fmt.Errorf("could not create branch: %s", err)
+		}
+
 		// get the output data
 		output := new(OutputDerefs)
 		output.TagName = tagName
+		output.BranchName = branchName
 
 		output.CommitOid = util.RevOid(repo, "HEAD")
 		output.TreeOid = util.RevOid(repo, "HEAD^{tree}")

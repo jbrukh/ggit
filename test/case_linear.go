@@ -21,14 +21,15 @@ import (
 // TEST CASE: A FEW LINEAR COMMITS
 // ================================================================= //
 
-type CommitAndParent struct {
-	Oid       string
-	ParentOid string // first parent oid
-	Repr      string // representation of this commit as a string
+type CommitInfo struct {
+	Oid        string
+	ParentOid  string // first parent oid
+	Repr       string // representation of this commit as a string
+	BranchName string
 }
 
 type OutputLinear struct {
-	Commits []*CommitAndParent
+	Commits []*CommitInfo
 	N       int
 }
 
@@ -45,7 +46,7 @@ var Linear = NewRepoTestCase(
 		}
 		repo := testCase.repo
 		output := &OutputLinear{
-			Commits: make([]*CommitAndParent, n),
+			Commits: make([]*CommitInfo, n),
 			N:       n,
 		}
 		for i := 0; i < n; i++ {
@@ -54,13 +55,21 @@ var Linear = NewRepoTestCase(
 			if err != nil {
 				return errors.New("could not create test file for repo: " + err.Error())
 			}
-			// create a few commits
+
+			// create a commits
 			err = util.GitExecMany(repo,
 				[]string{"add", "--all"},
 				[]string{"commit", "-a", "-m", fmt.Sprintf("\"Commit: %d\"", i)},
 			)
 			if err != nil {
 				return fmt.Errorf("could not commit to repo: %s", err)
+			}
+
+			// create a branch for that commit
+			branchName := fmt.Sprintf("branch_%d", i)
+			_, err = util.GitExec(repo, "branch", branchName)
+			if err != nil {
+				return fmt.Errorf("could not create branch: %s", err)
 			}
 
 			// get the output data
@@ -73,10 +82,11 @@ var Linear = NewRepoTestCase(
 			if i != 0 {
 				parentOid = util.RevOid(repo, "HEAD^")
 			}
-			output.Commits[i] = &CommitAndParent{
+			output.Commits[i] = &CommitInfo{
 				oid,
 				parentOid,
 				repr,
+				branchName,
 			}
 		}
 		testCase.output = output

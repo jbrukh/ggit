@@ -282,7 +282,7 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 
 	// First, get all the packed refs.
 	pr, err := repo.PackedRefs()
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
 
