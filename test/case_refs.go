@@ -32,6 +32,7 @@ type OutputRefs struct {
 	SymbolicRef1Target string // the name branch it points to
 	SymbolicRef2       string // points to the first symbolic ref
 	SymbolicRef2Target string // the first symbolic ref
+	HeadTarget         string // where HEAD points (symbolically)
 }
 
 var Refs = NewRepoTestCase(
@@ -102,6 +103,12 @@ var Refs = NewRepoTestCase(
 			return fmt.Errorf("could not create symbolic ref: %s", err)
 		}
 
+		// pack the refs, to move the annotated tag into the packed-refs file
+		_, err = util.GitExec(repo, "pack-refs")
+		if err != nil {
+			return fmt.Errorf("could not pack refs: %s", err)
+		}
+
 		// get the output data
 		output := &OutputRefs{
 			CommitOid:          util.RevOid(repo, "HEAD"),
@@ -114,6 +121,7 @@ var Refs = NewRepoTestCase(
 			SymbolicRef1Target: branchName,
 			SymbolicRef2:       symbolicRef2,
 			SymbolicRef2Target: symbolicRef1,
+			HeadTarget:         "refs/heads/master",
 		}
 
 		testCase.output = output
