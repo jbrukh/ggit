@@ -33,10 +33,10 @@ func looseCommitOid() (repo Repository, oid *ObjectId) {
 }
 
 func packedBlobOid() (repo Repository, oid *ObjectId) {
-	testRepo := test.BlobsPacked
-	output := testRepo.Output().(*test.OutputBlobsPacked)
+	testRepo := test.DerefsPacked
+	output := testRepo.Output().(*test.OutputDerefsPacked)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(output.Blobs[1].Oid)
+	oid = OidNow(output.BlobOid)
 	return
 }
 

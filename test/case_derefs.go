@@ -13,7 +13,6 @@ a tag on that commit, and data about the underlying tag, tree, and commit oids.
 package test
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jbrukh/ggit/util"
 )
@@ -28,6 +27,7 @@ type OutputDerefs struct {
 	TreeOid    string
 	TagOid     string
 	BranchName string
+	BlobOid    string
 }
 
 var Derefs = NewRepoTestCase(
@@ -41,9 +41,17 @@ var Derefs = NewRepoTestCase(
 		repo := testCase.repo
 
 		name := "myfile1.txt"
-		err = util.TestFile(repo, name, "one")
+		contents := "one"
+		err = util.TestFile(repo, name, contents)
 		if err != nil {
-			return errors.New("could not create test file for repo: " + err.Error())
+			return fmt.Errorf("could not create test file for repo: %s", err)
+		}
+
+		// hacky: figure out the blob oid of the file above
+		var blobOid string
+		blobOid, err = util.HashBlob(repo, contents)
+		if err != nil {
+			return fmt.Errorf("could not figure out blob oid: %s", err)
 		}
 
 		// create a single commit
@@ -77,6 +85,7 @@ var Derefs = NewRepoTestCase(
 		output.CommitOid = util.RevOid(repo, "HEAD")
 		output.TreeOid = util.RevOid(repo, "HEAD^{tree}")
 		output.TagOid = util.RevOid(repo, tagName)
+		output.BlobOid = blobOid
 
 		testCase.output = output
 		return

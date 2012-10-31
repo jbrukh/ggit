@@ -25,8 +25,7 @@ import (
 // mapping of name => RepoTestCase
 var repoTestCases = []*RepoTestCase{
 	Empty,
-	Blobs,
-	BlobsPacked,
+	Blobs, // do not try to pack this, it won't work on just loose blobs
 	Linear,
 	LinearPacked,
 	Derefs,
