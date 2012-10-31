@@ -54,38 +54,29 @@ var Derefs = NewRepoTestCase(
 			return fmt.Errorf("could not figure out blob oid: %s", err)
 		}
 
+		tagName := "0.0.0"
+		branchName := "brooklyn"
+
 		// create a single commit
 		err = util.GitExecMany(repo,
 			[]string{"add", "--all"},
 			[]string{"commit", "-a", "-m", "\"First and only commit\""},
+			[]string{"tag", "-a", tagName, "-m", "My tag!"},
+			[]string{"branch", branchName},
 		)
 		if err != nil {
 			return fmt.Errorf("could not commit to repo: %s", err)
 		}
 
-		// create a single tag
-		tagName := "0.0.0"
-		_, err = util.GitExec(repo, "tag", "-a", tagName, "-m", "My tag!")
-		if err != nil {
-			return fmt.Errorf("could not create tag: %s", err)
-		}
-
-		// create a branch
-		branchName := "brooklyn"
-		_, err = util.GitExec(repo, "branch", branchName)
-		if err != nil {
-			return fmt.Errorf("could not create branch: %s", err)
-		}
-
 		// get the output data
-		output := new(OutputDerefs)
-		output.TagName = tagName
-		output.BranchName = branchName
-
-		output.CommitOid = util.RevOid(repo, "HEAD")
-		output.TreeOid = util.RevOid(repo, "HEAD^{tree}")
-		output.TagOid = util.RevOid(repo, tagName)
-		output.BlobOid = blobOid
+		output := &OutputDerefs{
+			TagName:    tagName,
+			BranchName: branchName,
+			CommitOid:  util.RevOid(repo, "HEAD"),
+			TreeOid:    util.RevOid(repo, "HEAD^{tree}"),
+			TagOid:     util.RevOid(repo, tagName),
+			BlobOid:    blobOid,
+		}
 
 		testCase.output = output
 		return
