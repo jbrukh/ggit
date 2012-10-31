@@ -1,3 +1,11 @@
+//
+// Unless otherwise noted, this project is licensed under the Creative
+// Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License. Please
+// see the README file.
+//
+// Copyright (c) 2012 The ggit Authors
+//
+
 package api
 
 import (
@@ -269,14 +277,11 @@ func (p *packIdxParser) parseIdx() *Idx {
 	entriesByOid := make(map[string]*PackedObjectId)
 	for i := int64(0); i < count; i++ {
 		b := p.idxParser.ReadNBytes(20)
-		representation := fmt.Sprintf("%x", b)
+		oid, _ := OidFromBytes(b)
 		entries[i] = &PackedObjectId{
-			ObjectId: &ObjectId{
-				b,
-				representation,
-			},
+			ObjectId: oid,
 		}
-		entriesByOid[representation] = entries[i]
+		entriesByOid[oid.String()] = entries[i]
 	}
 	for i := int64(0); i < count; i++ {
 		entries[i].crc32 = int64(p.idxParser.ParseIntBigEndian(4))
@@ -541,7 +546,7 @@ func readPackedRefDelta(bytes []byte) (delta packedDelta, oid *ObjectId) {
 	deltaBytes := bytes[20:]
 	delta = packedDelta(deltaBytes)
 	oid, _ = OidFromBytes(baseOidBytes)
-	return packedDelta(deltaBytes), oid
+	return
 }
 
 func readPackedOffsetDelta(bytes []byte) (delta packedDelta, offset int64, err error) {
