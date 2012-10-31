@@ -11,9 +11,14 @@ alias gf="gofmt -tabs=false -tabwidth=4 -w *.go"
 
 # the most up-to-date ggit command
 alias gg="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
-
 alias ggbuild="go install -v ./... && go test ./..."
+alias ggtest="go test -v ./..."
 alias ggbench="go test -file api/benchmarks_test.go -test.bench=\".*\" ./api"
+
+ggbench-csv() {
+	SHA=`git rev-parse HEAD`
+	ggbench | grep Benchmark | sed -E -e "s/[ 	]+/,/g" | sed "s/^/$SHA,/g"
+}
 
 # list some objects... this is slow, so use on small repos
 objects() {
@@ -35,3 +40,4 @@ ggtime() {
 	time ggit "$@" 2>&1 >/dev/null
 	echo "==============================="
 }
+	
