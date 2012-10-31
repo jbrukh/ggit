@@ -277,7 +277,9 @@ func (p *packIdxParser) parseIdx() *Idx {
 	entriesByOid := make(map[string]*PackedObjectId)
 	for i := int64(0); i < count; i++ {
 		b := p.idxParser.ReadNBytes(20)
-		oid, _ := OidFromBytes(b)
+		oid := &ObjectId{
+			bytes: b,
+		}
 		entries[i] = &PackedObjectId{
 			ObjectId: oid,
 		}
@@ -291,16 +293,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 		entries[i].offset = p.idxParser.ParseIntBigEndian(4)
 	}
 	checksumPack := p.idxParser.ReadNBytes(20)
-	packChecksum := &ObjectId{
-		bytes: checksumPack,
-		repr:  fmt.Sprintf("%x", checksumPack),
-	}
-	//TODO: check the checksum
 	checksumIdx := p.idxParser.ReadNBytes(20)
-	idxChecksum := &ObjectId{
-		bytes: checksumIdx,
-		repr:  fmt.Sprintf("%x", checksumIdx),
-	}
 	if !p.idxParser.EOF() {
 		panicErrf("Found extraneous bytes! %x", p.idxParser.Bytes())
 	}
@@ -308,6 +301,12 @@ func (p *packIdxParser) parseIdx() *Idx {
 	sort.Sort(packedObjectIds(entries))
 	for i, v := range entries {
 		v.index = i
+	}
+	packChecksum := &ObjectId{
+		bytes: checksumPack,
+	}
+	idxChecksum := &ObjectId{
+		bytes: checksumIdx,
 	}
 	return &Idx{
 		entries,
