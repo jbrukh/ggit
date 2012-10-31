@@ -355,7 +355,6 @@ func (p *packIdxParser) parsePack() *Pack {
 	p.packParser.ConsumeString(PackSignature)
 	p.packParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
 	count := p.packParser.ParseIntBigEndian(4)
-	p.packFile.Close()
 	if count != idx.count {
 		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
 	}
@@ -365,7 +364,7 @@ func (p *packIdxParser) parsePack() *Pack {
 		idx,
 		p.name,
 		p.packOpener,
-		nil,
+		p.packFile,
 	}
 }
 
