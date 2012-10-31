@@ -64,10 +64,10 @@ func GitExec(workDir string, args ...string) (string, error) {
 // output and returns on any error. This is meant for
 // setting up test scenarios.
 func GitExecMany(workDir string, cmds ...[]string) error {
-	for _, cmd := range cmds {
+	for i, cmd := range cmds {
 		_, err := GitExec(workDir, cmd...)
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed on command %d ('%s') %s", i, cmd, err)
 		}
 	}
 	return nil
