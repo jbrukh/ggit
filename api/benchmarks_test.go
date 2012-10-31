@@ -123,19 +123,19 @@ func Benchmark__readLooseBlobByShort(b *testing.B) {
 	}
 }
 
-func Benchmark__readLooseTreeByShort(b *testing.B) {
+func Benchmark__readLooseCommitByShort(b *testing.B) {
 	b.StopTimer()
-	repo, output := looseDerefs()
-	rev := output.TreeOid[:20]
+	repo, oid := looseCommitOid()
+	rev := oid.String()[:20]
 	for i := 0; i < b.N; i++ {
 		objectFromRev(b, repo, rev)
 	}
 }
 
-func Benchmark__readLooseCommitByShort(b *testing.B) {
+func Benchmark__readLooseTreeByShort(b *testing.B) {
 	b.StopTimer()
-	repo, oid := looseCommitOid()
-	rev := oid.String()[:20]
+	repo, output := looseDerefs()
+	rev := output.TreeOid[:20]
 	for i := 0; i < b.N; i++ {
 		objectFromRev(b, repo, rev)
 	}
