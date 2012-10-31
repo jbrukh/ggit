@@ -55,7 +55,7 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 		e  error
 		rz io.ReadCloser
 	)
-	if f, e = repo.objectFile(oid); e != nil {
+	if f, e = objectFile(repo, oid); e != nil {
 		if os.IsNotExist(e) {
 			if err := repo.loadPacks(); err != nil {
 				return nil, err
@@ -124,17 +124,24 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 	return repo.ObjectFromOid(matching[0])
 }
 
+// Ref is a repository-based baseline method for getting refs. The
+// ref spec is the full path of the ref that is relative to the .git
+// directory.
+//
+// This will attempt to open the file pointed to by the spec. If this
+// file is unavailable, packed refs are loaded into memory (and cached)
+// and it attempts to find the ref there.
+//
+// For smart disambiguation of refs, or ref peeling, thou shalt
+// use helper operations.
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
-	file, e := repo.relativeFile(spec)
+	file, e := relativeFile(repo, spec)
 	if e == nil {
 		defer file.Close()
 		p := newRefParser(bufio.NewReader(file), spec)
 		return p.parseRef()
 	}
-
 	if os.IsNotExist(e) {
-		// we can check packed refs now
-		// TODO: we can optimize this by caching it
 		refs, err := repo.PackedRefs()
 		if err != nil {
 			return nil, noSuchRefErrf(spec)
@@ -146,7 +153,6 @@ func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 		}
 		return nil, noSuchRefErrf(spec)
 	}
-
 	return nil, e
 }
 
@@ -233,7 +239,7 @@ func (repo *DiskRepository) LooseObjectIds() (oids []*ObjectId, err error) {
 }
 
 func (repo *DiskRepository) Index() (idx *Index, err error) {
-	file, e := repo.relativeFile(IndexFile)
+	file, e := relativeFile(repo, IndexFile)
 	if e != nil {
 		return nil, e
 	}
@@ -243,7 +249,7 @@ func (repo *DiskRepository) Index() (idx *Index, err error) {
 
 func (repo *DiskRepository) PackedRefs() (packedRefs []Ref, err error) {
 	if repo.packedRefs == nil {
-		file, e := repo.relativeFile(PackedRefsFile)
+		file, e := relativeFile(repo, PackedRefsFile)
 		if e != nil {
 			return nil, e
 		}
@@ -338,19 +344,15 @@ func AssertDiskRepo(repo Repository) (*DiskRepository, error) {
 	return nil, errors.New("fatal: not a disk repository")
 }
 
-// ================================================================= //
-// PRIVATE METHODS
-// ================================================================= //
-
 // turn an oid into a path relative to the
 // git directory of a repository
-func (repo *DiskRepository) objectFile(oid *ObjectId) (file *os.File, err error) {
+func objectFile(repo *DiskRepository, oid *ObjectId) (file *os.File, err error) {
 	hex := oid.String()
 	path := path.Join(repo.path, DefaultObjectsDir, hex[0:2], hex[2:])
 	return os.Open(path)
 }
 
-func (repo *DiskRepository) relativeFile(relPath string) (file *os.File, err error) {
+func relativeFile(repo *DiskRepository, relPath string) (file *os.File, err error) {
 	path := path.Join(repo.path, relPath)
 	return os.Open(path)
 }
