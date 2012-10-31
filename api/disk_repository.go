@@ -57,7 +57,7 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 	)
 	if f, e = objectFile(repo, oid); e != nil {
 		if os.IsNotExist(e) {
-			if err := repo.loadPacks(); err != nil {
+			if err := loadPacks(repo); err != nil {
 				return nil, err
 			}
 			if obj, ok := unpack(repo.packs, oid); ok {
@@ -111,7 +111,7 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 	})
 	if e != nil {
 		if os.IsNotExist(e) {
-			repo.loadPacks()
+			loadPacks(repo)
 			if obj, ok := unpackFromShortOid(repo.packs, short); ok {
 				return obj, nil
 			}
@@ -166,56 +166,21 @@ func (repo *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
 	if err != nil {
 		return nil, err
 	}
-	oids = append(oids, lOids...)
-	oids = append(oids, pOids...)
-	return
+	return append(pOids, lOids...), nil
 }
 
 func (repo *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
-	if err := repo.loadPacks(); err != nil {
+	if err := loadPacks(repo); err != nil {
 		return nil, err
 	}
 	return objectIdsFromPacks(repo.packs), nil
 }
 
 func (repo *DiskRepository) PackedObjects() ([]*PackedObject, error) {
-	if err := repo.loadPacks(); err != nil {
+	if err := loadPacks(repo); err != nil {
 		return nil, err
 	}
 	return objectsFromPacks(repo.packs), nil
-}
-
-//extract object ids from a pack file. also extract objects if everything is true.
-func (repo *DiskRepository) loadPacks() (err error) {
-	if repo.packs != nil {
-		return
-	}
-	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
-	packRoot := path.Join(objectsRoot, DefaultPackDir)
-	packNames := make([]string, 0)
-	if err = filepath.Walk(packRoot, func(path string, info os.FileInfo, ignored error) error {
-		if strings.HasSuffix(path, "idx") {
-			name := info.Name()
-			packNames = append(packNames, packName(name))
-		}
-		return nil
-	}); err != nil {
-		return
-	}
-	packs := make([]*Pack, len(packNames), len(packNames))
-	for i, name := range packNames {
-		if idxFile, e := os.Open(path.Join(packRoot, "pack-"+name+".idx")); e != nil {
-			return e
-		} else {
-			open := func() (*os.File, error) {
-				return os.Open(path.Join(packRoot, "pack-"+name+".pack"))
-			}
-			pp := newPackIdxParser(bufio.NewReader(idxFile), opener(open), name)
-			packs[i] = pp.parsePack()
-		}
-	}
-	repo.packs = packs
-	return
 }
 
 func (repo *DiskRepository) LooseObjectIds() (oids []*ObjectId, err error) {
@@ -344,15 +309,52 @@ func AssertDiskRepo(repo Repository) (*DiskRepository, error) {
 	return nil, errors.New("fatal: not a disk repository")
 }
 
-// turn an oid into a path relative to the
-// git directory of a repository
+// objectFile turns an oid into a path relative to the
+// git directory of a repository where that object should
+// be located (if it is a loose object).
 func objectFile(repo *DiskRepository, oid *ObjectId) (file *os.File, err error) {
 	hex := oid.String()
 	path := path.Join(repo.path, DefaultObjectsDir, hex[0:2], hex[2:])
 	return os.Open(path)
 }
 
+// relativeFile returns the full path (including the repository path)
+// of a path that is given relative to the .git directory of a 
+// repository
 func relativeFile(repo *DiskRepository, relPath string) (file *os.File, err error) {
 	path := path.Join(repo.path, relPath)
 	return os.Open(path)
+}
+
+// loadsPacks loads the packs of a repository.
+func loadPacks(repo *DiskRepository) (err error) {
+	if repo.packs != nil {
+		return
+	}
+	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
+	packRoot := path.Join(objectsRoot, DefaultPackDir)
+	packNames := make([]string, 0)
+	if err = filepath.Walk(packRoot, func(path string, info os.FileInfo, ignored error) error {
+		if strings.HasSuffix(path, "idx") {
+			name := info.Name()
+			packNames = append(packNames, packName(name))
+		}
+		return nil
+	}); err != nil {
+		return
+	}
+	packs := make([]*Pack, len(packNames), len(packNames))
+	for i, name := range packNames {
+		if idxFile, e := os.Open(path.Join(packRoot, "pack-"+name+".idx")); e != nil {
+			return e
+		} else {
+			open := func() (*os.File, error) {
+				return os.Open(path.Join(packRoot, "pack-"+name+".pack"))
+			}
+			pp := newPackIdxParser(bufio.NewReader(idxFile), opener(open), name)
+			packs[i] = pp.parsePack()
+		}
+	}
+	repo.packs = packs
+	return
 }
