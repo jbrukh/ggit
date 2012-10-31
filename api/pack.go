@@ -59,7 +59,7 @@ type Idx struct {
 	// the object ids sorted by offset
 	entries []*PackedObjectId
 	// the object ids mapped by oid
-	entriesById map[string]*PackedObjectId
+	entriesById []*PackedObjectId
 	// number of objects contained in the pack (network
 	// byte order)
 	count int64
@@ -104,12 +104,30 @@ func (pack *Pack) close() (err error) {
 	return
 }
 
+// ================================================================= //
+// OBJECT RETRIEVAL
+// ================================================================= //
+
+func (idx *Idx) entryById(id string) *PackedObjectId {
+	gte := func(i int) bool {
+		var oid *ObjectId
+		oid = idx.entriesById[i].ObjectId
+		return oid.String() >= id
+	}
+	i := sort.Search(len(idx.entriesById), gte)
+	result := idx.entriesById[i]
+	if result.ObjectId.String() != id {
+		return nil
+	}
+	return result
+}
+
 // Returns the one Object in this pack with the given ObjectId,
 // or nil, NoSuchObject if no such Object is in this pack.
 func (pack *Pack) unpack(oid *ObjectId) (obj Object, result packSearch) {
 	defer pack.close()
 	s := oid.String()
-	if entry := pack.idx.entriesById[s]; entry != nil {
+	if entry := pack.idx.entryById(s); entry != nil {
 		if pack.content[entry.index] == nil {
 			pack.content[entry.index] = pack.parseEntry(entry.index)
 		}
@@ -274,7 +292,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 	//which is the total # of objects:
 	count := counts[255]
 	entries := make([]*PackedObjectId, count, count)
-	entriesByOid := make(map[string]*PackedObjectId)
+	entriesByOid := make([]*PackedObjectId, count, count)
 	for i := int64(0); i < count; i++ {
 		b := p.idxParser.ReadNBytes(20)
 		oid := &ObjectId{
@@ -283,7 +301,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 		entries[i] = &PackedObjectId{
 			ObjectId: oid,
 		}
-		entriesByOid[oid.String()] = entries[i]
+		entriesByOid[i] = entries[i]
 	}
 	for i := int64(0); i < count; i++ {
 		entries[i].crc32 = int64(p.idxParser.ParseIntBigEndian(4))
@@ -522,7 +540,7 @@ func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId
 	case ObjectRefDelta:
 		var oid *ObjectId
 		deltaDeflated, oid = readPackedRefDelta(bytes)
-		baseOffset = p.idx.entriesById[oid.String()].offset
+		baseOffset = p.idx.entryById(oid.String()).offset
 	case ObjectOffsetDelta:
 		if deltaDeflated, baseOffset, err = readPackedOffsetDelta(bytes); err != nil {
 			panicErrf("Err parsing size: %v. Could not determine size for %s", err, e.repr)
