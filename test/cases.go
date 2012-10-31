@@ -30,6 +30,7 @@ var repoTestCases = []*RepoTestCase{
 	LinearPacked,
 	Derefs,
 	DerefsPacked,
+	Refs,
 }
 
 // init initializes all the repo test cases, if they haven't been
