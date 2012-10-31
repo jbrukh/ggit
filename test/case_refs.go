@@ -23,7 +23,6 @@ import (
 
 type OutputRefs struct {
 	CommitOid          string // the one and only commit
-	BlobOid            string // the one and only blob
 	AnnTagName         string // name of annotated tag
 	AnnTagOid          string // the oid of the annotated tag
 	LightTagName       string // name of lightweight tag
@@ -52,67 +51,43 @@ var Refs = NewRepoTestCase(
 			return fmt.Errorf("could not create test file for repo: %s", err)
 		}
 
-		// hacky: figure out the blob oid of the file above
-		var blobOid string
-		blobOid, err = util.HashBlob(repo, contents)
-		if err != nil {
-			return fmt.Errorf("could not figure out blob oid: %s", err)
-		}
+		var (
+			annTagName   = "annotated_tag"
+			lightTagName = "lightweight_tag"
+			branchName   = "regular_branch"
+			symbolicRef1 = "symbolic1"
+			symbolicRef2 = "symbolic2"
+		)
 
 		// create a single commit
 		err = util.GitExecMany(repo,
+			// add a commit, the one and only
 			[]string{"add", "--all"},
 			[]string{"commit", "-a", "-m", "\"First and only commit\""},
+
+			// add an annotated and lightweight tag
+			[]string{"tag", "-a", annTagName, "-m", "My tag!"},
+			[]string{"tag", lightTagName},
+
+			// add a branch pointing to master
+			[]string{"branch", branchName},
+
+			// add a symbolic ref, 1 level deep
+			[]string{"symbolic-ref", symbolicRef1, branchName},
+
+			// add a symbolic ref, 2 levels deep
+			[]string{"symbolic-ref", symbolicRef2, symbolicRef1},
+
+			// pack the refs
+			[]string{"pack-refs"},
 		)
 		if err != nil {
-			return fmt.Errorf("could not commit to repo: %s", err)
-		}
-
-		// create an annotated tag
-		annTagName := "annotated_tag"
-		_, err = util.GitExec(repo, "tag", "-a", annTagName, "-m", "My tag!")
-		if err != nil {
-			return fmt.Errorf("could not create tag: %s", err)
-		}
-
-		// create a lightweight tag
-		lightTagName := "lightweight_tag"
-		_, err = util.GitExec(repo, "tag", lightTagName)
-		if err != nil {
-			return fmt.Errorf("could not create tag: %s", err)
-		}
-
-		// create a branch
-		branchName := "regular_branch"
-		_, err = util.GitExec(repo, "branch", branchName)
-		if err != nil {
-			return fmt.Errorf("could not create branch: %s", err)
-		}
-
-		// create a symbolic ref (1 deep)
-		symbolicRef1 := "symbolic1"
-		_, err = util.GitExec(repo, "symbolic-ref", symbolicRef1, branchName)
-		if err != nil {
-			return fmt.Errorf("could not create symbolic ref: %s", err)
-		}
-
-		// create a symbolic ref (2 deep)
-		symbolicRef2 := "symbolic2"
-		_, err = util.GitExec(repo, "symbolic-ref", symbolicRef2, symbolicRef1)
-		if err != nil {
-			return fmt.Errorf("could not create symbolic ref: %s", err)
-		}
-
-		// pack the refs, to move the annotated tag into the packed-refs file
-		_, err = util.GitExec(repo, "pack-refs")
-		if err != nil {
-			return fmt.Errorf("could not pack refs: %s", err)
+			return err
 		}
 
 		// get the output data
 		output := &OutputRefs{
 			CommitOid:          util.RevOid(repo, "HEAD"),
-			BlobOid:            blobOid,
 			AnnTagName:         annTagName,
 			AnnTagOid:          util.RevOid(repo, annTagName),
 			LightTagName:       lightTagName,
