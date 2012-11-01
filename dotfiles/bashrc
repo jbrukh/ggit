@@ -2,7 +2,7 @@
 
 PROJECT=$GOPATH/src/github.com/jbrukh/ggit
 cd $PROJECT
-export PATH=$GOPATH/bin:$PATH
+export PATH=$GOPATH/bin:$PROJECT/bin:$PATH
 
 # not necessary if you're using the git hook
 # at https://github.com/jbrukh/git-gofmt or
@@ -11,7 +11,6 @@ alias gf="gofmt -tabs=false -tabwidth=4 -w *.go"
 
 # the most up-to-date ggit command
 alias gg="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
-alias ggbuild="go install -v ./... && go test ./..."
 alias ggtest="go test -v ./..."
 alias ggbench="go test -file api/benchmarks_test.go -test.bench=\".*\" ./api"
 

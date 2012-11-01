@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# usage: ggbuild [go_command_package_format]
+# example: ggbuild; ggbuild ./...; ggbuild ./api
+
+path="./..."
+if [ -n $1 ]; then
+	path=$1	
+fi
+
+go install -v ./... && go test $path
