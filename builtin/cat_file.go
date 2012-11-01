@@ -25,7 +25,7 @@ var CatFile = &CatFileBuiltin{
 	HelpInfo: HelpInfo{
 		Name:        "cat-file",
 		Description: "Provide content or type and size information for repository objects",
-		UsageLine:   "(-t|-s|-p) <object>",
+		UsageLine:   "(-t|-s|-p|<type>) <object>",
 		ManPage:     "TODO",
 	},
 }
@@ -42,12 +42,15 @@ func init() {
 func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 	CatFile.Parse(args)
 	args = CatFile.Args()
-
-	if len(args) != 1 {
+	expected := 2
+	if b.flagPrettyPrint || b.flagShowSize || b.flagShowType {
+		expected = 1
+	}
+	if len(args) != expected {
 		b.HelpInfo.WriteUsage(p.Werr)
 		return
 	}
-	id := args[0]
+	id := args[expected-1]
 	o, err := api.ObjectFromRevision(p.Repo, id)
 	if err != nil {
 		fmt.Fprintln(p.Werr, err)
@@ -57,13 +60,18 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 	switch {
 	case b.flagPrettyPrint:
 		f := api.Format{p.Wout}
-		f.Object(o)
+		f.ObjectPretty(o)
 	case b.flagShowType:
 		fmt.Fprintln(p.Wout, o.Header().Type())
 	case b.flagShowSize:
 		fmt.Fprintln(p.Wout, o.Header().Size())
 	default:
-		b.HelpInfo.WriteUsage(p.Werr)
-		return
+		t := args[0]
+		if o.Header().Type().String() != t {
+			b.HelpInfo.WriteUsage(p.Werr)
+			return
+		}
+		f := api.Format{p.Wout}
+		f.Object(o)
 	}
 }

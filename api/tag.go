@@ -95,6 +95,17 @@ func (f *Format) Tag(t *Tag) (int, error) {
 	fmt.Fprintf(f.Writer, "type %s\n", t.objectType)
 	fmt.Fprintf(f.Writer, "tag %s\n", t.name)
 	sf := NewStrFormat()
+	sf.WhoWhen(t.tagger) // git-cat-file -p displays full dates for tags
+	fmt.Fprintf(f.Writer, "tagger %s\n\n", sf.String())
+	fmt.Fprintf(f.Writer, "%s", t.message)
+	return 0, nil // TODO
+}
+
+func (f *Format) TagPretty(t *Tag) (int, error) {
+	fmt.Fprintf(f.Writer, "object %s\n", t.object)
+	fmt.Fprintf(f.Writer, "type %s\n", t.objectType)
+	fmt.Fprintf(f.Writer, "tag %s\n", t.name)
+	sf := NewStrFormat()
 	sf.WhoWhenDate(t.tagger) // git-cat-file -p displays full dates for tags
 	fmt.Fprintf(f.Writer, "tagger %s\n\n", sf.String())
 	fmt.Fprintf(f.Writer, "%s", t.message)

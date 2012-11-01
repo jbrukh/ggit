@@ -39,41 +39,43 @@ func main() {
 	for i, oid := range oids {
 		fmt.Println(i, "git/ggit object:", oid)
 
-		// get the dashP from git
-		dashP, err := util.GitExec(repoPath, "cat-file", "-p", oid.String())
+		o, err := repo.ObjectFromOid(oid)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "git could not read object: %s\n", oid)
+			fmt.Fprintf(os.Stderr, "ggit could not read object: %s\n", oid)
 			os.Exit(1)
 		}
 
-		var o api.Object
-		o, err = repo.ObjectFromOid(oid)
+		// get the type for git cat-file
+		t := o.Header().Type()
+		// get the git cat-file output
+		var cat string
+		cat, err = util.GitExec(repoPath, "cat-file", t.String(), oid.String())
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "ggit could not read object: %s\n", oid)
+			fmt.Fprintf(os.Stderr, "git could not read object: %s\n", oid)
 			os.Exit(1)
 		}
 
 		f := api.NewStrFormat()
 		f.Object(o)
 		str := f.String()
-		if str != dashP {
+		if str != cat {
 			fmt.Printf("\nfound a mismatch in object %d (%s)...\n", i, oid)
 			fmt.Println("GIT -----------------------")
-			fmt.Println(dashP)
+			fmt.Println(cat)
 			fmt.Println("GGIT -----------------------")
 			fmt.Println(str)
 			fmt.Println("diff -----------------------")
 
 			i := 0
 			for {
-				if dashP[i] != str[i] {
+				if cat[i] != str[i] {
 					break
 				}
 				i++
 			}
 
 			ours := bytes.NewBufferString(str)
-			theirs := bytes.NewBufferString(dashP)
+			theirs := bytes.NewBufferString(cat)
 			b := ours.Next(i)
 			theirs.Next(i)
 

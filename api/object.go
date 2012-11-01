@@ -30,6 +30,8 @@ type Object interface {
 // FORMATTING
 // ================================================================= //
 
+// The "plumbing" string output of an Object. This output can be used
+// to reproduce the contents or SHA1 hash of an Object.
 func (f *Format) Object(o Object) (int, error) {
 	switch t := o.(type) {
 	case *Blob:
@@ -40,6 +42,22 @@ func (f *Format) Object(o Object) (int, error) {
 		return f.Commit(t)
 	case *Tag:
 		return f.Tag(t)
+	}
+	panic("unknown object")
+}
+
+// The pretty string output of an Object. This format is not necessarily
+// of use as an api call; it is for humans.
+func (f *Format) ObjectPretty(o Object) (int, error) {
+	switch t := o.(type) {
+	case *Blob:
+		return f.Blob(t)
+	case *Tree:
+		return f.TreePretty(t)
+	case *Commit:
+		return f.Commit(t)
+	case *Tag:
+		return f.TagPretty(t)
 	}
 	panic("unknown object")
 }
