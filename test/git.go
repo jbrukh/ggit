@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package util
+package test
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path"
 	//"path/filepath"
+	"github.com/jbrukh/ggit/util"
 	"strings"
 	"testing"
 )
@@ -78,8 +79,8 @@ func GitExecMany(workDir string, cmds ...[]string) error {
 // created successfully.
 func AssertCreateGitRepo(t *testing.T, repo string) {
 	_, err := CreateGitRepo(repo)
-	AssertNoErr(t, err)
-	Assert(t, IsValidRepo(repo))
+	util.AssertNoErr(t, err)
+	util.Assert(t, util.IsValidRepo(repo))
 }
 
 // AssertRemoveGitRepo is a convenience method for testing
@@ -87,7 +88,7 @@ func AssertCreateGitRepo(t *testing.T, repo string) {
 // removed successfully.
 func AssertRemoveGitRepo(t *testing.T, repo string) {
 	err := os.RemoveAll(repo)
-	AssertNoErr(t, err)
+	util.AssertNoErr(t, err)
 }
 
 // TestFile creates a file with name "name" inside of the
@@ -101,10 +102,10 @@ func TestFile(repo string, name string, contents string) error {
 // HashBlob creates a new blob object in the odb of the
 // given repository.
 func HashBlob(repo string, contents string) (oid string, err error) {
-	if !IsValidRepo(repo) {
+	if !util.IsValidRepo(repo) {
 		return "", fmt.Errorf("does not appear to be a valid repo: %s", repo)
 	}
-	name := path.Join(os.TempDir(), UniqueHex16())
+	name := path.Join(os.TempDir(), util.UniqueHex16())
 	err = ioutil.WriteFile(name, []byte(contents), 0644)
 	if err != nil {
 		return "", err
@@ -123,7 +124,8 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 func RevOid(repo string, rev string) string {
 	oid, err := GitExec(repo, "rev-parse", rev)
 	if err != nil {
-		panic("can't get oid for: " + rev)
+		msg := fmt.Sprintf("can't get oid for: %s (%s)", rev, err)
+		panic(msg)
 	}
 	return strings.TrimSpace(oid)
 }

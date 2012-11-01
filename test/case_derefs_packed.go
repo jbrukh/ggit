@@ -12,10 +12,6 @@ but with all the objects packed.
 */
 package test
 
-import (
-	"github.com/jbrukh/ggit/util"
-)
-
 // ================================================================= //
 // TEST CASE: DEREFS
 // ================================================================= //
@@ -33,7 +29,7 @@ var DerefsPacked = NewRepoTestCase(
 		}
 
 		// pack all that shit and remove loose shit
-		err = util.GitExecMany(testCase.Repo(),
+		err = GitExecMany(testCase.Repo(),
 			[]string{"repack", "-a"},
 			[]string{"prune-packed"},
 		)

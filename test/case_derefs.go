@@ -14,7 +14,6 @@ package test
 
 import (
 	"fmt"
-	"github.com/jbrukh/ggit/util"
 )
 
 // ================================================================= //
@@ -42,14 +41,14 @@ var Derefs = NewRepoTestCase(
 
 		name := "myfile1.txt"
 		contents := "one"
-		err = util.TestFile(repo, name, contents)
+		err = TestFile(repo, name, contents)
 		if err != nil {
 			return fmt.Errorf("could not create test file for repo: %s", err)
 		}
 
 		// hacky: figure out the blob oid of the file above
 		var blobOid string
-		blobOid, err = util.HashBlob(repo, contents)
+		blobOid, err = HashBlob(repo, contents)
 		if err != nil {
 			return fmt.Errorf("could not figure out blob oid: %s", err)
 		}
@@ -58,7 +57,7 @@ var Derefs = NewRepoTestCase(
 		branchName := "brooklyn"
 
 		// create a single commit
-		err = util.GitExecMany(repo,
+		err = GitExecMany(repo,
 			[]string{"add", "--all"},
 			[]string{"commit", "-a", "-m", "\"First and only commit\""},
 			[]string{"tag", "-a", tagName, "-m", "My tag!"},
@@ -72,9 +71,9 @@ var Derefs = NewRepoTestCase(
 		output := &OutputDerefs{
 			TagName:    tagName,
 			BranchName: branchName,
-			CommitOid:  util.RevOid(repo, "HEAD"),
-			TreeOid:    util.RevOid(repo, "HEAD^{tree}"),
-			TagOid:     util.RevOid(repo, tagName),
+			CommitOid:  RevOid(repo, "HEAD"),
+			TreeOid:    RevOid(repo, "HEAD^{tree}"),
+			TagOid:     RevOid(repo, tagName),
 			BlobOid:    blobOid,
 		}
 

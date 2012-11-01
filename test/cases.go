@@ -112,7 +112,7 @@ func createRepo(testCase *RepoTestCase) (err error) {
 
 	// clean that shit
 	os.RemoveAll(repo)
-	_, err = util.CreateGitRepo(repo)
+	_, err = CreateGitRepo(repo)
 	if err != nil {
 		return fmt.Errorf("Could not create case '%s': %s", testCase.name, err.Error())
 	}

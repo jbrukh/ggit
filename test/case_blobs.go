@@ -11,10 +11,6 @@ case_blobs.go implements a test repository.
 */
 package test
 
-import (
-	"github.com/jbrukh/ggit/util"
-)
-
 // ================================================================= //
 // TEST CASE: BUNCHES OF BLOBS
 // ================================================================= //
@@ -78,7 +74,7 @@ var Blobs = NewRepoTestCase(
 
 		// hash the test objects
 		for _, contents := range testCasesBlobContents {
-			if oidStr, err := util.HashBlob(testCase.Repo(), contents); err != nil {
+			if oidStr, err := HashBlob(testCase.Repo(), contents); err != nil {
 				return err
 			} else {
 				output.Blobs = append(output.Blobs, &OutputBlob{

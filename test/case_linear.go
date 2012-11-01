@@ -61,7 +61,7 @@ var Linear = NewRepoTestCase(
 				commit     = fmt.Sprintf("\"Commit: %d\"", i)
 			)
 			// create a commits
-			err = util.GitExecMany(repo,
+			err = GitExecMany(repo,
 				[]string{"add", "--all"},
 				[]string{"commit", "-a", "-m", commit},
 				[]string{"branch", branchName},
@@ -72,14 +72,14 @@ var Linear = NewRepoTestCase(
 
 			// get the output data
 			var parentOid string
-			oid := util.RevOid(repo, "HEAD")
+			oid := RevOid(repo, "HEAD")
 			if i != 0 {
 				parentOid = util.RevOid(repo, "HEAD^")
 			}
 			output.Commits[i] = &CommitInfo{
 				Oid:        oid,
 				ParentOid:  parentOid,
-				Repr:       util.ObjectRepr(repo, oid),
+				Repr:       ObjectRepr(repo, oid),
 				BranchName: branchName,
 			}
 		}
