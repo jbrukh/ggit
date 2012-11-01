@@ -67,22 +67,9 @@ func noSuchRefErrf(ref string) noSuchRef {
 	return noSuchRef(fmt.Errorf("no such ref: %s", ref))
 }
 
-func ambiguousRefErrf(ref string) noSuchRef {
-	return ambiguousRef(fmt.Errorf("ambiguous ref: %s", ref))
-}
-
 func IsNoSuchRef(e error) bool {
 	switch t := e.(type) {
 	case noSuchRef:
-		e = t // must use t
-		return true
-	}
-	return false
-}
-
-func IsAmbiguousRef(e error) bool {
-	switch t := e.(type) {
-	case ambiguousRef:
 		e = t // must use t
 		return true
 	}
