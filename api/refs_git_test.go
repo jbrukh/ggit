@@ -55,6 +55,34 @@ func Test_refPaths(t *testing.T) {
 	testPeelRef(t, repo, output.SymbolicRef2, oid)
 }
 
+func Test_refsLoosePacked(t *testing.T) {
+	testRepo := test.Refs
+	repo := Open(testRepo.Repo())
+	output := testRepo.Output().(*test.OutputRefs)
+
+	var (
+		master   = "refs/heads/master"
+		branch   = expandHeadRef(output.BranchName)
+		annTag   = expandTagRef(output.AnnTagName)
+		lightTag = expandTagRef(output.LightTagName)
+	)
+
+	refs, err := repo.LooseRefs()
+	util.AssertNoErr(t, err)
+	util.Assert(t, len(refs) == 2)
+	for i, r := range []string{master, branch} {
+		util.AssertEqualString(t, r, refs[i].Name())
+	}
+
+	refs, err = repo.PackedRefs()
+	util.AssertNoErr(t, err)
+	util.Assert(t, len(refs) == 2)
+	for i, r := range []string{annTag, lightTag} {
+		util.AssertEqualString(t, r, refs[i].Name())
+	}
+
+}
+
 func testRefPathPeeled(t *testing.T, repo Repository, spec string, oid *ObjectId) {
 	ref, err := repo.Ref(spec)
 	util.AssertNoErr(t, err)
