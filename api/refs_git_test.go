@@ -49,6 +49,8 @@ func Test_refPaths(t *testing.T) {
 	testPackedTagDerefInfo(t, repo, annTag, oid)
 
 	// test ref peeling
+	testPeelRef(t, repo, master, oid)
+	testPeelRef(t, repo, branch, oid)
 	testPeelRef(t, repo, output.SymbolicRef1, oid)
 	testPeelRef(t, repo, output.SymbolicRef2, oid)
 }
