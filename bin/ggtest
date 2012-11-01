@@ -5,7 +5,7 @@
 # example: ggtest; ggtest ./...; ggtest ./api
 
 path="./..."
-if [ -n $1 ]; then
+if [ -n "$1" ]; then
        path=$1 
 fi
 go test -i $path
