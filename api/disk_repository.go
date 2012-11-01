@@ -137,20 +137,25 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 	file, e := relativeFile(repo, spec)
 	if e == nil {
+		println("found a file for this")
 		defer file.Close()
 		p := newRefParser(bufio.NewReader(file), spec)
 		return p.parseRef()
 	}
 	if os.IsNotExist(e) {
+		println("didn't find a file...")
 		refs, err := repo.PackedRefs()
 		if err != nil {
+			println("couldn't open packed refs?")
 			return nil, noSuchRefErrf(spec)
 		}
+		fmt.Println(refs)
 		for _, r := range refs {
 			if r.Name() == spec {
 				return r, nil
 			}
 		}
+		println("didn't find it...")
 		return nil, noSuchRefErrf(spec)
 	}
 	return nil, e
@@ -212,7 +217,7 @@ func (repo *DiskRepository) Index() (idx *Index, err error) {
 	return toIndex(bufio.NewReader(file))
 }
 
-func (repo *DiskRepository) PackedRefs() (packedRefs []Ref, err error) {
+func (repo *DiskRepository) PackedRefs() ([]Ref, error) {
 	if repo.packedRefs == nil {
 		file, e := relativeFile(repo, PackedRefsFile)
 		if e != nil {
@@ -220,12 +225,13 @@ func (repo *DiskRepository) PackedRefs() (packedRefs []Ref, err error) {
 		}
 		defer file.Close()
 		p := newRefParser(bufio.NewReader(file), "")
-		if packedRefs, e = p.ParsePackedRefs(); e != nil {
+		var refs []Ref
+		if refs, e = p.ParsePackedRefs(); e != nil {
 			return nil, e
 		}
-		repo.packedRefs = packedRefs
+		repo.packedRefs = refs
 	}
-	return packedRefs, nil
+	return repo.packedRefs, nil
 }
 
 func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
