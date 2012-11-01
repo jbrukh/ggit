@@ -68,12 +68,39 @@ func Test_refPaths(t *testing.T) {
 	testRefRetrieval(t, repo, func() ([]Ref, error) {
 		return repo.Refs()
 	}, []string{master, branch, annTag, lightTag})
+
+	// test non existent refs
+	testNonexistent(t, repo)
+}
+
+func testNonexistent(t *testing.T, repo Repository) {
+	cases := []string{
+		"refs/heads/elephant",
+		"refs/tags/tiger",
+		"woodchuck",
+		"goldmine",
+	}
+	for _, spec := range cases {
+		assertBadRef(t, repo, spec)
+	}
+}
+
+func assertBadRef(t *testing.T, repo Repository, spec string) {
+	_, err := repo.Ref(spec)
+	util.Assert(t, err != nil)
+	util.Assert(t, IsNoSuchRef(err))
+	_, err = RefFromSpec(repo, spec)
+	util.Assert(t, err != nil)
+	util.Assert(t, IsNoSuchRef(err))
+	_, err = PeeledRefFromSpec(repo, spec)
+	util.Assert(t, err != nil)
+	util.Assert(t, IsNoSuchRef(err))
 }
 
 func testRefRetrieval(t *testing.T, repo Repository, f func() ([]Ref, error), expected []string) {
 	refs, err := f()
 	util.AssertNoErr(t, err)
-	util.Assert(t, len(refs) == 2)
+	util.AssertEqualInt(t, len(expected), len(refs))
 	for i, r := range expected {
 		util.AssertEqualString(t, r, refs[i].Name())
 	}
