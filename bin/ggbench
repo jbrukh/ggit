@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Run benchmarks on the ggit project.
+# usage: ggbench
+
+go test -file api/benchmarks_test.go -test.bench=".*" ./api

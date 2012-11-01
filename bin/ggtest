@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# Run the ggit test suite.
+# usage: ggtest [go_command_package_format]
+# example: ggtest; ggtest ./...; ggtest ./api
+
+path="./..."
+if [ -n $1 ]; then
+       path=$1 
+fi
+go test -i $path
+go test -v $path
