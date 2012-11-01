@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+who_when.go implements user credentials and timestamps.
+*/
 package api
 
 import (
@@ -13,8 +17,10 @@ import (
 	"time"
 )
 
-// Who represents a user that has been using
-// (g)git
+// ================================================================= //
+// WHO
+// ================================================================= //
+
 type Who struct {
 	name  string
 	email string
@@ -27,6 +33,10 @@ func (w *Who) Name() string {
 func (w *Who) Email() string {
 	return w.email
 }
+
+// ================================================================= //
+// WHEN
+// ================================================================= //
 
 type When struct {
 	seconds int64 // seconds since epoch
@@ -48,6 +58,19 @@ func (w *When) Date() string {
 
 }
 
+// ================================================================= //
+// WHO WHEN
+// ================================================================= //
+
+type WhoWhen struct {
+	Who
+	When
+}
+
+// ================================================================= //
+// FORMATTING
+// ================================================================= //
+
 func (f *Format) WhoWhenDate(ww *WhoWhen) (int, error) {
 	return fmt.Fprintf(f.Writer, "%s <%s> %s %s", ww.Name(), ww.Email(), ww.Date(), zone(ww.offset))
 }
@@ -56,44 +79,9 @@ func (f *Format) WhoWhen(ww *WhoWhen) (int, error) {
 	return fmt.Fprintf(f.Writer, "%s <%s> %d %s", ww.Name(), ww.Email(), ww.Seconds(), zone(ww.offset))
 }
 
-func zone(offset int) string {
-	sign := ""
-	if offset < 0 {
-		sign = MINUS
-		offset = -offset
-	} else {
-		sign = PLUS
-	}
-	hours := int(offset / 60)
-	minutes := offset - hours*60
-	return fmt.Sprintf("%s%02d%02d", sign, hours, minutes)
-}
-
-// WhoWhen
-type WhoWhen struct {
-	Who
-	When
-}
-
-func (ww *WhoWhen) String() string {
-	const format = "%s <%s> %d %s"
-	offset := ww.Offset()
-	hours := int(offset / 60)
-	minutes := fmt.Sprintf("%d", (offset - (hours * 60)))
-	if minutes[0] == '-' {
-		minutes = minutes[1:]
-	}
-	if len(minutes) == 1 {
-		//pad with 0
-		minutes = "0" + minutes
-	}
-	zone := fmt.Sprintf("%d%s", hours, minutes)
-	if len(zone) == 4 {
-		//pad hour with 0
-		zone = string(zone[0]) + "0" + string(zone[1:])
-	}
-	return fmt.Sprintf(format, ww.Name(), ww.Email(), ww.Seconds(), zone)
-}
+// ================================================================= //
+// PARSING
+// ================================================================= //
 
 func (p *objectParser) parseWhoWhen(marker string) *WhoWhen {
 	p.ConsumeString(marker)
@@ -128,4 +116,21 @@ func (p *objectParser) parseWhoWhen(marker string) *WhoWhen {
 		When{seconds, tz},
 	}
 	return ww
+}
+
+// ================================================================= //
+// UTIL
+// ================================================================= //
+
+func zone(offset int) string {
+	sign := ""
+	if offset < 0 {
+		sign = MINUS
+		offset = -offset
+	} else {
+		sign = PLUS
+	}
+	hours := int(offset / 60)
+	minutes := offset - hours*60
+	return fmt.Sprintf("%s%02d%02d", sign, hours, minutes)
 }
