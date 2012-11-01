@@ -393,8 +393,10 @@ func (p *Pack) parseEntry(i int) (obj *PackedObject) {
 	switch {
 	case pot == PackedBlob || pot == PackedCommit || pot == PackedTree || pot == PackedTag:
 		obj = parseNonDeltaEntry(bytes, pot, e.ObjectId, int64(size))
-	default:
+	case pot == ObjectOffsetDelta || pot == ObjectRefDelta:
 		obj = p.parseDeltaEntry(bytes, pot, e.ObjectId, i)
+	default:
+		panicErrf("Unrecognized object type %d in pack %s for entry with id %s", pot, p.name, e.ObjectId)
 	}
 	return
 }
@@ -544,8 +546,6 @@ func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId
 			panicErrf("Err parsing size: %v. Could not determine size for %s", err, e.repr)
 		}
 		baseOffset = e.offset - baseOffset
-	default:
-		fmt.Printf("Unrecognized pack object type: %b ", pot)
 	}
 	base := p.findObjectByOffset(baseOffset)
 	bytes = []byte(deltaDeflated)
