@@ -348,6 +348,7 @@ func loadPacks(repo *DiskRepository) (err error) {
 		if idxFile, e := os.Open(path.Join(packRoot, "pack-"+name+".idx")); e != nil {
 			return e
 		} else {
+			defer idxFile.Close()
 			open := func() (*os.File, error) {
 				return os.Open(path.Join(packRoot, "pack-"+name+".pack"))
 			}

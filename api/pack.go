@@ -226,32 +226,21 @@ func objectsFromPacks(packs []*Pack) (objects []*PackedObject) {
 // ================================================================= //
 
 type packIdxParser struct {
-	idxParser  objectIdParser
-	packParser dataParser
+	idxParser  *objectIdParser
 	name       string
 	packOpener opener
-	packFile   *os.File
 }
 
 func newPackIdxParser(idx *bufio.Reader, packOpener opener, name string) *packIdxParser {
-	file, err := packOpener()
-	if err != nil {
-		panicErrf("Could not open pack file %s: %s", name, err)
-	}
-	oidParser := objectIdParser{
+	oidParser := &objectIdParser{
 		dataParser{
 			buf: idx,
 		},
 	}
-	dataParser := dataParser{
-		buf: bufio.NewReader(file),
-	}
 	return &packIdxParser{
 		idxParser:  oidParser,
-		packParser: dataParser,
 		name:       name,
 		packOpener: packOpener,
-		packFile:   file,
 	}
 }
 
@@ -369,20 +358,29 @@ func newPackedObjectParser(data []byte, oid *ObjectId) (p *packedObjectParser, e
 func (p *packIdxParser) parsePack() *Pack {
 	idx := p.parseIdx()
 	objects := make([]*PackedObject, idx.count)
-	p.packParser.ConsumeString(PackSignature)
-	p.packParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
-	count := p.packParser.ParseIntBigEndian(4)
-	if count != idx.count {
-		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
-	}
-	return &Pack{
+	pack := &Pack{
 		PackVersion,
 		objects,
 		idx,
 		p.name,
 		p.packOpener,
-		p.packFile,
+		nil,
 	}
+
+	if err := pack.open(); err != nil {
+		panicErrf("Could not open pack file %s: %s", pack.name, err)
+	}
+	dataParser := &dataParser{
+		buf: bufio.NewReader(pack.file),
+	}
+	dataParser.ConsumeString(PackSignature)
+	dataParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
+	count := dataParser.ParseIntBigEndian(4)
+	if count != idx.count {
+		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
+	}
+
+	return pack
 }
 
 // parse the ith entry of this pack, opening the pack resource if necessary
