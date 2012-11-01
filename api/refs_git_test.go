@@ -43,6 +43,7 @@ func Test_refPaths(t *testing.T) {
 	// targets are in fact symbols and are correct
 	testRefPathSymbolic(t, repo, output.SymbolicRef1, output.SymbolicRef1Target)
 	testRefPathSymbolic(t, repo, output.SymbolicRef2, output.SymbolicRef2Target)
+	testRefPathSymbolic(t, repo, "HEAD", master)
 
 	// test that packed refs have correct commit
 	// dereferencing information stored in the packed-refs file
@@ -71,6 +72,36 @@ func Test_refPaths(t *testing.T) {
 
 	// test non existent refs
 	testNonexistent(t, repo)
+
+	// test resolution of short refs
+	testShortRefResolvesPeeled(t, repo, "master", oid)
+	testShortRefResolvesPeeled(t, repo, output.BranchName, oid)
+	testShortRefResolvesPeeled(t, repo, output.AnnTagName, tagOid)
+	testShortRefResolvesPeeled(t, repo, output.LightTagName, oid)
+	testShortRefResolvesSymbolic(t, repo, "HEAD", master, oid)
+	testShortRefResolvesSymbolic(t, repo, output.SymbolicRef1, output.SymbolicRef1Target, oid)
+	testShortRefResolvesSymbolic(t, repo, output.SymbolicRef2, output.SymbolicRef2Target, oid)
+
+}
+
+func testShortRefResolvesSymbolic(t *testing.T, repo Repository, spec string, tget string, oid *ObjectId) {
+	symbolicRef, err := RefFromSpec(repo, spec)
+	util.AssertNoErr(t, err)
+	assertSymbolicRef(t, symbolicRef, tget)
+
+	peeledRef, err := PeeledRefFromSpec(repo, spec)
+	util.AssertNoErr(t, err)
+	assertPeeledRef(t, peeledRef, oid)
+}
+
+func testShortRefResolvesPeeled(t *testing.T, repo Repository, spec string, oid *ObjectId) {
+	peeledRef, err := RefFromSpec(repo, spec)
+	util.AssertNoErr(t, err)
+	assertPeeledRef(t, peeledRef, oid)
+
+	peeledRef, err = PeeledRefFromSpec(repo, spec)
+	util.AssertNoErr(t, err)
+	assertPeeledRef(t, peeledRef, oid)
 }
 
 func testNonexistent(t *testing.T, repo Repository) {
@@ -114,24 +145,11 @@ func testRefPathPeeled(t *testing.T, repo Repository, spec string, oid *ObjectId
 }
 
 func testRefPathSymbolic(t *testing.T, repo Repository, spec string, tget string) {
-	ref, err := repo.Ref(spec)
+	symbolicRef, err := repo.Ref(spec)
 	util.AssertNoErr(t, err)
-	util.AssertEqualString(t, ref.Name(), spec)
+	util.AssertEqualString(t, symbolicRef.Name(), spec)
 	// make sure target is symbolic and matches
-	symbolic, target := ref.Target()
-	util.Assert(t, symbolic)
-	if target == nil {
-		t.Fatalf("nil target")
-	}
-	util.AssertEqualString(t, target.(string), tget)
-	util.AssertPanic(t, func() {
-		oid := target.(*ObjectId)
-		oid.String() // for compilation
-	})
-	util.AssertPanic(t, func() {
-		oid := ref.ObjectId()
-		oid.String() // for compilation
-	})
+	assertSymbolicRef(t, symbolicRef, tget)
 }
 
 func testPackedTagDerefInfo(t *testing.T, repo Repository, spec string, oid *ObjectId) {
@@ -175,5 +193,22 @@ func assertPeeledRef(t *testing.T, peeledRef Ref, oid *ObjectId) {
 	util.AssertPanic(t, func() {
 		s := target.(string)
 		s += "" // for compilation
+	})
+}
+
+func assertSymbolicRef(t *testing.T, symbolicRef Ref, tget string) {
+	symbolic, target := symbolicRef.Target()
+	util.Assert(t, symbolic)
+	if target == nil {
+		t.Fatalf("nil target")
+	}
+	util.AssertEqualString(t, target.(string), tget)
+	util.AssertPanic(t, func() {
+		oid := target.(*ObjectId)
+		oid.String() // for compilation
+	})
+	util.AssertPanic(t, func() {
+		oid := symbolicRef.ObjectId()
+		oid.String() // for compilation
 	})
 }
