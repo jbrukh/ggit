@@ -17,7 +17,28 @@ alias ggbench="go test -file api/benchmarks_test.go -test.bench=\".*\" ./api"
 
 ggbench-csv() {
 	SHA=`git rev-parse HEAD`
-	ggbench | grep Benchmark | sed -E -e "s/[ 	]+/,/g" | sed "s/^/$SHA,/g"
+	ggbench | grep Benchmark | sed -E -e "s/[ 	]+/,/g" | sed -e "/FAIL:/d" -e "s/^/$SHA,/g" -e "s/$/,$1/g"
+}
+
+ggbench-range() {
+	set -e
+	HEAD=`git rev-parse HEAD`
+	revlist=`git rev-list --max-count=10 --reverse HEAD`
+	for sha in $revlist; do
+		git checkout $sha >/dev/null 2>&1
+		if [ $? -ne 0 ]
+		then
+			echo "checkout failed: $sha"
+			return 1
+		fi
+		ggbuild && ggbench-csv 1 2>&1
+		if [ $? -ne 0 ]
+		then
+			echo "ggbench failed: $sha"
+			return 1
+		fi
+	done
+	git checkout $HEAD
 }
 
 # list some objects... this is slow, so use on small repos
