@@ -337,3 +337,11 @@ func PeelRef(repo Repository, r Ref) (Ref, error) {
 	}
 	return r, nil
 }
+
+func expandHeadRef(short string) string {
+	return "refs/heads/" + short
+}
+
+func expandTagRef(short string) string {
+	return "refs/tags/" + short
+}

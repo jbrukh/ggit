@@ -73,7 +73,7 @@ var Refs = NewRepoTestCase(
 			[]string{"branch", branchName},
 
 			// add a symbolic ref, 1 level deep
-			[]string{"symbolic-ref", symbolicRef1, branchName},
+			[]string{"symbolic-ref", symbolicRef1, "refs/heads/" + branchName},
 
 			// add a symbolic ref, 2 levels deep
 			[]string{"symbolic-ref", symbolicRef2, symbolicRef1},
@@ -93,7 +93,7 @@ var Refs = NewRepoTestCase(
 			LightTagName:       lightTagName,
 			BranchName:         branchName,
 			SymbolicRef1:       symbolicRef1,
-			SymbolicRef1Target: branchName,
+			SymbolicRef1Target: "refs/heads/" + branchName,
 			SymbolicRef2:       symbolicRef2,
 			SymbolicRef2Target: symbolicRef1,
 			HeadTarget:         "refs/heads/master",

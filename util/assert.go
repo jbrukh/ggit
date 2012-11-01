@@ -38,7 +38,11 @@ func Assertf(t *testing.T, b bool, format string, items ...interface{}) {
 
 func AssertEqualString(t *testing.T, one, two string) {
 	if one != two {
-		t.Errorf("expecting: '%s' but got '%s'\n", one, two)
+		_, file, line, ok := runtime.Caller(1)
+		if !ok {
+			file = "(unknown file)"
+		}
+		t.Errorf("%s:%d: expecting '%s' but got '%s'\n", file, line, one, two)
 	}
 }
 

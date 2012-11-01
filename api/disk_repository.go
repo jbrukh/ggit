@@ -137,25 +137,20 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 	file, e := relativeFile(repo, spec)
 	if e == nil {
-		println("found a file for this")
 		defer file.Close()
 		p := newRefParser(bufio.NewReader(file), spec)
 		return p.parseRef()
 	}
 	if os.IsNotExist(e) {
-		println("didn't find a file...")
 		refs, err := repo.PackedRefs()
 		if err != nil {
-			println("couldn't open packed refs?")
 			return nil, noSuchRefErrf(spec)
 		}
-		fmt.Println(refs)
 		for _, r := range refs {
 			if r.Name() == spec {
 				return r, nil
 			}
 		}
-		println("didn't find it...")
 		return nil, noSuchRefErrf(spec)
 	}
 	return nil, e

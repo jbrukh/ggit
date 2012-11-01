@@ -51,8 +51,7 @@ func Test_parseInvalidFileMode(t *testing.T) {
 	for !p.EOF() {
 		util.AssertPanic(t, func() {
 			m := p.ParseFileMode(LF)
-			println(m)
-
+			m++ // for compilation, should not get here
 		})
 	}
 }
