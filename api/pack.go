@@ -356,6 +356,7 @@ func newPackedObjectParser(data []byte, oid *ObjectId) (p *packedObjectParser, e
 
 //parse the pack's meta data and close it
 func (p *packIdxParser) parsePack() *Pack {
+	//parse the index and construct the pack
 	idx := p.parseIdx()
 	objects := make([]*PackedObject, idx.count)
 	pack := &Pack{
@@ -366,7 +367,7 @@ func (p *packIdxParser) parsePack() *Pack {
 		p.packOpener,
 		nil,
 	}
-
+	//verify the pack file
 	if err := pack.open(); err != nil {
 		panicErrf("Could not open pack file %s: %s", pack.name, err)
 	}
@@ -379,7 +380,7 @@ func (p *packIdxParser) parsePack() *Pack {
 	if count != idx.count {
 		panicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
 	}
-
+	pack.close()
 	return pack
 }
 
@@ -387,6 +388,9 @@ func (p *packIdxParser) parsePack() *Pack {
 func (p *Pack) parseEntry(i int) (obj *PackedObject) {
 	if len(p.content) > i && p.content[i] != nil {
 		return p.content[i] //already parsed
+	}
+	if err := p.open(); err != nil {
+		panicErrf("Could not open pack file %s: %s", p.name, err.Error())
 	}
 	size, pot, bytes := p.entrySizeTypeData(i)
 	e := p.idx.entries[i]
@@ -423,9 +427,6 @@ func (p *Pack) entrySizeTypeData(i int) (uint64, PackedObjectType, []byte) {
 
 // read all the bytes of the ith object of the pack file
 func (p *Pack) readEntry(i int) []byte {
-	if p.file == nil {
-		p.open()
-	}
 	entries := p.idx.entries
 	v := entries[i]
 	var entryLen int64

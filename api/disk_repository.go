@@ -349,8 +349,9 @@ func loadPacks(repo *DiskRepository) (err error) {
 			return e
 		} else {
 			defer idxFile.Close()
+			packFile := "pack-" + name + ".pack"
 			open := func() (*os.File, error) {
-				return os.Open(path.Join(packRoot, "pack-"+name+".pack"))
+				return os.Open(path.Join(packRoot, packFile))
 			}
 			pp := newPackIdxParser(bufio.NewReader(idxFile), opener(open), name)
 			packs[i] = pp.parsePack()
