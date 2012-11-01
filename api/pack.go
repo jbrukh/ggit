@@ -60,6 +60,8 @@ type Idx struct {
 	entries []*PackedObjectId
 	// the object ids mapped by oid
 	entriesById []*PackedObjectId
+	// caches oid lookup results
+	idToEntry map[string]*PackedObjectId
 	// number of objects contained in the pack (network
 	// byte order)
 	count int64
@@ -109,6 +111,9 @@ func (pack *Pack) close() (err error) {
 // ================================================================= //
 
 func (idx *Idx) entryById(id string) *PackedObjectId {
+	if idx.idToEntry[id] != nil {
+		return idx.idToEntry[id]
+	}
 	gte := func(i int) bool {
 		var oid *ObjectId
 		oid = idx.entriesById[i].ObjectId
@@ -119,6 +124,7 @@ func (idx *Idx) entryById(id string) *PackedObjectId {
 	if result.ObjectId.String() != id {
 		return nil
 	}
+	idx.idToEntry[id] = result
 	return result
 }
 
@@ -280,6 +286,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 	//discard the fan-out values, just use the largest value,
 	//which is the total # of objects:
 	count := counts[255]
+	idToEntry := make(map[string]*PackedObjectId)
 	entries := make([]*PackedObjectId, count, count)
 	entriesByOid := make([]*PackedObjectId, count, count)
 	for i := int64(0); i < count; i++ {
@@ -318,6 +325,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 	return &Idx{
 		entries,
 		entriesByOid,
+		idToEntry,
 		count,
 		packChecksum,
 		idxChecksum,
