@@ -91,7 +91,7 @@ func (p *objectParser) parseTree() *Tree {
 // The file mode of a tree entry implies an object type.
 func deduceObjectType(mode FileMode) ObjectType {
 	switch mode {
-	case ModeNew, ModeBlob, ModeBlobExec:
+	case ModeNew, ModeBlob, ModeBlobExec, ModeLink:
 		return ObjectBlob
 	case ModeTree:
 		return ObjectTree
