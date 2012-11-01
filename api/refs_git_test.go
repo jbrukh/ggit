@@ -63,6 +63,11 @@ func Test_refPaths(t *testing.T) {
 	testRefRetrieval(t, repo, func() ([]Ref, error) {
 		return repo.PackedRefs()
 	}, []string{annTag, lightTag})
+
+	// make sure we get all refs correctly
+	testRefRetrieval(t, repo, func() ([]Ref, error) {
+		return repo.Refs()
+	}, []string{master, branch, annTag, lightTag})
 }
 
 func testRefRetrieval(t *testing.T, repo Repository, f func() ([]Ref, error), expected []string) {
