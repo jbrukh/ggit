@@ -17,7 +17,7 @@ import (
 	"testing"
 )
 
-func Test_fullPathRefs(t *testing.T) {
+func Test_refPaths(t *testing.T) {
 	testRepo := test.Refs
 	repo := Open(testRepo.Repo())
 	output := testRepo.Output().(*test.OutputRefs)
@@ -37,13 +37,14 @@ func Test_fullPathRefs(t *testing.T) {
 	testRefPathPeeled(t, repo, branch, oid)
 	testRefPathPeeled(t, repo, annTag, tagOid)
 	testRefPathPeeled(t, repo, lightTag, oid)
+
+	testRefPathSymbolic(t, repo, output.SymbolicRef1, output.SymbolicRef1Target)
+	testRefPathSymbolic(t, repo, output.SymbolicRef2, output.SymbolicRef2Target)
 }
 
 func testRefPathPeeled(t *testing.T, repo Repository, spec string, oid *ObjectId) {
 	ref, err := repo.Ref(spec)
 	util.AssertNoErr(t, err)
-
-	// assert the name sticks
 	util.AssertEqualString(t, ref.Name(), spec)
 
 	// make sure target is symbolic and matches
@@ -51,4 +52,27 @@ func testRefPathPeeled(t *testing.T, repo Repository, spec string, oid *ObjectId
 	util.Assert(t, !symbolic)
 	util.AssertEqualString(t, target.(*ObjectId).String(), oid.String())
 	util.AssertEqualString(t, ref.ObjectId().String(), oid.String())
+	util.AssertPanic(t, func() {
+		s := target.(string)
+		s += ""
+	})
+}
+
+func testRefPathSymbolic(t *testing.T, repo Repository, spec string, tget string) {
+	ref, err := repo.Ref(spec)
+	util.AssertNoErr(t, err)
+	util.AssertEqualString(t, ref.Name(), spec)
+	// make sure target is symbolic and matches
+	symbolic, target := ref.Target()
+	util.Assert(t, symbolic)
+	util.AssertEqualString(t, target.(string), tget)
+	util.AssertPanic(t, func() {
+		oid := target.(*ObjectId)
+		oid.String()
+	})
+	util.AssertPanic(t, func() {
+		oid := ref.ObjectId()
+		oid.String()
+	})
+
 }
