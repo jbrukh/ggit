@@ -117,7 +117,7 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 	filtered := api.FilterRefs(refs, f)
 
 	if b.flagHead {
-		if r, err := api.OidRefFromRef(p.Repo, "HEAD"); err == nil {
+		if r, err := api.PeeledRefFromSpec(p.Repo, "HEAD"); err == nil {
 			filtered = append([]api.Ref{r}, filtered...)
 		}
 	}

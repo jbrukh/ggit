@@ -52,7 +52,7 @@ func Test_fullPathRefs(t *testing.T) {
 }
 
 func testOidRefFromRef(t *testing.T, repo Repository, spec string, oid *ObjectId) {
-	ref, err := OidRefFromRef(repo, spec)
+	ref, err := PeeledRefFromSpec(repo, spec)
 	util.AssertNoErr(t, err)
 	util.AssertEqualString(t, ref.Name(), spec)
 	assertConcreteRef(t, ref, oid)

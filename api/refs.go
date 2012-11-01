@@ -269,16 +269,56 @@ func (p *refParser) parseRef() (r Ref, err error) {
 // OPERATIONS
 // ================================================================= //
 
-// OidRefFromRef returns a Ref object representing the target of
-// the ref, by peeling away any symbolic refs that might stand
-// in its way.
-func OidRefFromRef(repo Repository, spec string) (Ref, error) {
-	r, err := repo.Ref(spec)
-	if err != nil {
+var refSearchPath = []string{
+	"%s",
+	"refs/%s",
+	"refs/tags/%s",
+	"refs/heads/%s",
+	"refs/remotes/%s",
+	"refs/remotes/%s/HEAD",
+}
+
+// RefFromSpec delivers a ref from the repository that is in
+// the form of a Ref object. The ref may be symbolic or peeled.
+// 
+// This method resolves "shorthand" refs (e.g. when one writes 
+// "master" for "refs/head/master". It follows the rules specified 
+// here:
+//
+//    http://www.kernel.org/pub/software/scm/git/docs/gitrevisions.html
+//
+// under "Specifying Revisions/<refname>". If the ref does not exist
+// then you can check the returned error with api.IsNoSuchRef.
+// TODO: what about ambiguous refs?
+func RefFromSpec(repo Repository, spec string) (ref Ref, err error) {
+	for _, prefix := range refSearchPath {
+		refPath := fmt.Sprintf(prefix, spec)
+		if ref, err = repo.Ref(refPath); err == nil {
+			return ref, nil
+		} else if !IsNoSuchRef(err) {
+			return nil, err // something went wrong
+		}
+	}
+	return nil, err // no such ref
+}
+
+// PeeledRefFromSpec takes the same arguments as RefFromSpec, but
+// peels the ref before sending it back.
+func PeeledRefFromSpec(repo Repository, spec string) (ref Ref, err error) {
+	if ref, err = RefFromSpec(repo, spec); err != nil {
 		return nil, err
 	}
+	return PeelRef(repo, ref)
+}
 
+// PeelRef resolves the final target oid of the ref and returns
+// a peeled ref for this target. It examines the target of the
+// given ref and if the target is symbolic, it is followed and
+// resolved. This process repeats as many times as necessary to
+// obtain a peeled ref.
+func PeelRef(repo Repository, r Ref) (Ref, error) {
 	var (
+		err      error
 		symbolic bool
 		target   interface{}
 	)
@@ -295,36 +335,5 @@ func OidRefFromRef(repo Repository, spec string) (Ref, error) {
 			break
 		}
 	}
-	return &ref{name: spec, oid: target.(*ObjectId)}, nil
-}
-
-var defaultRefPrefixes = []string{
-	"%s",
-	"refs/%s",
-	"refs/tags/%s",
-	"refs/heads/%s",
-	"refs/remotes/%s",
-	"refs/remotes/%s/HEAD",
-}
-
-// OidRefFromShortRef attempts to disambiguate "shorthand" refs, e.g.
-// when one writes "master" for "refs/head/master". It follows the 
-// rules specified here:
-//
-//    http://www.kernel.org/pub/software/scm/git/docs/gitrevisions.html
-//
-// under "Specifying Revisions/<refname>". If the ref does not exist
-// then you can check the returned error with api.IsNoSuchRef. If the
-// ref is ambiguous, you can check the returned error with
-// api.IsAmbiguousRef.
-func OidRefFromShortRef(repo Repository, spec string) (r Ref, e error) {
-	for _, prefix := range defaultRefPrefixes {
-		ref := fmt.Sprintf(prefix, spec)
-		if r, e = OidRefFromRef(repo, ref); e == nil {
-			return r, nil
-		} else if !IsNoSuchRef(e) {
-			return nil, e // something went wrong
-		}
-	}
-	return nil, e // no such ref
+	return r, nil
 }

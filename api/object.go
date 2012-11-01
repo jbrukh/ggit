@@ -63,7 +63,7 @@ func ObjectFromShortOid(repo Repository, short string) (Object, error) {
 // ObjectFromRef is similar to OidFromRef, except it derefernces the
 // target ObjectId into an actual Object.
 func ObjectFromRef(repo Repository, spec string) (Object, error) {
-	ref, err := OidRefFromRef(repo, spec)
+	ref, err := PeeledRefFromSpec(repo, spec)
 	if err != nil {
 		return nil, err
 	}

@@ -191,17 +191,17 @@ func applyDereference(p *revParser, otype ObjectType) error {
 	return nil
 }
 
-func (p *revParser) findObject(simpleRev string) (err error) {
+func (p *revParser) findObject(spec string) (err error) {
 	// oid or short oid
 	var o Object
 	switch {
-	case hexRegex.MatchString(simpleRev):
-		o, err = ObjectFromShortOid(p.repo, simpleRev)
+	case hexRegex.MatchString(spec):
+		o, err = ObjectFromShortOid(p.repo, spec)
 		if err != nil {
 			return err
 		}
 	default:
-		ref, err := OidRefFromShortRef(p.repo, simpleRev)
+		ref, err := PeeledRefFromSpec(p.repo, spec)
 		if err != nil {
 			return err
 		}
