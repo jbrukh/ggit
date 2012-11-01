@@ -65,12 +65,16 @@ type Pack struct {
 type Idx struct {
 	// the object ids sorted by offset
 	entries []*PackedObjectId
-	// the object ids mapped by oid
+	// the object ids in order of oid
 	entriesById []*PackedObjectId
 	// caches oid lookup results
 	idToEntry map[string]*PackedObjectId
-	// number of objects contained in the pack (network
-	// byte order)
+	// the fan-out counts - each value represents the
+	// number of objects in this pack whose 1st byte
+	// is >= the index of that value.
+	counts *[256]int
+	// number of objects contained in the pack). equal to
+	// counts[255].
 	count int64
 	// copy of the checksum for this idx file's
 	// corresponding pack file.
@@ -117,17 +121,40 @@ func (pack *Pack) close() (err error) {
 // OBJECT RETRIEVAL
 // ================================================================= //
 
-func (idx *Idx) entryById(id string) *PackedObjectId {
+func (idx *Idx) entriesWithPrefix(prefix byte) []*PackedObjectId {
+	//the object we want is somewhere in the range between from (inclusive) and to (exclusive).
+	var from, to int
+	if prefix == 0 {
+		from = 0
+	} else {
+		from = idx.counts[prefix-1]
+	}
+	to = idx.counts[prefix]
+	if from == to {
+		return nil
+	}
+	return idx.entriesById[from:to]
+}
+
+func (idx *Idx) entryById(oid *ObjectId) *PackedObjectId {
+	trimmed := idx.entriesWithPrefix(oid.bytes[0])
+	if trimmed == nil {
+		return nil
+	}
+	id := oid.String()
 	if idx.idToEntry[id] != nil {
 		return idx.idToEntry[id]
 	}
 	gte := func(i int) bool {
 		var oid *ObjectId
-		oid = idx.entriesById[i].ObjectId
+		oid = trimmed[i].ObjectId
 		return oid.String() >= id
 	}
-	i := sort.Search(len(idx.entriesById), gte)
-	result := idx.entriesById[i]
+	i := sort.Search(len(trimmed), gte)
+	if i >= len(trimmed) {
+		return nil
+	}
+	result := trimmed[i]
 	if result.ObjectId.String() != id {
 		return nil
 	}
@@ -139,8 +166,7 @@ func (idx *Idx) entryById(id string) *PackedObjectId {
 // or nil, NoSuchObject if no such Object is in this pack.
 func (pack *Pack) unpack(oid *ObjectId) (obj Object, result packSearch) {
 	defer pack.close()
-	s := oid.String()
-	if entry := pack.idx.entryById(s); entry != nil {
+	if entry := pack.idx.entryById(oid); entry != nil {
 		if pack.content[entry.index] == nil {
 			pack.content[entry.index] = pack.parseEntry(entry.index)
 		}
@@ -158,8 +184,16 @@ const (
 )
 
 func (pack *Pack) unpackFromShortOid(short string) (obj Object, result packSearch) {
+	prefix, err := strconv.ParseUint(short[0:2], 16, 8)
+	if err != nil {
+		util.PanicErrf("invalid short oid; non-hex characters: %s. %s", short, err.Error())
+	}
+	entries := pack.idx.entriesWithPrefix(byte(prefix))
+	if entries == nil {
+		return
+	}
 	var already bool
-	for _, oid := range pack.idx.entries {
+	for _, oid := range entries {
 		if s := oid.String(); strings.HasPrefix(s, short) {
 			if already {
 				return nil, MultipleObjects
@@ -284,9 +318,9 @@ func (e packedObjectIds) Len() int {
 func (p *packIdxParser) parseIdx() *Idx {
 	p.idxParser.ConsumeString(PackIdxSignature)
 	p.idxParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
-	var counts [256]int64
+	var counts [256]int
 	for i := range counts {
-		counts[i] = p.idxParser.ParseIntBigEndian(4)
+		counts[i] = int(p.idxParser.ParseIntBigEndian(4))
 	}
 	//discard the fan-out values, just use the largest value,
 	//which is the total # of objects:
@@ -294,7 +328,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 	idToEntry := make(map[string]*PackedObjectId)
 	entries := make([]*PackedObjectId, count, count)
 	entriesByOid := make([]*PackedObjectId, count, count)
-	for i := int64(0); i < count; i++ {
+	for i := 0; i < count; i++ {
 		b := p.idxParser.ReadNBytes(20)
 		oid := &ObjectId{
 			bytes: b,
@@ -304,10 +338,10 @@ func (p *packIdxParser) parseIdx() *Idx {
 		}
 		entriesByOid[i] = entries[i]
 	}
-	for i := int64(0); i < count; i++ {
+	for i := 0; i < count; i++ {
 		entries[i].crc32 = int64(p.idxParser.ParseIntBigEndian(4))
 	}
-	for i := int64(0); i < count; i++ {
+	for i := 0; i < count; i++ {
 		//TODO: 8-byte #'s for some offsets for some pack files (packs > 2gb)
 		entries[i].offset = p.idxParser.ParseIntBigEndian(4)
 	}
@@ -331,7 +365,8 @@ func (p *packIdxParser) parseIdx() *Idx {
 		entries,
 		entriesByOid,
 		idToEntry,
-		count,
+		&counts,
+		int64(count),
 		packChecksum,
 		idxChecksum,
 	}
@@ -544,7 +579,11 @@ func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId
 	case ObjectRefDelta:
 		var oid *ObjectId
 		deltaDeflated, oid = readPackedRefDelta(bytes)
-		baseOffset = p.idx.entryById(oid.String()).offset
+		e := p.idx.entryById(oid)
+		if e == nil {
+			util.PanicErrf("nil entry for base object with id %s", oid.String())
+		}
+		baseOffset = e.offset
 	case ObjectOffsetDelta:
 		if deltaDeflated, baseOffset, err = readPackedOffsetDelta(bytes); err != nil {
 			util.ParseErrf("Err parsing size: %v. Could not determine size for %s", err, e.repr)
