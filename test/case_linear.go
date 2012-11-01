@@ -56,37 +56,31 @@ var Linear = NewRepoTestCase(
 				return errors.New("could not create test file for repo: " + err.Error())
 			}
 
+			var (
+				branchName = fmt.Sprintf("branch_%d", i)
+				commit     = fmt.Sprintf("\"Commit: %d\"", i)
+			)
 			// create a commits
 			err = util.GitExecMany(repo,
 				[]string{"add", "--all"},
-				[]string{"commit", "-a", "-m", fmt.Sprintf("\"Commit: %d\"", i)},
+				[]string{"commit", "-a", "-m", commit},
+				[]string{"branch", branchName},
 			)
 			if err != nil {
 				return fmt.Errorf("could not commit to repo: %s", err)
 			}
 
-			// create a branch for that commit
-			branchName := fmt.Sprintf("branch_%d", i)
-			_, err = util.GitExec(repo, "branch", branchName)
-			if err != nil {
-				return fmt.Errorf("could not create branch: %s", err)
-			}
-
 			// get the output data
-			var oid, parentOid, repr string
-			oid = util.RevOid(repo, "HEAD")
-			repr, err = util.GitExec(repo, "cat-file", "-p", oid)
-			if err != nil {
-				return err
-			}
+			var parentOid string
+			oid := util.RevOid(repo, "HEAD")
 			if i != 0 {
 				parentOid = util.RevOid(repo, "HEAD^")
 			}
 			output.Commits[i] = &CommitInfo{
-				oid,
-				parentOid,
-				repr,
-				branchName,
+				Oid:        oid,
+				ParentOid:  parentOid,
+				Repr:       util.ObjectRepr(repo, oid),
+				BranchName: branchName,
 			}
 		}
 		testCase.output = output

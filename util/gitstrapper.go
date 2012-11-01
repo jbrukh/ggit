@@ -117,6 +117,9 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 }
 
 // TODO: turn the following two methods into GitNow()
+
+// RevOid returns the git-rev-parse of the current
+// revision and returns it as a 40-character string.
 func RevOid(repo string, rev string) string {
 	oid, err := GitExec(repo, "rev-parse", rev)
 	if err != nil {
@@ -125,10 +128,13 @@ func RevOid(repo string, rev string) string {
 	return strings.TrimSpace(oid)
 }
 
+// ObjectRepr returns the git-cat-file -p output for
+// the given revision, or panics if there is an
+// error
 func ObjectRepr(repo string, rev string) string {
 	oid, err := GitExec(repo, "cat-file", "-p", rev)
 	if err != nil {
-		panic("can't get oid for: " + rev)
+		panic("can't get repr for: " + rev)
 	}
-	return strings.TrimSpace(oid)
+	return oid
 }
