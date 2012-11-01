@@ -7,7 +7,7 @@
 //
 
 /*
-cases.go
+cases.go instantiates all the repo test cases.
 */
 package test
 

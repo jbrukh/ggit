@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+git_test.go implements a few spot tests for git.go.
+*/
 package test
 
 import (

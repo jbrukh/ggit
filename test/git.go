@@ -5,20 +5,28 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+git.go implements functions for interactive with git repositories using
+command-line git.
+*/
 package test
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
-	//"path/filepath"
-	"github.com/jbrukh/ggit/util"
 	"strings"
 	"testing"
 )
+
+func init() {
+	// TODO: check for git in the system
+}
 
 // TempRepo returns a temporary location where we 
 // can store the test repo.
