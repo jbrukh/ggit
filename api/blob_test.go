@@ -44,12 +44,12 @@ func Test_parseValidBlob(t *testing.T) {
 		util.Assert(t, o.Header().Type() == ObjectBlob)
 		util.Assert(t, o.Header().Size() == int64(len(v)))
 		util.Assert(t, o.ObjectId() == nil) // wasn't set in the test scenario
+
+		var b *Blob
 		util.AssertPanicFree(t, func() {
-			b := o.(*Blob)
-			b.String()
+			b = o.(*Blob)
 		})
-		b := o.(*Blob)
-		util.Assert(t, b.String() == v)
+		util.AssertEqualString(t, string(b.Data()), v)
 	}
 }
 

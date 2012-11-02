@@ -35,8 +35,8 @@ func (b *Blob) ObjectId() *ObjectId {
 	return b.oid
 }
 
-func (b *Blob) String() string {
-	return string(b.data)
+func (b *Blob) Data() []byte {
+	return b.data
 }
 
 // ================================================================= //
