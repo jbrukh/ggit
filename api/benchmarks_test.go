@@ -16,6 +16,10 @@ import (
 	"testing"
 )
 
+// ================================================================= //
+// OBJECT PROVIDERS
+// ================================================================= //
+
 func looseBlobOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.Blobs
 	info := testRepo.Info().(*test.InfoBlobs)
@@ -62,6 +66,26 @@ func packedDerefs() (repo Repository, info *test.InfoDerefsPacked) {
 	return
 }
 
+func looseRef() (repo Repository, spec string) {
+	testRepo := test.Refs
+	repo = Open(testRepo.Repo())
+	info := testRepo.Info().(*test.InfoRefs)
+	spec = info.BranchName
+	return
+}
+
+func packedRef() (repo Repository, spec string) {
+	testRepo := test.Refs
+	repo = Open(testRepo.Repo())
+	info := testRepo.Info().(*test.InfoRefs)
+	spec = info.AnnTagName
+	return
+}
+
+// ================================================================= //
+// ATOM OPERATIONS
+// ================================================================= //
+
 func objectFromOid(b *testing.B, repo Repository, oid *ObjectId) {
 	b.StartTimer()
 	_, err := repo.ObjectFromOid(oid)
@@ -87,6 +111,68 @@ func listRefs(b *testing.B, repo Repository) {
 		b.Fatalf("could not list refs: %s", err)
 	}
 	b.StopTimer()
+}
+
+func resolveRef(b *testing.B, repo Repository, spec string) {
+	b.StartTimer()
+	_, err := repo.Ref(spec)
+	if err != nil {
+		b.Fatalf("could not resolve ref: %s", err)
+	}
+	b.StopTimer()
+}
+
+func resolveShortRef(b *testing.B, repo Repository, spec string) {
+	b.StartTimer()
+	_, err := RefFromSpec(repo, spec)
+	if err != nil {
+		b.Fatalf("could not resolve ref: %s", err)
+	}
+	b.StopTimer()
+}
+
+// ================================================================= //
+// BENCHMARKS
+// ================================================================= //
+
+func Benchmark__listTenRefs(b *testing.B) {
+	b.StopTimer()
+	repo := Open(test.Linear.Repo())
+	for i := 0; i < b.N; i++ {
+		listRefs(b, repo)
+	}
+}
+
+func Benchmark__resolveLooseRef(b *testing.B) {
+	b.StopTimer()
+	repo, spec := looseRef()
+	for i := 0; i < b.N; i++ {
+		resolveRef(b, repo, expandHeadRef(spec)) // TODO
+	}
+}
+
+func Benchmark__resolvePackedRef(b *testing.B) {
+	b.StopTimer()
+	repo, spec := packedRef()
+	for i := 0; i < b.N; i++ {
+		resolveRef(b, repo, expandTagRef(spec)) // TODO
+	}
+}
+
+func Benchmark__resolveLooseShortRef(b *testing.B) {
+	b.StopTimer()
+	repo, spec := looseRef()
+	for i := 0; i < b.N; i++ {
+		resolveShortRef(b, repo, spec)
+	}
+}
+
+func Benchmark__resolvePackedShortRef(b *testing.B) {
+	b.StopTimer()
+	repo, spec := packedRef()
+	for i := 0; i < b.N; i++ {
+		resolveShortRef(b, repo, spec)
+	}
 }
 
 func Benchmark__readLooseBlobByOid(b *testing.B) {
@@ -246,13 +332,5 @@ func Benchmark__resolvePackedBranch(b *testing.B) {
 	rev := info.BranchName
 	for i := 0; i < b.N; i++ {
 		objectFromRev(b, repo, rev)
-	}
-}
-
-func Benchmark__listTenRefs(b *testing.B) {
-	b.StopTimer()
-	repo := Open(test.Linear.Repo())
-	for i := 0; i < b.N; i++ {
-		listRefs(b, repo)
 	}
 }
