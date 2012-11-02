@@ -10,12 +10,11 @@
 git.go implements functions for interactive with git repositories using
 command-line git.
 */
-package test
+package util
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/jbrukh/ggit/util"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -31,7 +30,7 @@ func init() {
 // TempRepo returns a temporary location where we 
 // can store the test repo.
 func TempRepo(subdir string) string {
-	return path.Join("var", subdir)
+	return path.Join(os.TempDir(), subdir)
 }
 
 // CreateGitRepo creates an empty git repo in the
@@ -87,8 +86,8 @@ func GitExecMany(workDir string, cmds ...[]string) error {
 // created successfully.
 func AssertCreateGitRepo(t *testing.T, repo string) {
 	_, err := CreateGitRepo(repo)
-	util.AssertNoErr(t, err)
-	util.Assert(t, util.IsValidRepo(repo))
+	AssertNoErr(t, err)
+	Assert(t, IsValidRepo(repo))
 }
 
 // AssertRemoveGitRepo is a convenience method for testing
@@ -96,7 +95,7 @@ func AssertCreateGitRepo(t *testing.T, repo string) {
 // removed successfully.
 func AssertRemoveGitRepo(t *testing.T, repo string) {
 	err := os.RemoveAll(repo)
-	util.AssertNoErr(t, err)
+	AssertNoErr(t, err)
 }
 
 // TestFile creates a file with name "name" inside of the
@@ -110,10 +109,10 @@ func TestFile(repo string, name string, contents string) error {
 // HashBlob creates a new blob object in the odb of the
 // given repository.
 func HashBlob(repo string, contents string) (oid string, err error) {
-	if !util.IsValidRepo(repo) {
+	if !IsValidRepo(repo) {
 		return "", fmt.Errorf("does not appear to be a valid repo: %s", repo)
 	}
-	name := path.Join(os.TempDir(), util.UniqueHex16())
+	name := path.Join(os.TempDir(), UniqueHex16())
 	err = ioutil.WriteFile(name, []byte(contents), 0644)
 	if err != nil {
 		return "", err

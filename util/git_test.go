@@ -9,11 +9,10 @@
 /*
 git_test.go implements a few spot tests for git.go.
 */
-package test
+package util
 
 import (
 	"bytes"
-	"github.com/jbrukh/ggit/util"
 	"io"
 	"io/ioutil"
 	"os"
@@ -39,29 +38,29 @@ func Test_GitExec(t *testing.T) {
 		err error
 	)
 	out, err = GitExec(repo, "status")
-	util.AssertNoErr(t, err)
-	util.Assert(t, out == emptyRepoStatus)
+	AssertNoErr(t, err)
+	Assert(t, out == emptyRepoStatus)
 
 	// add a test file
 	var testFile = path.Join(repo, "test.txt")
 	err = ioutil.WriteFile(testFile, []byte("hahaha"), 0644)
-	util.AssertNoErr(t, err)
+	AssertNoErr(t, err)
 
 	// status with test file
 	out, err = GitExec(repo, "status")
-	util.AssertNoErr(t, err)
-	util.Assert(t, out == newFileStatus)
+	AssertNoErr(t, err)
+	Assert(t, out == newFileStatus)
 
 	// hash an object in the repo's object db
 	out, err = GitExec(repo, "hash-object", "-w", testFile)
-	util.AssertNoErr(t, err)
-	util.Assert(t, strings.TrimSpace(out) == oidOfTestFile)
+	AssertNoErr(t, err)
+	Assert(t, strings.TrimSpace(out) == oidOfTestFile)
 
 	// hash an object in the repo's object db, using HashBlob
 	var oid string
 	oid, err = HashBlob(repo, "hahaha")
-	util.AssertNoErr(t, err)
-	util.Assert(t, oid == oidOfTestFile)
+	AssertNoErr(t, err)
+	Assert(t, oid == oidOfTestFile)
 }
 
 func Test_TestFile(t *testing.T) {
@@ -72,15 +71,15 @@ func Test_TestFile(t *testing.T) {
 	testFile := "hello"
 	testContents := "hey!"
 	err := TestFile(repo, testFile, testContents)
-	util.AssertNoErrOrDie(t, err)
+	AssertNoErrOrDie(t, err)
 
 	pth := path.Join(repo, testFile)
 	file, err := os.Open(pth)
-	util.AssertNoErr(t, err)
+	AssertNoErr(t, err)
 
 	var contents bytes.Buffer
 	io.Copy(&contents, file)
-	util.AssertEqualString(t, contents.String(), testContents)
+	AssertEqualString(t, contents.String(), testContents)
 }
 
 const emptyRepoStatus = `# On branch master

@@ -60,7 +60,7 @@ var Refs = NewRepoTestCase(
 		)
 
 		// create a single commit
-		err = GitExecMany(repo,
+		err = util.GitExecMany(repo,
 			// add a commit, the one and only
 			[]string{"add", "--all"},
 			[]string{"commit", "-a", "-m", "\"First and only commit\""},
@@ -87,9 +87,9 @@ var Refs = NewRepoTestCase(
 
 		// get the output data
 		output := &OutputRefs{
-			CommitOid:          RevOid(repo, "HEAD"),
+			CommitOid:          util.RevOid(repo, "HEAD"),
 			AnnTagName:         annTagName,
-			AnnTagOid:          RevOid(repo, annTagName),
+			AnnTagOid:          util.RevOid(repo, annTagName),
 			LightTagName:       lightTagName,
 			BranchName:         branchName,
 			SymbolicRef1:       symbolicRef1,
