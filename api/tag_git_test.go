@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
+
+/*
+tag_git_test.go implements git comparison tests for tag reading.
+*/
 package api
 
 import (
@@ -15,7 +19,7 @@ import (
 
 // Test_readCommits will compare the commit output of
 // git and ggit for a string of commits.
-func Test_readCommits(t *testing.T) {
+func Test_readTags(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
 	info := testCase.Info().(*test.InfoLinear)
@@ -25,30 +29,35 @@ func Test_readCommits(t *testing.T) {
 
 	f := NewStrFormat()
 	for _, detail := range info.Commits {
-		o, err := repo.ObjectFromOid(OidNow(detail.CommitOid))
+		tagOid := OidNow(detail.TagOid)
+		o, err := repo.ObjectFromOid(tagOid)
 		util.AssertNoErr(t, err)
 
 		// check the id
-		util.Assert(t, o.ObjectId().String() == detail.CommitOid)
+		util.Assert(t, o.ObjectId().String() == detail.TagOid)
 
 		// check the header
-		util.Assert(t, o.Header().Type() == ObjectCommit)
-		util.AssertEqualInt(t, int(o.Header().Size()), detail.CommitSize)
+		util.Assert(t, o.Header().Type() == ObjectTag)
+		util.AssertEqualInt(t, int(o.Header().Size()), detail.TagSize)
 
-		// now convert to a commit and check the fields
-		var cmt *Commit
+		// now convert to a tag and check the fields
+		var tag *Tag
 		util.AssertPanicFree(t, func() {
-			cmt = o.(*Commit)
+			tag = o.(*Tag)
 		})
 
-		// check the tree
-		util.Assert(t, cmt.Tree() != nil)
-		util.AssertEqualString(t, cmt.Tree().String(), detail.TreeOid)
+		// check the name
+		util.AssertEqualString(t, tag.Name(), detail.TagName)
+
+		// check the target object
+		util.Assert(t, tag.Object() != nil)
+		util.AssertEqualString(t, tag.Object().String(), detail.CommitOid)
+		util.Assert(t, tag.ObjectType() == ObjectCommit)
 
 		// check the whole representation, which will catch
 		// most of the other stuff
 		f.Reset()
 		f.Object(o)
-		util.AssertEqualString(t, detail.CommitRepr, f.String())
+		util.AssertEqualString(t, detail.TagRepr, f.String())
 	}
 }

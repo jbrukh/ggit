@@ -24,12 +24,14 @@ import (
 type CommitDetail struct {
 	CommitOid  string // oid of the given commit
 	ParentOid  string // first parent oid
-	Repr       string // representation of this commit as a string
-	Size       int    // size of the commit object
+	CommitRepr string // representation of this commit as a string
+	CommitSize int    // size of the commit object
 	TreeOid    string
 	BranchName string
 	TagName    string
+	TagSize    int
 	TagOid     string
+	TagRepr    string
 }
 
 type InfoLinear struct {
@@ -77,20 +79,25 @@ var Linear = NewRepoTestCase(
 			}
 
 			// get the output data
-			var parentOid string
-			oid := util.RevOid(repo, "HEAD")
+			var (
+				parentOid = ""
+				oid       = util.RevOid(repo, "HEAD")
+				tagOid    = util.RevOid(repo, tagName)
+			)
 			if i != 0 {
 				parentOid = util.RevOid(repo, "HEAD^")
 			}
 			info.Commits[i] = &CommitDetail{
 				CommitOid:  oid,
 				ParentOid:  parentOid,
-				Repr:       util.ObjectRepr(repo, oid),
-				Size:       util.ObjectSize(repo, oid),
+				CommitRepr: util.ObjectRepr(repo, oid),
+				CommitSize: util.ObjectSize(repo, oid),
 				TreeOid:    util.RevOid(repo, oid+"^{tree}"),
 				BranchName: branchName,
 				TagName:    tagName,
-				TagOid:     util.RevOid(repo, tagName),
+				TagOid:     tagOid,
+				TagRepr:    util.ObjectRepr(repo, tagName),
+				TagSize:    util.ObjectSize(repo, tagOid),
 			}
 		}
 		testCase.info = info
