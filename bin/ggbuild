@@ -8,4 +8,4 @@ path="./..."
 if [ -n "$1" ]; then
        path=$1 
 fi
-go install -v ./... && go test $path
+go install -v ./... && go test -v $path

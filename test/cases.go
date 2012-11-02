@@ -83,7 +83,10 @@ func (tc *RepoTestCase) Output() interface{} {
 }
 
 func (tc *RepoTestCase) Remove() {
-	os.RemoveAll(tc.repo)
+	err := os.RemoveAll(tc.repo)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: error removing repo: %s\n", err)
+	}
 }
 
 func (tc *RepoTestCase) Build() error {

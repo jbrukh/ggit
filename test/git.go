@@ -31,7 +31,7 @@ func init() {
 // TempRepo returns a temporary location where we 
 // can store the test repo.
 func TempRepo(subdir string) string {
-	return path.Join(os.TempDir(), subdir)
+	return path.Join("var", subdir)
 }
 
 // CreateGitRepo creates an empty git repo in the
@@ -63,7 +63,7 @@ func GitExec(workDir string, args ...string) (string, error) {
 	cmd.Stdout = &out
 
 	if err := cmd.Run(); err != nil {
-		return "", err
+		return out.String(), err
 	}
 	return out.String(), nil
 }
@@ -74,9 +74,9 @@ func GitExec(workDir string, args ...string) (string, error) {
 // setting up test scenarios.
 func GitExecMany(workDir string, cmds ...[]string) error {
 	for i, cmd := range cmds {
-		_, err := GitExec(workDir, cmd...)
+		out, err := GitExec(workDir, cmd...)
 		if err != nil {
-			return fmt.Errorf("Failed on command %d ('%s') %s", i, cmd, err)
+			return fmt.Errorf("Failed on command %d ('%s') %s (git: '%s')", i, cmd, err, out)
 		}
 	}
 	return nil
@@ -118,6 +118,12 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 	if err != nil {
 		return "", err
 	}
+	defer func() {
+		err := os.Remove(name)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error removing file: %s\n", err)
+		}
+	}()
 	oid, err = GitExec(repo, "hash-object", "-w", name)
 	if err != nil {
 		return "", err
