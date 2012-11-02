@@ -175,7 +175,7 @@ func applyDereference(p *revParser, otype ObjectType) error {
 		if err != nil {
 			return err
 		}
-		p.o, err = p.repo.ObjectFromOid(c.tree)
+		p.o, err = p.repo.ObjectFromOid(c.Tree())
 		if err != nil {
 			return err
 		}

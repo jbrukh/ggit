@@ -34,12 +34,12 @@ const (
 
 type Commit struct {
 	hdr       ObjectHeader
+	oid       *ObjectId
+	treeOid   *ObjectId
+	parents   []*ObjectId
 	author    *WhoWhen
 	committer *WhoWhen
 	message   string
-	tree      *ObjectId
-	parents   []*ObjectId
-	oid       *ObjectId
 }
 
 func (c *Commit) Header() ObjectHeader {
@@ -50,10 +50,27 @@ func (c *Commit) ObjectId() *ObjectId {
 	return c.oid
 }
 
+func (c *Commit) Tree() *ObjectId {
+	return c.treeOid
+}
+
+func (c *Commit) Parents() []*ObjectId {
+	return c.parents
+}
+
+func (c *Commit) Author() *WhoWhen {
+	return c.author
+}
+
+func (c *Commit) Committer() *WhoWhen {
+	return c.committer
+}
+
+func (c *Commit) Message() string {
+	return c.message
+}
+
 func (c *Commit) addParent(oid *ObjectId) {
-	if c.parents == nil {
-		c.parents = make([]*ObjectId, 0, 2)
-	}
 	c.parents = append(c.parents, oid)
 }
 
@@ -62,14 +79,16 @@ func (c *Commit) addParent(oid *ObjectId) {
 // ================================================================= //
 
 func (p *objectParser) parseCommit() *Commit {
-	c := new(Commit)
-	c.oid = p.oid
+	c := &Commit{
+		parents: make([]*ObjectId, 0),
+		oid:     p.oid,
+	}
 	p.ResetCount()
 
 	// read the tree line
 	p.ConsumeString(markerTree)
 	p.ConsumeByte(SP)
-	c.tree = p.ParseOid()
+	c.treeOid = p.ParseOid()
 	p.ConsumeByte(LF)
 
 	// read an arbitrary number of parent lines
@@ -107,7 +126,7 @@ func (p *objectParser) parseCommit() *Commit {
 // TODO: the return values of this method are broken
 func (f *Format) Commit(c *Commit) (int, error) {
 	// tree
-	fmt.Fprintf(f.Writer, "tree %s\n", c.tree)
+	fmt.Fprintf(f.Writer, "tree %s\n", c.treeOid)
 
 	// parents
 	for _, p := range c.parents {
