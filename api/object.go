@@ -9,6 +9,7 @@ package api
 
 // ObjectHeader contains the type and size
 // information for an object.
+// TODO: this doesn't need to be an interface
 type ObjectHeader interface {
 	Type() ObjectType
 	Size() int64

@@ -23,13 +23,13 @@ const (
 // ================================================================= //
 
 type Tag struct {
-	hdr        ObjectHeader // the size of the tag
-	object     *ObjectId    // the object this tag is pointing at
-	name       string       // the tag name
-	tagger     *WhoWhen     // the tagger
-	message    string       // the tag message
-	objectType ObjectType   // the object type
-	oid        *ObjectId    // the oid of the tag itself
+	hdr     ObjectHeader // the size of the tag
+	oid     *ObjectId    // the oid of the tag itself
+	name    string       // the tag name
+	object  *ObjectId    // the object this tag is pointing at
+	otype   ObjectType   // the object type
+	tagger  *WhoWhen     // the tagger
+	message string       // the tag message
 }
 
 func (t *Tag) Header() ObjectHeader {
@@ -40,8 +40,24 @@ func (t *Tag) ObjectId() *ObjectId {
 	return t.oid
 }
 
+func (t *Tag) Name() string {
+	return t.name
+}
+
 func (t *Tag) Object() *ObjectId {
 	return t.object
+}
+
+func (t *Tag) ObjectType() ObjectType {
+	return t.otype
+}
+
+func (t *Tag) Tagger() *WhoWhen {
+	return t.tagger
+}
+
+func (t *Tag) Message() string {
+	return t.message
 }
 
 // ================================================================= //
@@ -62,7 +78,7 @@ func (p *objectParser) parseTag() *Tag {
 	// read object type
 	p.ConsumeString(markerType)
 	p.ConsumeByte(SP)
-	tag.objectType = ObjectType(p.ConsumeStrings(objectTypes))
+	tag.otype = ObjectType(p.ConsumeStrings(objectTypes))
 	p.ConsumeByte(LF)
 
 	// read the tag name
@@ -92,7 +108,7 @@ func (p *objectParser) parseTag() *Tag {
 
 func (f *Format) Tag(t *Tag) (int, error) {
 	fmt.Fprintf(f.Writer, "object %s\n", t.object)
-	fmt.Fprintf(f.Writer, "type %s\n", t.objectType)
+	fmt.Fprintf(f.Writer, "type %s\n", t.otype)
 	fmt.Fprintf(f.Writer, "tag %s\n", t.name)
 	sf := NewStrFormat()
 	sf.WhoWhen(t.tagger) // git-cat-file -p displays full dates for tags
