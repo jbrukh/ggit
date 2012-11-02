@@ -26,15 +26,15 @@ func Test_readBlobs(t *testing.T) {
 		fmt.Println("warning: no blobs to test")
 	}
 
-	for _, out := range info.Blobs {
+	for _, detail := range info.Blobs {
 		// read the blob
-		oid := OidNow(out.Oid)
+		oid := OidNow(detail.Oid)
 		o, err := repo.ObjectFromOid(oid)
 		util.AssertNoErr(t, err)
 		util.Assert(t, o.Header().Type() == ObjectBlob)
 		b := o.(*Blob)
-		util.AssertEqualString(t, string(b.Data()), out.Contents)
-		util.AssertEqualInt(t, int(b.Header().Size()), len(out.Contents))
+		util.AssertEqualString(t, string(b.Data()), detail.Contents)
+		util.AssertEqualInt(t, int(b.Header().Size()), len(detail.Contents))
 	}
 
 }
