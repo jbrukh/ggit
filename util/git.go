@@ -151,7 +151,8 @@ func RevOid(repo string, rev string) string {
 // the given revision, or panics if there is an
 // error
 func ObjectRepr(repo string, rev string) (repr string) {
-	return GitNow(repo, "cat-file", "-p", rev)
+	otype := strings.TrimSpace(GitNow(repo, "cat-file", "-t", rev))
+	return GitNow(repo, "cat-file", otype, rev)
 }
 
 func ObjectSize(repo string, rev string) int {

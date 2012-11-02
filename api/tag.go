@@ -119,7 +119,7 @@ func (f *Format) Tag(t *Tag) (int, error) {
 
 func (f *Format) TagPretty(t *Tag) (int, error) {
 	fmt.Fprintf(f.Writer, "object %s\n", t.object)
-	fmt.Fprintf(f.Writer, "type %s\n", t.objectType)
+	fmt.Fprintf(f.Writer, "type %s\n", t.otype)
 	fmt.Fprintf(f.Writer, "tag %s\n", t.name)
 	sf := NewStrFormat()
 	sf.WhoWhenDate(t.tagger) // git-cat-file -p displays full dates for tags
