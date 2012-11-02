@@ -22,9 +22,9 @@ func Test_revParse__firstParent(t *testing.T) {
 	util.Assert(t, len(output.Commits) == output.N)
 
 	// test the first, parentless commit
-	testParentlessCommit(t, repo, OidNow(output.Commits[0].Oid))
+	testParentlessCommit(t, repo, OidNow(output.Commits[0].CommitOid))
 	for _, c := range output.Commits[1:] {
-		oid, expOid := OidNow(c.Oid), OidNow(c.ParentOid)
+		oid, expOid := OidNow(c.CommitOid), OidNow(c.ParentOid)
 		testShortOid(t, repo, oid)
 		testFirstParent(t, repo, oid, expOid)
 		testFirstParentVariations(t, repo, oid, expOid)
@@ -41,7 +41,7 @@ func Test_revParse__secondAncestor(t *testing.T) {
 
 	// test the first, parentless commit
 	for i, c := range output.Commits[2:] {
-		oid, expOid := OidNow(c.Oid), OidNow(output.Commits[i].Oid)
+		oid, expOid := OidNow(c.CommitOid), OidNow(output.Commits[i].CommitOid)
 		testSecondAncestor(t, repo, oid, expOid)
 		testSecondAncestorVariations(t, repo, oid, expOid)
 	}
@@ -57,7 +57,7 @@ func Test_revParse__zeros(t *testing.T) {
 
 	// test the first, parentless commit
 	for _, c := range output.Commits {
-		oid := OidNow(c.Oid)
+		oid := OidNow(c.CommitOid)
 		testZeros(t, repo, oid)
 	}
 }

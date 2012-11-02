@@ -28,7 +28,7 @@ func looseCommitOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.Linear
 	output := testRepo.Output().(*test.OutputLinear)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(output.Commits[1].Oid)
+	oid = OidNow(output.Commits[1].CommitOid)
 	return
 }
 
@@ -44,7 +44,7 @@ func packedCommitOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.LinearPacked
 	output := testRepo.Output().(*test.OutputLinearPacked)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(output.Commits[1].Oid)
+	oid = OidNow(output.Commits[1].CommitOid)
 	return
 }
 

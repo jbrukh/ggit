@@ -25,10 +25,11 @@ func Test_readCommits(t *testing.T) {
 
 	f := NewStrFormat()
 	for _, c := range output.Commits {
-		o, err := repo.ObjectFromOid(OidNow(c.Oid))
+		o, err := repo.ObjectFromOid(OidNow(c.CommitOid))
 		util.AssertNoErr(t, err)
-		util.Assert(t, o.ObjectId().String() == c.Oid)
+		util.Assert(t, o.ObjectId().String() == c.CommitOid)
 		util.Assert(t, o.Header().Type() == ObjectCommit)
+		util.AssertEqualInt(t, int(o.Header().Size()), c.Size)
 		f.Reset()
 		f.Object(o)
 		util.AssertEqualString(t, c.Repr, f.String())

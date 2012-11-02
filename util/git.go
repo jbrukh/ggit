@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -130,26 +131,34 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 	return strings.TrimSpace(oid), err
 }
 
-// TODO: turn the following two methods into GitNow()
+func GitNow(repo string, params ...string) string {
+	out, err := GitExec(repo, params...)
+	if err != nil {
+		msg := fmt.Sprintf("can't execute cmd ('%s') in %s (%s)", strings.Join(params, " "), repo, err)
+		panic(msg)
+	}
+	return out
+}
 
 // RevOid returns the git-rev-parse of the current
 // revision and returns it as a 40-character string.
 func RevOid(repo string, rev string) string {
-	oid, err := GitExec(repo, "rev-parse", rev)
-	if err != nil {
-		msg := fmt.Sprintf("can't get oid for: %s (%s)", rev, err)
-		panic(msg)
-	}
+	oid := GitNow(repo, "rev-parse", rev)
 	return strings.TrimSpace(oid)
 }
 
 // ObjectRepr returns the git-cat-file -p output for
 // the given revision, or panics if there is an
 // error
-func ObjectRepr(repo string, rev string) string {
-	oid, err := GitExec(repo, "cat-file", "-p", rev)
+func ObjectRepr(repo string, rev string) (repr string) {
+	return GitNow(repo, "cat-file", "-p", rev)
+}
+
+func ObjectSize(repo string, rev string) int {
+	size := strings.TrimSpace(GitNow(repo, "cat-file", "-s", rev))
+	i, err := strconv.Atoi(size) // should be an int, or git is busted
 	if err != nil {
-		panic("can't get repr for: " + rev)
+		panic(err.Error())
 	}
-	return oid
+	return i
 }
