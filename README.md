@@ -4,6 +4,19 @@
 * ggit is a single-executable Git that compiles on Go-supported systems, including Windows.
 * ggit is a library for programmatically interacting with Git repositories.
 
+# Status
+
+ggit is alpha. We currently support reading operations and an API around the following constructs: 
+blobs, trees, tags, commits, refs, packed refs, git packs, and index files. ggit can parse revisions
+and has a command suite similar to git.
+
+# Changelog
+
+* **0.1.0** (TBA) Minimal viable reading API with test suite and benchmarks.
+* **0.0.2** Pack parsing and testing framework.
+* **0.0.1** Licensing and API improvements.
+* **0.0.0** Basic objects and command suite.
+
 # Copyright
 
     Copyright (c) 2012 The ggit Authors
