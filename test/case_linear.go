@@ -26,6 +26,8 @@ type CommitInfo struct {
 	ParentOid  string // first parent oid
 	Repr       string // representation of this commit as a string
 	BranchName string
+	TagName    string
+	TagOid     string
 }
 
 type OutputLinear struct {
@@ -58,13 +60,15 @@ var Linear = NewRepoTestCase(
 
 			var (
 				branchName = fmt.Sprintf("branch_%d", i)
-				commit     = fmt.Sprintf("\"Commit: %d\"", i)
+				tagName    = fmt.Sprintf("tag_%d", i)
+				commitMsg  = fmt.Sprintf("\"Commit: %d\"", i)
 			)
 			// create a commits
 			err = GitExecMany(repo,
 				[]string{"add", "--all"},
-				[]string{"commit", "-a", "-m", commit},
+				[]string{"commit", "-a", "-m", commitMsg},
 				[]string{"branch", branchName},
+				[]string{"tag", "-a", tagName, "-m", commitMsg},
 			)
 			if err != nil {
 				return fmt.Errorf("could not commit to repo: %s", err)
@@ -74,13 +78,15 @@ var Linear = NewRepoTestCase(
 			var parentOid string
 			oid := RevOid(repo, "HEAD")
 			if i != 0 {
-				parentOid = util.RevOid(repo, "HEAD^")
+				parentOid = RevOid(repo, "HEAD^")
 			}
 			output.Commits[i] = &CommitInfo{
 				Oid:        oid,
 				ParentOid:  parentOid,
 				Repr:       ObjectRepr(repo, oid),
 				BranchName: branchName,
+				TagName:    tagName,
+				TagOid:     RevOid(repo, tagName),
 			}
 		}
 		testCase.output = output
