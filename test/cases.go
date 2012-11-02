@@ -67,7 +67,7 @@ type RepoTestCase struct {
 	name    string
 	repo    string // path
 	builder RepoBuilder
-	output  interface{}
+	info    interface{}
 }
 
 func (tc *RepoTestCase) Repo() string {
@@ -78,8 +78,8 @@ func (tc *RepoTestCase) Name() string {
 	return tc.name
 }
 
-func (tc *RepoTestCase) Output() interface{} {
-	return tc.output
+func (tc *RepoTestCase) Info() interface{} {
+	return tc.info
 }
 
 func (tc *RepoTestCase) Remove() {

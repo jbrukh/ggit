@@ -16,14 +16,14 @@ import (
 func Test_revParse__firstParent(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputLinear)
+	info := testCase.Info().(*test.InfoLinear)
 
-	util.Assert(t, output.N > 1)
-	util.Assert(t, len(output.Commits) == output.N)
+	util.Assert(t, info.N > 1)
+	util.Assert(t, len(info.Commits) == info.N)
 
 	// test the first, parentless commit
-	testParentlessCommit(t, repo, OidNow(output.Commits[0].CommitOid))
-	for _, c := range output.Commits[1:] {
+	testParentlessCommit(t, repo, OidNow(info.Commits[0].CommitOid))
+	for _, c := range info.Commits[1:] {
 		oid, expOid := OidNow(c.CommitOid), OidNow(c.ParentOid)
 		testShortOid(t, repo, oid)
 		testFirstParent(t, repo, oid, expOid)
@@ -34,14 +34,14 @@ func Test_revParse__firstParent(t *testing.T) {
 func Test_revParse__secondAncestor(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputLinear)
+	info := testCase.Info().(*test.InfoLinear)
 
-	util.Assert(t, output.N > 2)
-	util.Assert(t, len(output.Commits) == output.N)
+	util.Assert(t, info.N > 2)
+	util.Assert(t, len(info.Commits) == info.N)
 
 	// test the first, parentless commit
-	for i, c := range output.Commits[2:] {
-		oid, expOid := OidNow(c.CommitOid), OidNow(output.Commits[i].CommitOid)
+	for i, c := range info.Commits[2:] {
+		oid, expOid := OidNow(c.CommitOid), OidNow(info.Commits[i].CommitOid)
 		testSecondAncestor(t, repo, oid, expOid)
 		testSecondAncestorVariations(t, repo, oid, expOid)
 	}
@@ -50,13 +50,13 @@ func Test_revParse__secondAncestor(t *testing.T) {
 func Test_revParse__zeros(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputLinear)
+	info := testCase.Info().(*test.InfoLinear)
 
-	util.Assert(t, output.N > 0)
-	util.Assert(t, len(output.Commits) == output.N)
+	util.Assert(t, info.N > 0)
+	util.Assert(t, len(info.Commits) == info.N)
 
 	// test the first, parentless commit
-	for _, c := range output.Commits {
+	for _, c := range info.Commits {
 		oid := OidNow(c.CommitOid)
 		testZeros(t, repo, oid)
 	}
@@ -65,18 +65,18 @@ func Test_revParse__zeros(t *testing.T) {
 func Test_revParse__derefs(t *testing.T) {
 	testCase := test.Derefs
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputDerefs)
+	info := testCase.Info().(*test.InfoDerefs)
 
-	commitOid := OidNow(output.CommitOid)
-	tagOid := OidNow(output.TagOid)
-	treeOid := OidNow(output.TreeOid)
+	commitOid := OidNow(info.CommitOid)
+	tagOid := OidNow(info.TagOid)
+	treeOid := OidNow(info.TreeOid)
 	testObjectExpected(t, repo, "HEAD", commitOid, ObjectCommit)
 	testObjectExpected(t, repo, "HEAD^{commit}", commitOid, ObjectCommit)
 	testObjectExpected(t, repo, "HEAD^{tree}", treeOid, ObjectTree)
 	testObjectExpected(t, repo, "HEAD^{commit}^{tree}", treeOid, ObjectTree)
-	testObjectExpected(t, repo, output.TagName, tagOid, ObjectTag)
-	testObjectExpected(t, repo, output.TagName+"^{commit}", commitOid, ObjectCommit)
-	testObjectExpected(t, repo, output.TagName+"^{commit}^{tree}", treeOid, ObjectTree)
+	testObjectExpected(t, repo, info.TagName, tagOid, ObjectTag)
+	testObjectExpected(t, repo, info.TagName+"^{commit}", commitOid, ObjectCommit)
+	testObjectExpected(t, repo, info.TagName+"^{commit}^{tree}", treeOid, ObjectTree)
 
 }
 

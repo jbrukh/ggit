@@ -19,13 +19,13 @@ import (
 // TEST CASE: BUNCHES OF BLOBS
 // ================================================================= //
 
-type OutputBlob struct {
+type BlobDetail struct {
 	Oid      string
 	Contents string
 }
 
-type OutputBlobs struct {
-	Blobs []*OutputBlob
+type InfoBlobs struct {
+	Blobs []*BlobDetail
 	N     int
 }
 
@@ -71,8 +71,8 @@ var Blobs = NewRepoTestCase(
 			return err
 		}
 
-		output := &OutputBlobs{
-			Blobs: make([]*OutputBlob, 0),
+		info := &InfoBlobs{
+			Blobs: make([]*BlobDetail, 0),
 			N:     len(testCasesBlobContents),
 		}
 
@@ -81,13 +81,13 @@ var Blobs = NewRepoTestCase(
 			if oidStr, err := util.HashBlob(testCase.Repo(), contents); err != nil {
 				return err
 			} else {
-				output.Blobs = append(output.Blobs, &OutputBlob{
+				info.Blobs = append(info.Blobs, &BlobDetail{
 					oidStr,
 					contents,
 				})
 			}
 		}
-		testCase.output = output
+		testCase.info = info
 		return
 	},
 )

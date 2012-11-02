@@ -21,7 +21,7 @@ import (
 // TEST CASE: A BUNCH OF CONCRETE AND SYMBOLIC REFS
 // ================================================================= //
 
-type OutputRefs struct {
+type InfoRefs struct {
 	CommitOid          string // the one and only commit
 	AnnTagName         string // name of annotated tag
 	AnnTagOid          string // the oid of the annotated tag
@@ -86,7 +86,7 @@ var Refs = NewRepoTestCase(
 		}
 
 		// get the output data
-		output := &OutputRefs{
+		info := &InfoRefs{
 			CommitOid:          util.RevOid(repo, "HEAD"),
 			AnnTagName:         annTagName,
 			AnnTagOid:          util.RevOid(repo, annTagName),
@@ -99,7 +99,7 @@ var Refs = NewRepoTestCase(
 			HeadTarget:         "refs/heads/master",
 		}
 
-		testCase.output = output
+		testCase.info = info
 		return
 	},
 )

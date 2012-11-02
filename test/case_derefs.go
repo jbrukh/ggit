@@ -21,7 +21,7 @@ import (
 // TEST CASE: A COMMIT AND TAG AND TREE AND BLOB FOR DEREFERENCING
 // ================================================================= //
 
-type OutputDerefs struct {
+type InfoDerefs struct {
 	TagName    string
 	CommitOid  string
 	TreeOid    string
@@ -69,7 +69,7 @@ var Derefs = NewRepoTestCase(
 		}
 
 		// get the output data
-		output := &OutputDerefs{
+		info := &InfoDerefs{
 			TagName:    tagName,
 			BranchName: branchName,
 			CommitOid:  util.RevOid(repo, "HEAD"),
@@ -78,7 +78,7 @@ var Derefs = NewRepoTestCase(
 			BlobOid:    blobOid,
 		}
 
-		testCase.output = output
+		testCase.info = info
 		return
 	},
 )

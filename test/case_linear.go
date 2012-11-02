@@ -21,7 +21,7 @@ import (
 // TEST CASE: A FEW LINEAR COMMITS
 // ================================================================= //
 
-type CommitInfo struct {
+type CommitDetail struct {
 	CommitOid  string // oid of the given commit
 	ParentOid  string // first parent oid
 	Repr       string // representation of this commit as a string
@@ -32,8 +32,8 @@ type CommitInfo struct {
 	TagOid     string
 }
 
-type OutputLinear struct {
-	Commits []*CommitInfo
+type InfoLinear struct {
+	Commits []*CommitDetail
 	N       int
 }
 
@@ -49,8 +49,8 @@ var Linear = NewRepoTestCase(
 			return errors.New("n must be > 0")
 		}
 		repo := testCase.repo
-		output := &OutputLinear{
-			Commits: make([]*CommitInfo, n),
+		info := &InfoLinear{
+			Commits: make([]*CommitDetail, n),
 			N:       n,
 		}
 		for i := 0; i < n; i++ {
@@ -82,7 +82,7 @@ var Linear = NewRepoTestCase(
 			if i != 0 {
 				parentOid = util.RevOid(repo, "HEAD^")
 			}
-			output.Commits[i] = &CommitInfo{
+			info.Commits[i] = &CommitDetail{
 				CommitOid:  oid,
 				ParentOid:  parentOid,
 				Repr:       util.ObjectRepr(repo, oid),
@@ -93,7 +93,7 @@ var Linear = NewRepoTestCase(
 				TagOid:     util.RevOid(repo, tagName),
 			}
 		}
-		testCase.output = output
+		testCase.info = info
 		return
 	},
 )

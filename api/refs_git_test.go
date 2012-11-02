@@ -20,16 +20,16 @@ import (
 func Test_refPaths(t *testing.T) {
 	testRepo := test.Refs
 	repo := Open(testRepo.Repo())
-	output := testRepo.Output().(*test.OutputRefs)
+	info := testRepo.Info().(*test.InfoRefs)
 
 	var (
-		oid    = OidNow(output.CommitOid)
-		tagOid = OidNow(output.AnnTagOid)
+		oid    = OidNow(info.CommitOid)
+		tagOid = OidNow(info.AnnTagOid)
 
 		master   = "refs/heads/master"
-		branch   = expandHeadRef(output.BranchName)
-		annTag   = expandTagRef(output.AnnTagName)
-		lightTag = expandTagRef(output.LightTagName)
+		branch   = expandHeadRef(info.BranchName)
+		annTag   = expandTagRef(info.AnnTagName)
+		lightTag = expandTagRef(info.LightTagName)
 	)
 
 	// test reading these full path refs directly from
@@ -41,8 +41,8 @@ func Test_refPaths(t *testing.T) {
 
 	// test reading symbolic refs and asserting that the
 	// targets are in fact symbols and are correct
-	testRefPathSymbolic(t, repo, output.SymbolicRef1, output.SymbolicRef1Target)
-	testRefPathSymbolic(t, repo, output.SymbolicRef2, output.SymbolicRef2Target)
+	testRefPathSymbolic(t, repo, info.SymbolicRef1, info.SymbolicRef1Target)
+	testRefPathSymbolic(t, repo, info.SymbolicRef2, info.SymbolicRef2Target)
 	testRefPathSymbolic(t, repo, "HEAD", master)
 
 	// test that packed refs have correct commit
@@ -52,8 +52,8 @@ func Test_refPaths(t *testing.T) {
 	// test ref peeling
 	testPeelRef(t, repo, master, oid)
 	testPeelRef(t, repo, branch, oid)
-	testPeelRef(t, repo, output.SymbolicRef1, oid)
-	testPeelRef(t, repo, output.SymbolicRef2, oid)
+	testPeelRef(t, repo, info.SymbolicRef1, oid)
+	testPeelRef(t, repo, info.SymbolicRef2, oid)
 
 	// make sure we read loose refs correctly
 	testRefRetrieval(t, repo, func() ([]Ref, error) {
@@ -75,12 +75,12 @@ func Test_refPaths(t *testing.T) {
 
 	// test resolution of short refs
 	testShortRefResolvesPeeled(t, repo, "master", oid)
-	testShortRefResolvesPeeled(t, repo, output.BranchName, oid)
-	testShortRefResolvesPeeled(t, repo, output.AnnTagName, tagOid)
-	testShortRefResolvesPeeled(t, repo, output.LightTagName, oid)
+	testShortRefResolvesPeeled(t, repo, info.BranchName, oid)
+	testShortRefResolvesPeeled(t, repo, info.AnnTagName, tagOid)
+	testShortRefResolvesPeeled(t, repo, info.LightTagName, oid)
 	testShortRefResolvesSymbolic(t, repo, "HEAD", master, oid)
-	testShortRefResolvesSymbolic(t, repo, output.SymbolicRef1, output.SymbolicRef1Target, oid)
-	testShortRefResolvesSymbolic(t, repo, output.SymbolicRef2, output.SymbolicRef2Target, oid)
+	testShortRefResolvesSymbolic(t, repo, info.SymbolicRef1, info.SymbolicRef1Target, oid)
+	testShortRefResolvesSymbolic(t, repo, info.SymbolicRef2, info.SymbolicRef2Target, oid)
 
 }
 

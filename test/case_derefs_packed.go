@@ -20,8 +20,8 @@ import (
 // TEST CASE: DEREFS
 // ================================================================= //
 
-type OutputDerefsPacked struct {
-	OutputDerefs
+type InfoDerefsPacked struct {
+	InfoDerefs
 }
 
 var DerefsPacked = NewRepoTestCase(
@@ -38,8 +38,8 @@ var DerefsPacked = NewRepoTestCase(
 			[]string{"prune-packed"},
 		)
 
-		testCase.output = &OutputDerefsPacked{
-			*testCase.output.(*OutputDerefs),
+		testCase.info = &InfoDerefsPacked{
+			*testCase.info.(*InfoDerefs),
 		}
 
 		return

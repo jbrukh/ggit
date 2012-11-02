@@ -18,13 +18,13 @@ import (
 func Test_readCommits(t *testing.T) {
 	testCase := test.Linear
 	repo := Open(testCase.Repo())
-	output := testCase.Output().(*test.OutputLinear)
+	info := testCase.Info().(*test.InfoLinear)
 
-	util.Assert(t, output.N > 1)
-	util.Assert(t, len(output.Commits) == output.N)
+	util.Assert(t, info.N > 1)
+	util.Assert(t, len(info.Commits) == info.N)
 
 	f := NewStrFormat()
-	for _, c := range output.Commits {
+	for _, c := range info.Commits {
 		o, err := repo.ObjectFromOid(OidNow(c.CommitOid))
 		util.AssertNoErr(t, err)
 

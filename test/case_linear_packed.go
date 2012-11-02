@@ -20,8 +20,8 @@ import (
 // TEST CASE: BUNCHES OF BLOBS
 // ================================================================= //
 
-type OutputLinearPacked struct {
-	OutputLinear
+type InfoLinearPacked struct {
+	InfoLinear
 }
 
 var LinearPacked = NewRepoTestCase(
@@ -38,8 +38,8 @@ var LinearPacked = NewRepoTestCase(
 			[]string{"prune-packed"},
 		)
 
-		testCase.output = &OutputLinearPacked{
-			*testCase.output.(*OutputLinear),
+		testCase.info = &InfoLinearPacked{
+			*testCase.info.(*InfoLinear),
 		}
 
 		return

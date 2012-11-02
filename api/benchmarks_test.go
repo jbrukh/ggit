@@ -18,7 +18,7 @@ import (
 
 func looseBlobOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.Blobs
-	output := testRepo.Output().(*test.OutputBlobs)
+	output := testRepo.Info().(*test.InfoBlobs)
 	repo = Open(testRepo.Repo())
 	oid = OidNow(output.Blobs[1].Oid)
 	return
@@ -26,7 +26,7 @@ func looseBlobOid() (repo Repository, oid *ObjectId) {
 
 func looseCommitOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.Linear
-	output := testRepo.Output().(*test.OutputLinear)
+	output := testRepo.Info().(*test.InfoLinear)
 	repo = Open(testRepo.Repo())
 	oid = OidNow(output.Commits[1].CommitOid)
 	return
@@ -34,7 +34,7 @@ func looseCommitOid() (repo Repository, oid *ObjectId) {
 
 func packedBlobOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.DerefsPacked
-	output := testRepo.Output().(*test.OutputDerefsPacked)
+	output := testRepo.Info().(*test.InfoDerefsPacked)
 	repo = Open(testRepo.Repo())
 	oid = OidNow(output.BlobOid)
 	return
@@ -42,22 +42,22 @@ func packedBlobOid() (repo Repository, oid *ObjectId) {
 
 func packedCommitOid() (repo Repository, oid *ObjectId) {
 	testRepo := test.LinearPacked
-	output := testRepo.Output().(*test.OutputLinearPacked)
+	output := testRepo.Info().(*test.InfoLinearPacked)
 	repo = Open(testRepo.Repo())
 	oid = OidNow(output.Commits[1].CommitOid)
 	return
 }
 
-func looseDerefs() (repo Repository, output *test.OutputDerefs) {
+func looseDerefs() (repo Repository, output *test.InfoDerefs) {
 	testRepo := test.Derefs
-	output = testRepo.Output().(*test.OutputDerefs)
+	output = testRepo.Info().(*test.InfoDerefs)
 	repo = Open(testRepo.Repo())
 	return
 }
 
-func packedDerefs() (repo Repository, output *test.OutputDerefsPacked) {
+func packedDerefs() (repo Repository, output *test.InfoDerefsPacked) {
 	testRepo := test.DerefsPacked
-	output = testRepo.Output().(*test.OutputDerefsPacked)
+	output = testRepo.Info().(*test.InfoDerefsPacked)
 	repo = Open(testRepo.Repo())
 	return
 }
