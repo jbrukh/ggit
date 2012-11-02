@@ -22,10 +22,11 @@ import (
 // ================================================================= //
 
 type CommitInfo struct {
-	CommitOid  string
-	Size       int
+	CommitOid  string // oid of the given commit
 	ParentOid  string // first parent oid
 	Repr       string // representation of this commit as a string
+	Size       int    // size of the commit object
+	TreeOid    string
 	BranchName string
 	TagName    string
 	TagOid     string
@@ -86,6 +87,7 @@ var Linear = NewRepoTestCase(
 				ParentOid:  parentOid,
 				Repr:       util.ObjectRepr(repo, oid),
 				Size:       util.ObjectSize(repo, oid),
+				TreeOid:    util.RevOid(repo, oid+"^{tree}"),
 				BranchName: branchName,
 				TagName:    tagName,
 				TagOid:     util.RevOid(repo, tagName),
