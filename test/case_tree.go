@@ -86,11 +86,12 @@ var Tree = NewRepoTestCase(
 		info := &InfoTree{
 			CommitOid: util.RevOid(repo, "HEAD"),
 			TreeOid:   util.RevOid(repo, "HEAD^{tree}"),
-			File1Oid:  util.BlobOid(repo, file1),
-			File2Oid:  util.BlobOid(repo, file2),
-			File3Oid:  util.BlobOid(repo, file3),
+			File1Oid:  util.TreeEntryOid(repo, file1),
+			File2Oid:  util.TreeEntryOid(repo, file2),
+			File3Oid:  util.TreeEntryOid(repo, file3),
+			Tree1Oid:  util.TreeEntryOid(repo, tree1),
+			Tree2Oid:  util.TreeEntryOid(repo, tree2),
 		}
-
 		testCase.info = info
 		return err
 	},

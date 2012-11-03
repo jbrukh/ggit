@@ -144,7 +144,7 @@ func GitNow(repo string, params ...string) string {
 	return out
 }
 
-func BlobOid(repo string, file string) string {
+func TreeEntryOid(repo string, file string) string {
 	line := GitNow(repo, "ls-files", "-s", file)
 	p := ParserForString(line)
 	var oid string
