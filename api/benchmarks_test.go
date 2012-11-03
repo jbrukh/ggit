@@ -82,6 +82,43 @@ func packedRef() (repo Repository, spec string) {
 	return
 }
 
+func justBlob() (Repository, *Blob) {
+	repo, oid := packedBlobOid()
+	o, err := repo.ObjectFromOid(oid)
+	if err != nil {
+		panic(err)
+	}
+	return repo, o.(*Blob)
+}
+
+func justCommit() (Repository, *Commit) {
+	repo, oid := packedCommitOid()
+	o, err := repo.ObjectFromOid(oid)
+	if err != nil {
+		panic(err)
+	}
+	return repo, o.(*Commit)
+}
+
+func justTree() (Repository, *Tree) {
+	repo, commit := justCommit()
+	o, err := repo.ObjectFromOid(commit.Tree())
+	if err != nil {
+		panic(err)
+	}
+	return repo, o.(*Tree)
+}
+
+func justTag() (Repository, *Tag) {
+	repo, info := packedDerefs()
+	tagOid := OidNow(info.TagOid)
+	o, err := repo.ObjectFromOid(tagOid)
+	if err != nil {
+		panic(err)
+	}
+	return repo, o.(*Tag)
+}
+
 // ================================================================= //
 // ATOM OPERATIONS
 // ================================================================= //
@@ -132,7 +169,61 @@ func resolveShortRef(b *testing.B, repo Repository, spec string) {
 }
 
 // ================================================================= //
-// BENCHMARKS
+// BENCHMARKS - FORMATTING
+// ================================================================= //
+
+func Benchmark__oidFromString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		OidNow("fb5b685ca75023e129b2f3c8172a7a166ad4dca8")
+	}
+}
+
+// ================================================================= //
+// BENCHMARKS - FORMATTING
+// ================================================================= //
+
+func Benchmark__blobString(b *testing.B) {
+	b.StopTimer()
+	f := NewStrFormat()
+	_, blob := justBlob()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		f.Blob(blob)
+	}
+}
+
+func Benchmark__commitString(b *testing.B) {
+	b.StopTimer()
+	f := NewStrFormat()
+	_, commit := justCommit()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		f.Commit(commit)
+	}
+}
+
+func Benchmark__treeString(b *testing.B) {
+	b.StopTimer()
+	f := NewStrFormat()
+	_, tree := justTree()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		f.Tree(tree)
+	}
+}
+
+func Benchmark__tagString(b *testing.B) {
+	b.StopTimer()
+	f := NewStrFormat()
+	_, tag := justTag()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		f.Tag(tag)
+	}
+}
+
+// ================================================================= //
+// BENCHMARKS - REFS
 // ================================================================= //
 
 func Benchmark__listTenRefs(b *testing.B) {

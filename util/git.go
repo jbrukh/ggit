@@ -147,11 +147,16 @@ func RevOid(repo string, rev string) string {
 	return strings.TrimSpace(oid)
 }
 
+func ObjectType(repo string, rev string) string {
+	otype := GitNow(repo, "cat-file", "-t", rev)
+	return strings.TrimSpace(otype)
+}
+
 // ObjectRepr returns the git-cat-file -p output for
 // the given revision, or panics if there is an
 // error
 func ObjectRepr(repo string, rev string) (repr string) {
-	otype := strings.TrimSpace(GitNow(repo, "cat-file", "-t", rev))
+	otype := ObjectType(repo, rev)
 	return GitNow(repo, "cat-file", otype, rev)
 }
 
