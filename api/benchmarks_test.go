@@ -21,10 +21,10 @@ import (
 // ================================================================= //
 
 func looseBlobOid() (repo Repository, oid *ObjectId) {
-	testRepo := test.Blobs
-	info := testRepo.Info().(*test.InfoBlobs)
+	testRepo := test.Derefs
+	info := testRepo.Info().(*test.InfoDerefs)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(info.Blobs[1].Oid)
+	oid = OidNow(info.BlobOid)
 	return
 }
 
