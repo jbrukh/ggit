@@ -21,11 +21,15 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"testing"
 )
 
 func init() {
-	// TODO: check for git in the system
+	cmd := exec.Command("which", "git")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil || out.String() == "" {
+		panic("no git installed")
+	}
 }
 
 // TempRepo returns a temporary location where we 
@@ -82,23 +86,6 @@ func GitExecMany(workDir string, cmds ...[]string) error {
 	return nil
 }
 
-// AssertCreateGitRepo is a convenience method for testing
-// which creates a new repo and asserts that it was
-// created successfully.
-func AssertCreateGitRepo(t *testing.T, repo string) {
-	_, err := CreateGitRepo(repo)
-	AssertNoErr(t, err)
-	Assert(t, IsValidRepo(repo))
-}
-
-// AssertRemoveGitRepo is a convenience method for testing
-// which removes a new repo and asserts that is was
-// removed successfully.
-func AssertRemoveGitRepo(t *testing.T, repo string) {
-	err := os.RemoveAll(repo)
-	AssertNoErr(t, err)
-}
-
 // TestFile creates a file with name "name" inside of the
 // repo "repo" with the specified contents.
 func TestFile(repo string, name string, contents string) error {
@@ -131,6 +118,11 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 	return strings.TrimSpace(oid), err
 }
 
+// ================================================================= //
+// BLOB OBJECT
+// ================================================================= //
+
+// GitNow executes a git command or panics
 func GitNow(repo string, params ...string) string {
 	out, err := GitExec(repo, params...)
 	if err != nil {
