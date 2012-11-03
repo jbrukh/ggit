@@ -7,7 +7,7 @@
 //
 
 /*
-tree_git_test.go implements git-comparison tests for ggit tree parsing.
+tree_test.go implements git-comparison tests for ggit tree parsing.
 */
 package api
 
