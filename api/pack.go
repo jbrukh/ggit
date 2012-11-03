@@ -38,9 +38,15 @@ const (
 )
 
 type PackedObject struct {
-	Object
+	object  Object
 	bytes   []byte
 	DeltaOf *ObjectId
+	//the length of this object's delta chain. 0 for non-delta objects.
+	Depth int
+}
+
+func (p *PackedObject) Object() Object {
+	return p.object
 }
 
 type Pack struct {
@@ -137,7 +143,7 @@ func (pack *Pack) unpack(oid *ObjectId) (obj Object, result packSearch) {
 		if pack.content[entry.index] == nil {
 			pack.content[entry.index] = pack.parseEntry(entry.index)
 		}
-		obj, result = pack.content[entry.index].Object, OneSuchObject
+		obj, result = pack.content[entry.index].object, OneSuchObject
 	}
 	return
 }
@@ -435,21 +441,20 @@ func (p *Pack) entrySizeTypeData(i int) (uint64, PackedObjectType, []byte) {
 
 // read all the bytes of the ith object of the pack file
 func (p *Pack) readEntry(i int) []byte {
-	entries := p.idx.entries
-	v := entries[i]
-	var entryLen int64
-	if i+1 < len(entries) {
-		entryLen = entries[i+1].offset - v.offset
+	e := p.idx.entries[i]
+	var size int64
+	if i+1 < len(p.idx.entries) {
+		size = p.idx.entries[i+1].offset - e.offset
 	} else {
 		if info, err := p.file.Stat(); err != nil {
 			panicErrf("Could not determine size of pack file %s: %s", p.file.Name(), err)
 		} else {
-			entryLen = info.Size() - v.offset
+			size = info.Size() - e.offset
 		}
 	}
-	data := make([]byte, entryLen, entryLen)
-	if _, err := p.file.ReadAt(data, v.offset); err != nil {
-		panicErrf("Could not read %d bytes from %d of pack file %s: %s", len(data), v.offset, p.file.Name(), err)
+	data := make([]byte, size, size)
+	if _, err := p.file.ReadAt(data, e.offset); err != nil {
+		panicErrf("Could not read %d bytes from %d of pack file %s: %s", len(data), e.offset, p.file.Name(), err)
 	}
 	return data
 }
@@ -485,9 +490,8 @@ func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 	commit := dp.objectParser.parseCommit()
 
 	return &PackedObject{
-		commit,
-		dp.bytes,
-		nil,
+		object: commit,
+		bytes:  dp.bytes,
 	}
 }
 func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
@@ -497,9 +501,8 @@ func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 	}
 	tag := dp.objectParser.parseTag()
 	return &PackedObject{
-		tag,
-		dp.bytes,
-		nil,
+		object: tag,
+		bytes:  dp.bytes,
 	}
 }
 
@@ -512,9 +515,8 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 		size,
 	}
 	return &PackedObject{
-		blob,
-		blob.data,
-		nil,
+		object: blob,
+		bytes:  blob.data,
 	}
 }
 
@@ -525,9 +527,8 @@ func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
 	}
 	tree := dp.objectParser.parseTree()
 	return &PackedObject{
-		tree,
-		dp.bytes,
-		nil,
+		object: tree,
+		bytes:  dp.bytes,
 	}
 }
 
@@ -674,7 +675,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 	if outputSize != int64(len(out)) {
 		panicErrf("Expected output of len %d, got %d. \n", outputSize, len(out))
 	}
-	outputType := base.Object.Header().Type()
+	outputType := base.object.Header().Type()
 	outputParser := newObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
 	outputParser.hdr = &objectHeader{
 		outputType,
@@ -694,7 +695,8 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 	return &PackedObject{
 		obj,
 		out,
-		base.Object.ObjectId(),
+		base.object.ObjectId(),
+		base.Depth + 1,
 	}
 }
 

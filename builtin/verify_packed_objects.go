@@ -41,8 +41,8 @@ func (b *VerifyPackedObjectsBuiltin) Execute(p *Params, args []string) {
 		object := objects[i]
 		base := ""
 		if oid := object.DeltaOf; oid != nil {
-			base = fmt.Sprintf("base %s", oid)
+			base = fmt.Sprintf("base %s depth %d", oid, object.Depth)
 		}
-		fmt.Fprintln(p.Wout, object.ObjectId(), object.Header().Type(), base)
+		fmt.Fprintln(p.Wout, object.Object().ObjectId(), object.Object().Header().Type(), base)
 	}
 }
