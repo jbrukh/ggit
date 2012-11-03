@@ -66,7 +66,7 @@ var Refs = NewRepoTestCase(
 			[]string{"commit", "-a", "-m", "\"First and only commit\""},
 
 			// add an annotated and lightweight tag
-			[]string{"tag", "-a", annTagName, "-m", "My tag!"},
+			[]string{"tag", "-a", annTagName, "-m", "\"My tag!\""},
 			[]string{"tag", lightTagName},
 
 			// add a branch pointing to master

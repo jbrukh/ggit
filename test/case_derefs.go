@@ -61,7 +61,7 @@ var Derefs = NewRepoTestCase(
 		err = util.GitExecMany(repo,
 			[]string{"add", "--all"},
 			[]string{"commit", "-a", "-m", "\"First and only commit\""},
-			[]string{"tag", "-a", tagName, "-m", "My tag!"},
+			[]string{"tag", "-a", tagName, "-m", "\"My tag!\""},
 			[]string{"branch", branchName},
 		)
 		if err != nil {
