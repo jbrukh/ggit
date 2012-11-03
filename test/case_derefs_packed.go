@@ -42,6 +42,6 @@ var DerefsPacked = NewRepoTestCase(
 			*testCase.info.(*InfoDerefs),
 		}
 
-		return
+		return err
 	},
 )

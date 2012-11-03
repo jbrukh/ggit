@@ -36,13 +36,11 @@ type InfoRefs struct {
 
 var Refs = NewRepoTestCase(
 	"__refs",
-	func(testCase *RepoTestCase) (err error) {
-		err = createRepo(testCase)
+	func(testCase *RepoTestCase) error {
+		repo, err := createRepo(testCase)
 		if err != nil {
 			return err
 		}
-
-		repo := testCase.repo
 
 		name := "myfile1.txt"
 		contents := "various refs lol"
@@ -100,6 +98,6 @@ var Refs = NewRepoTestCase(
 		}
 
 		testCase.info = info
-		return
+		return nil
 	},
 )

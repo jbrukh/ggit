@@ -65,8 +65,8 @@ var testCasesBlobContents = []string{
 
 var Blobs = NewRepoTestCase(
 	"__blobs",
-	func(testCase *RepoTestCase) (err error) {
-		err = createRepo(testCase)
+	func(testCase *RepoTestCase) error {
+		repo, err := createRepo(testCase)
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ var Blobs = NewRepoTestCase(
 
 		// hash the test objects
 		for _, contents := range testCasesBlobContents {
-			if oidStr, err := util.HashBlob(testCase.Repo(), contents); err != nil {
+			if oidStr, err := util.HashBlob(repo, contents); err != nil {
 				return err
 			} else {
 				info.Blobs = append(info.Blobs, &BlobDetail{
@@ -88,6 +88,6 @@ var Blobs = NewRepoTestCase(
 			}
 		}
 		testCase.info = info
-		return
+		return nil
 	},
 )

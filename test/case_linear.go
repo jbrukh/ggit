@@ -41,16 +41,15 @@ type InfoLinear struct {
 
 var Linear = NewRepoTestCase(
 	"__linear",
-	func(testCase *RepoTestCase) (err error) {
+	func(testCase *RepoTestCase) error {
 		n := 10
-		err = createRepo(testCase)
+		repo, err := createRepo(testCase)
 		if err != nil {
 			return err
 		}
 		if n < 1 {
 			return errors.New("n must be > 0")
 		}
-		repo := testCase.repo
 		info := &InfoLinear{
 			Commits: make([]*CommitDetail, n),
 			N:       n,
@@ -101,6 +100,6 @@ var Linear = NewRepoTestCase(
 			}
 		}
 		testCase.info = info
-		return
+		return nil
 	},
 )

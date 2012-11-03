@@ -18,6 +18,7 @@ package test
 var Empty = NewRepoTestCase(
 	"__empty",
 	func(testCase *RepoTestCase) error {
-		return createRepo(testCase)
+		_, err := createRepo(testCase)
+		return err
 	},
 )

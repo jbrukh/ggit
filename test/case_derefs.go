@@ -32,13 +32,11 @@ type InfoDerefs struct {
 
 var Derefs = NewRepoTestCase(
 	"__derefs",
-	func(testCase *RepoTestCase) (err error) {
-		err = createRepo(testCase)
+	func(testCase *RepoTestCase) error {
+		repo, err := createRepo(testCase)
 		if err != nil {
 			return err
 		}
-
-		repo := testCase.repo
 
 		name := "myfile1.txt"
 		contents := "one"
@@ -79,6 +77,6 @@ var Derefs = NewRepoTestCase(
 		}
 
 		testCase.info = info
-		return
+		return nil
 	},
 )

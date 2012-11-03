@@ -31,6 +31,7 @@ var repoTestCases = []*RepoTestCase{
 	Derefs,
 	DerefsPacked,
 	Refs,
+	Tree,
 }
 
 // init initializes all the repo test cases, if they haven't been
@@ -110,14 +111,14 @@ type RepoBuilder func(testCase *RepoTestCase) error
 // UTIL
 // ================================================================= //
 
-func createRepo(testCase *RepoTestCase) (err error) {
-	repo := util.TempRepo(testCase.name)
+func createRepo(testCase *RepoTestCase) (repo string, err error) {
+	repo = util.TempRepo(testCase.name)
 
 	// clean that shit
 	os.RemoveAll(repo)
 	_, err = util.CreateGitRepo(repo)
 	if err != nil {
-		return fmt.Errorf("Could not create case '%s': %s", testCase.name, err.Error())
+		return repo, fmt.Errorf("Could not create case '%s': %s", testCase.name, err.Error())
 	}
 	testCase.repo = repo
 	return

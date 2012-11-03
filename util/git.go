@@ -61,7 +61,7 @@ func GitExec(workDir string, args ...string) (string, error) {
 
 	// print the output
 
-	fmt.Println(gitDir, ": ", strings.Join(args[3:], " "))
+	fmt.Printf("%s: %s\n", gitDir, strings.Join(args[3:], " "))
 
 	cmd := exec.Command(args[0], args[1:]...)
 	var out bytes.Buffer
@@ -92,7 +92,10 @@ func GitExecMany(workDir string, cmds ...[]string) error {
 func TestFile(repo string, name string, contents string) error {
 	pth := path.Join(repo, name)
 	err := ioutil.WriteFile(pth, []byte(contents), 0644)
-	return err
+	if err != nil {
+		return fmt.Errorf("could not create test file '%s' for repo: %s", name, err)
+	}
+	return nil
 }
 
 // HashBlob creates a new blob object in the odb of the
@@ -134,8 +137,18 @@ func GitNow(repo string, params ...string) string {
 }
 
 func BlobOid(repo string, file string) string {
-	oid := GitNow(repo, "ls-files", "-s", file, "|", "cut", "-d' '", "-f2")
-	return strings.TrimSpace(oid)
+	line := GitNow(repo, "ls-files", "-s", file)
+	p := ParserForString(line)
+	var oid string
+	const SP = ' '
+	err := SafeParse(func() {
+		p.ReadString(SP)
+		oid = p.ReadString(SP)
+	})
+	if err != nil {
+		panic(err)
+	}
+	return oid
 }
 
 // RevOid returns the git-rev-parse of the current

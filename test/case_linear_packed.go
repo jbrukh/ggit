@@ -26,8 +26,8 @@ type InfoLinearPacked struct {
 
 var LinearPacked = NewRepoTestCase(
 	"__linear_packed",
-	func(testCase *RepoTestCase) (err error) {
-		err = Linear.builder(testCase)
+	func(testCase *RepoTestCase) error {
+		err := Linear.builder(testCase)
 		if err != nil {
 			return err
 		}
@@ -42,6 +42,6 @@ var LinearPacked = NewRepoTestCase(
 			*testCase.info.(*InfoLinear),
 		}
 
-		return
+		return err
 	},
 )
