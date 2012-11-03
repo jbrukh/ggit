@@ -13,6 +13,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"runtime/debug"
 	"strconv"
 	"strings"
 )
@@ -71,6 +72,7 @@ func safeParse(f func()) (err error) {
 		if r := recover(); r != nil {
 			if e, ok := r.(parseErr); ok {
 				err = e
+				debug.PrintStack()
 			}
 		}
 	}()
