@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -91,6 +92,13 @@ func GitExecMany(workDir string, cmds ...[]string) error {
 // repo "repo" with the specified contents.
 func TestFile(repo string, name string, contents string) error {
 	pth := path.Join(repo, name)
+
+	// create the directory, if applicable
+	dir, _ := filepath.Split(pth)
+	if dir != "" {
+		os.MkdirAll(dir, 0755)
+	}
+
 	err := ioutil.WriteFile(pth, []byte(contents), 0644)
 	if err != nil {
 		return fmt.Errorf("could not create test file '%s' for repo: %s", name, err)
