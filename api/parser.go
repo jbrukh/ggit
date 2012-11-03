@@ -13,10 +13,18 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"os"
 	"runtime/debug"
 	"strconv"
 	"strings"
 )
+
+// ================================================================= //
+// PARSE ERROR TYPE & PANICS
+// ================================================================= //
+
+// ParserDebug toggles parser debugging in safeParse().
+var ParserDebug bool = true
 
 // ================================================================= //
 // PARSE ERROR TYPE & PANICS
@@ -82,6 +90,10 @@ func safeParse(f func()) (err error) {
 		if r := recover(); r != nil {
 			if e, ok := r.(*parseErr); ok {
 				err = e
+				if ParserDebug {
+					fmt.Fprintln(os.Stderr, "------------ ParserDebug Output ------------")
+					fmt.Fprint(os.Stderr, e.Stack())
+				}
 			}
 		}
 	}()
