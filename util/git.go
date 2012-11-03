@@ -120,7 +120,7 @@ func HashBlob(repo string, contents string) (oid string, err error) {
 }
 
 // ================================================================= //
-// BLOB OBJECT
+// UTILS
 // ================================================================= //
 
 // GitNow executes a git command or panics
@@ -131,6 +131,11 @@ func GitNow(repo string, params ...string) string {
 		panic(msg)
 	}
 	return out
+}
+
+func BlobOid(repo string, file string) string {
+	oid := GitNow(repo, "ls-files", "-s", file, "|", "cut", "-d' '", "-f2")
+	return strings.TrimSpace(oid)
 }
 
 // RevOid returns the git-rev-parse of the current
