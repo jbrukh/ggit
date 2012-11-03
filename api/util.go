@@ -48,7 +48,7 @@ func MakeHash(o Object) (hash.Hash, error) {
 	}
 	content := f.String()
 	len := len([]byte(content))
-	value := kind + " " + fmt.Sprint(len) + "\000" + content
+	value := kind + " " + fmt.Sprint(len) + string(NUL) + content
 	toHash := []byte(value)
 	sha.Write(toHash)
 	return sha, nil
