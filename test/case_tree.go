@@ -27,6 +27,8 @@ type InfoTree struct {
 	File1Oid  string
 	File2Oid  string
 	File3Oid  string
+	Tree1Oid  string
+	Tree2Oid  string
 }
 
 var Tree = NewRepoTestCase(
@@ -53,6 +55,20 @@ var Tree = NewRepoTestCase(
 		}
 
 		err = util.TestFile(repo, file3, "3")
+		if err != nil {
+			return err
+		}
+
+		// add some trees
+		tree1 := "mytree/hello.txt"
+		tree2 := "anothertree/bye.txt"
+
+		err = util.TestFile(repo, tree1, "hello")
+		if err != nil {
+			return err
+		}
+
+		err = util.TestFile(repo, tree2, "bye")
 		if err != nil {
 			return err
 		}
