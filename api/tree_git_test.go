@@ -23,6 +23,7 @@ func Test_readTree(t *testing.T) {
 	testCase := test.Tree
 	repo := Open(testCase.Repo())
 	info := testCase.Info().(*test.InfoTree)
+	f := NewStrFormat()
 
 	var (
 		oid = OidNow(info.TreeOid)
@@ -37,4 +38,21 @@ func Test_readTree(t *testing.T) {
 	util.Assert(t, o.Header().Type() == ObjectTree)
 	util.AssertEqualInt(t, int(o.Header().Size()), info.TreeSize)
 
+	// get the tree
+	// now convert to a tag and check the fields
+	var tree *Tree
+	util.AssertPanicFree(t, func() {
+		tree = o.(*Tree)
+	})
+
+	// check a file
+	entries := tree.Entries()
+	util.AssertEqualInt(t, info.N, len(entries))
+
+	// check the output
+	// check the whole representation, which will catch
+	// most of the other stuff
+	f.Reset()
+	f.Object(o)
+	util.AssertEqualString(t, info.TreeRepr, f.String())
 }
