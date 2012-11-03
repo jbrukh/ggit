@@ -24,26 +24,36 @@ import (
 
 // ParseErr is a common error that occurs when ggit is 
 // parsing binary objects
-type parseErr string
+type parseErr struct {
+	msg   string
+	stack []byte
+}
 
 // ParseErr is an error
-func (p parseErr) Error() string {
-	return string(p)
+func (p *parseErr) Error() string {
+	return p.msg
+}
+
+func (p *parseErr) Stack() string {
+	return string(p.stack)
 }
 
 // parseErrf allows convenience formatting for ParseErrors
-func parseErrf(format string, items ...interface{}) parseErr {
-	return parseErr(fmt.Sprintf(format, items...))
+func parseErrf(format string, items ...interface{}) *parseErr {
+	return &parseErr{
+		msg:   fmt.Sprintf(format, items...),
+		stack: debug.Stack(),
+	}
 }
 
 // parseErrn concatenates a bunch of items together to 
 // form the error string
-func parseErrn(items ...string) parseErr {
-	return parseErr(strings.Join(items, ""))
+func parseErrn(items ...string) *parseErr {
+	return parseErrf("%s", strings.Join(items, ""))
 }
 
 func panicErr(msg string) {
-	panic(parseErr(msg))
+	panic(parseErrn(msg))
 }
 
 func panicErrn(items ...string) {
@@ -70,9 +80,8 @@ type dataParser struct {
 func safeParse(f func()) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			if e, ok := r.(parseErr); ok {
+			if e, ok := r.(*parseErr); ok {
 				err = e
-				debug.PrintStack()
 			}
 		}
 	}()

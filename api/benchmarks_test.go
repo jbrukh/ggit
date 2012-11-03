@@ -178,6 +178,17 @@ func Benchmark__oidFromString(b *testing.B) {
 	}
 }
 
+func Benchmark__oidToString(b *testing.B) {
+	b.StopTimer()
+	const oidStr = "fb5b685ca75023e129b2f3c8172a7a166ad4dca8"
+	for i := 0; i < b.N; i++ {
+		oid := OidNow(oidStr)
+		b.StartTimer()
+		oid.String()
+		b.StopTimer()
+	}
+}
+
 // ================================================================= //
 // BENCHMARKS - FORMATTING
 // ================================================================= //
