@@ -3,4 +3,5 @@
 # Run benchmarks on the ggit project.
 # usage: ggbench
 
-go test -file api/benchmarks_test.go -test.bench=".*" ./api
+# we only want to run benchmarks, not any tests; we exclude tests.
+go test -test.bench="Benchmark__.*" -test.run="dontrunanytests" -v ./api
