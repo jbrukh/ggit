@@ -112,7 +112,7 @@ func (f *Format) Tag(t *Tag) (int, error) {
 	fmt.Fprintf(f.Writer, "type %s\n", t.otype)
 	fmt.Fprintf(f.Writer, "tag %s\n", t.name)
 	sf := NewStrFormat()
-	sf.WhoWhen(t.tagger) // git-cat-file -p displays full dates for tags
+	sf.WhoWhen(t.tagger)
 	fmt.Fprintf(f.Writer, "tagger %s\n\n", sf.String())
 	fmt.Fprintf(f.Writer, "%s", t.message)
 	return 0, nil // TODO

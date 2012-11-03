@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/sha1"
+	"fmt"
 	"hash"
 )
 
@@ -38,15 +39,20 @@ var signs []string = []string{
 var sha hash.Hash = sha1.New()
 
 // produce the SHA1 hash for any Object.
-/*func makeHash(o Object) hash.Hash {
+func MakeHash(o Object) (hash.Hash, error) {
 	sha.Reset()
-	kind := string(o.Type())
-	content := o.String()
-	len := len([]byte(content)) + 1
-	toHash := []byte(kind + " " + fmt.Sprint(len) + "\000" + content + "\n")
+	kind := string(o.Header().Type())
+	f := NewStrFormat()
+	if _, err := f.Object(o); err != nil {
+		return nil, err
+	}
+	content := f.String()
+	len := len([]byte(content))
+	value := kind + " " + fmt.Sprint(len) + "\000" + content
+	toHash := []byte(value)
 	sha.Write(toHash)
-	return sha
-}*/
+	return sha, nil
+}
 
 // get the first OID_SZ of the hash
 func getHash(h hash.Hash) []byte {

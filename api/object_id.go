@@ -69,9 +69,8 @@ func OidFromString(hex string) (id *ObjectId, err error) {
 }
 
 func OidFromHash(h hash.Hash) (id *ObjectId) {
-	hsh := h.Sum(nil)
 	id = &ObjectId{
-		bytes: hsh[0:OidSize], // TODO: what if size exceeds hash?
+		bytes: getHash(h),
 	}
 	return
 }

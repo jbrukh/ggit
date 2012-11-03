@@ -33,7 +33,9 @@ var objectTypes []string = []string{
 	string(ObjectTag),
 }
 
-func assertObjectType(str string) (ObjectType, bool) {
+// Return the ObjectType this string represents.
+// If the string is invalid, return ObjectType(0), false
+func AssertObjectType(str string) (ObjectType, bool) {
 	otype := ObjectType(str)
 	switch otype {
 	case ObjectBlob, ObjectCommit, ObjectTag, ObjectTree:
