@@ -23,12 +23,13 @@ import (
 	"strings"
 )
 
+// check to make sure git is installed on this system,
+// for testing purposes
 func init() {
-	cmd := exec.Command("which", "git")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	if err := cmd.Run(); err != nil || out.String() == "" {
-		panic("no git installed")
+	cmd := exec.Command("git", "--version")
+	cmd.Stdout = nil
+	if err := cmd.Run(); err != nil {
+		panic("no git installed: " + err.Error())
 	}
 }
 
