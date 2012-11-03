@@ -10,6 +10,7 @@ package api
 import (
 	"bufio"
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 	"strings"
 )
 
@@ -192,9 +193,7 @@ type refParser struct {
 func newRefParser(buf *bufio.Reader, name string) *refParser {
 	return &refParser{
 		objectIdParser: objectIdParser{
-			dataParser{
-				buf: buf,
-			},
+			*util.NewDataParser(buf),
 		},
 		name: name,
 	}
@@ -202,7 +201,7 @@ func newRefParser(buf *bufio.Reader, name string) *refParser {
 
 func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 	r := make([]Ref, 0)
-	err := safeParse(func() {
+	err := util.SafeParse(func() {
 		for !p.EOF() {
 			c := p.PeekByte()
 			switch c {
@@ -236,7 +235,7 @@ func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 }
 
 func (p *refParser) parseRef() (r Ref, err error) {
-	err = safeParse(func() {
+	err = util.SafeParse(func() {
 		// is it a symbolic ref?
 		if p.PeekString(len(markerRef)) == markerRef {
 			p.ConsumeString(markerRef)

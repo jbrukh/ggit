@@ -237,7 +237,7 @@ func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
 	err := filepath.Walk(dir,
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
-				spec := trimPrefix(path, repoPath)
+				spec := util.TrimPrefix(path, repoPath)
 				r, e := PeeledRefFromSpec(repo, spec)
 				if e != nil {
 					return e
@@ -273,7 +273,7 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			// refs are files, so...
 			if !f.IsDir() {
-				spec := trimPrefix(path, repo.path+"/")
+				spec := util.TrimPrefix(path, repo.path+"/")
 				r, e := PeeledRefFromSpec(repo, spec)
 				if e != nil {
 					return e

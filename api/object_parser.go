@@ -9,6 +9,7 @@ package api
 
 import (
 	"bufio"
+	"github.com/jbrukh/ggit/util"
 )
 
 // ================================================================= //
@@ -43,9 +44,7 @@ type objectParser struct {
 func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
 	op := &objectParser{
 		objectIdParser: objectIdParser{
-			dataParser{
-				buf: buf,
-			},
+			*util.NewDataParser(buf),
 		},
 		oid: oid,
 	}
@@ -53,7 +52,7 @@ func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
 }
 
 func (p *objectParser) ParseHeader() (*objectHeader, error) {
-	err := safeParse(func() {
+	err := util.SafeParse(func() {
 		p.hdr = new(objectHeader)
 		p.hdr.otype = ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
@@ -77,7 +76,7 @@ func (p *objectParser) ParsePayload() (Object, error) {
 		err error
 	)
 
-	err = safeParse(func() {
+	err = util.SafeParse(func() {
 		switch p.hdr.otype {
 		case ObjectBlob:
 			obj = p.parseBlob()

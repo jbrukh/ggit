@@ -13,6 +13,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 	"time"
 )
 
@@ -267,7 +268,7 @@ func (info *statInfo) String() string {
 // ================================================================= //
 
 // TODO: integrate this parser with everything else
-type indexParser dataParser
+type indexParser util.DataParser
 
 func parseIndexHeader(r *bufio.Reader) (hdr *indexHeader, err error) {
 	var h indexHeader
@@ -293,7 +294,7 @@ func parseIndexEntry(r *bufio.Reader) (entry *IndexEntry, err error) {
 	if e != nil {
 		return nil, e
 	}
-	name = trimLastByte(name) // get rid of NUL
+	name = util.TrimLastByte(name) // get rid of NUL
 
 	// don't ask me how I figured this out after
 	// a 14 hour workday

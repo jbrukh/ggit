@@ -15,6 +15,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 )
 
 // ================================================================= //
@@ -114,7 +115,7 @@ func (p *objectParser) parseCommit() *Commit {
 
 	c.hdr = p.hdr
 	if p.Count() != p.hdr.Size() {
-		panicErr("payload doesn't match prescibed size")
+		util.PanicErr("payload doesn't match prescibed size")
 	}
 	return c
 }

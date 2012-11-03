@@ -64,3 +64,33 @@ func IsDigit(c byte) bool {
 	}
 	return false
 }
+
+// trimLast throws away the last character of a byte slice
+func TrimLastByte(b []byte) []byte {
+	if b == nil || len(b) == 0 {
+		return b
+	}
+	return b[:len(b)-1]
+}
+
+func TrimLastStr(b []byte) string {
+	return string(TrimLastByte(b))
+}
+
+func TrimLast(str string) string {
+	if str == "" {
+		return str
+	}
+	return str[:len(str)-1]
+}
+
+func TrimPrefix(str, prefix string) string {
+	for _, v := range prefix {
+		if len(str) > 0 && uint8(v) == str[0] {
+			str = str[1:]
+		} else {
+			panic("prefix doesn't match")
+		}
+	}
+	return str
+}

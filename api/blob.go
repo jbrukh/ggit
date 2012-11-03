@@ -13,6 +13,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 )
 
 // ================================================================= //
@@ -57,7 +58,7 @@ func (p *objectParser) parseBlob() *Blob {
 	b.hdr = p.hdr
 
 	if p.Count() != p.hdr.Size() {
-		panicErr("payload doesn't match prescibed size")
+		util.PanicErr("payload doesn't match prescibed size")
 	}
 
 	return b

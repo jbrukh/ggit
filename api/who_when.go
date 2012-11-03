@@ -13,6 +13,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 	"strings"
 	"time"
 )
@@ -99,13 +100,13 @@ func (p *objectParser) parseWhoWhen(marker string) *WhoWhen {
 	} else if signStr == MINUS {
 		sign = -1
 	} else {
-		panicErrf("expecting: +/- sign")
+		util.PanicErrf("expecting: +/- sign")
 	}
 
 	tzHours := p.ParseIntN(2, 10, 64)
 	tzMins := p.ParseIntN(2, 10, 64)
 	if tzMins < 0 || tzMins > 59 {
-		panicErrf("expecting 00 to 59 for tz minutes")
+		util.PanicErrf("expecting 00 to 59 for tz minutes")
 	}
 
 	// time zone offset in signed minutes

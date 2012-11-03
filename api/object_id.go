@@ -8,8 +8,10 @@
 package api
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 	"hash"
 )
 
@@ -97,16 +99,22 @@ func (id *ObjectId) String() string {
 
 // objectIdParser is a dataparser that supports parsing of oids.
 type objectIdParser struct {
-	dataParser
+	util.DataParser
+}
+
+func newObjectIdParser(rd *bufio.Reader) *objectIdParser {
+	return &objectIdParser{
+		*util.NewDataParser(rd),
+	}
 }
 
 // ParseOid reads the next OidHexSize bytes from the
 // Reader and places the resulting object id in oid.
 func (p *objectIdParser) ParseOid() *ObjectId {
-	hex := string(p.consume(OidHexSize))
+	hex := string(p.Consume(OidHexSize))
 	oid, e := OidFromString(hex)
 	if e != nil {
-		panicErrf("expected: hex string of size %d", OidHexSize)
+		util.PanicErrf("expected: hex string of size %d", OidHexSize)
 	}
 	return oid
 }
@@ -114,10 +122,10 @@ func (p *objectIdParser) ParseOid() *ObjectId {
 // ParseOidBytes reads the next OidSize bytes from
 // the Reader and generates an ObjectId.
 func (p *objectIdParser) ParseOidBytes() *ObjectId {
-	b := p.consume(OidSize)
+	b := p.Consume(OidSize)
 	oid, e := OidFromBytes(b)
 	if e != nil {
-		panicErrf("expected: hash bytes %d long", OidSize)
+		util.PanicErrf("expected: hash bytes %d long", OidSize)
 	}
 	return oid
 }

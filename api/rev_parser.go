@@ -36,7 +36,7 @@ func init() {
 
 // revParser is a parser for revision specs.
 type revParser struct {
-	dataParser
+	util.DataParser
 	repo Repository
 
 	inx int
@@ -47,11 +47,9 @@ type revParser struct {
 
 func newRevParser(repo Repository, rev string) *revParser {
 	return &revParser{
-		dataParser: dataParser{
-			buf: readerForString(rev),
-		},
-		repo: repo,
-		rev:  rev,
+		util.DataParser: *util.NewDataParser(readerForString(rev)),
+		repo:            repo,
+		rev:             rev,
 	}
 }
 
@@ -88,13 +86,13 @@ func (p *revParser) number() (n int) {
 }
 
 func (p *revParser) Parse() error {
-	e := safeParse(func() {
+	e := util.SafeParse(func() {
 		if p.rev == "" {
-			panicErr("revision spec is empty")
+			util.PanicErr("revision spec is empty")
 		}
 
 		if p.PeekByte() == ':' {
-			panicErr(": syntaxes not supported") // TODO
+			util.PanicErr(": syntaxes not supported") // TODO
 		}
 
 		start := p.Count()
@@ -110,12 +108,12 @@ func (p *revParser) Parse() error {
 
 		rev := p.rev[start:end]
 		if rev == "" {
-			panicErr("revision is empty")
+			util.PanicErr("revision is empty")
 		}
 
 		err := p.findObject(rev)
 		if err != nil {
-			panicErr(err.Error())
+			util.PanicErr(err.Error())
 		}
 
 		for !p.EOF() {
@@ -136,11 +134,11 @@ func (p *revParser) Parse() error {
 			} else if b == '~' {
 				err = applyParentFunc(p, CommitNthAncestor)
 			} else {
-				panicErrf("unexpected modifier: '%s'", string(b))
+				util.PanicErrf("unexpected modifier: '%s'", string(b))
 			}
 
 			if err != nil {
-				panicErr(err.Error())
+				util.PanicErr(err.Error())
 			}
 		}
 	})

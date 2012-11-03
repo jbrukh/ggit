@@ -11,6 +11,10 @@ file_mode.go implements the git-supported file modes used mainly in trees.
 */
 package api
 
+import (
+	"github.com/jbrukh/ggit/util"
+)
+
 // ================================================================= //
 // FILE MODE
 // ================================================================= //
@@ -47,7 +51,7 @@ func assertFileMode(u uint16) (FileMode, bool) {
 func (p *objectParser) ParseFileMode(delim byte) (mode FileMode) {
 	var ok bool
 	if mode, ok = assertFileMode(uint16(p.ParseInt(delim, 8, 32))); !ok {
-		panicErrf("expected: filemode")
+		util.PanicErrf("expected: filemode")
 	}
 	return
 }

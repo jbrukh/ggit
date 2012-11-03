@@ -9,6 +9,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/util"
 )
 
 const (
@@ -96,7 +97,7 @@ func (p *objectParser) parseTag() *Tag {
 	tag.hdr = p.hdr
 
 	if p.Count() != p.hdr.Size() {
-		panicErr("payload doesn't match prescibed size")
+		util.PanicErr("payload doesn't match prescibed size")
 	}
 
 	return tag

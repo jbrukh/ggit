@@ -68,59 +68,15 @@ func abs(x int) int {
 }
 
 // ================================================================= //
-// HELPERS
-// ================================================================= //
-
-// trimLast throws away the last character of a byte slice
-func trimLastByte(b []byte) []byte {
-	if b == nil || len(b) == 0 {
-		return b
-	}
-	return b[:len(b)-1]
-}
-
-func trimLastStr(b []byte) string {
-	return string(trimLastByte(b))
-}
-
-func trimLast(str string) string {
-	if str == "" {
-		return str
-	}
-	return str[:len(str)-1]
-}
-
-func trimPrefix(str, prefix string) string {
-	for _, v := range prefix {
-		if len(str) > 0 && uint8(v) == str[0] {
-			str = str[1:]
-		} else {
-			panic("prefix doesn't match")
-		}
-	}
-	return str
-}
-
-// ================================================================= //
 // METHODS FOR TESTING
 // ================================================================= //
 
 // TODO: move to util
 
 func objectParserForString(str string) *objectParser {
-	p := new(objectParser)
-	p.buf = readerForString(str)
-	return p
-}
-
-func parserForBytes(b []byte) *dataParser {
-	return &dataParser{
-		buf: bufio.NewReader(bytes.NewBuffer(b)),
+	return &objectParser{
+		objectIdParser: *newObjectIdParser(readerForString(str)),
 	}
-}
-
-func parserForString(str string) *dataParser {
-	return parserForBytes([]byte(str))
 }
 
 func readerForString(str string) *bufio.Reader {
