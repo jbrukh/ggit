@@ -2,7 +2,7 @@
 
 PROJECT=$GOPATH/src/github.com/jbrukh/ggit
 cd $PROJECT
-export PATH=$GOPATH/bin:$PROJECT/bin:$PATH
+export PATH=$GOPATH/bin:$PATH
 
 # not necessary if you're using the git hook
 # at https://github.com/jbrukh/git-gofmt or
@@ -11,35 +11,6 @@ alias gf="gofmt -tabs=false -tabwidth=4 -w *.go"
 
 # the most up-to-date ggit command
 alias gg="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
-
-ggbench-csv() {
-	if [ -z "$1" ]; then
-	    return
-	fi 
-	SHA=`git rev-parse HEAD`
-	ggbench "$1" | grep Benchmark | head -1 | sed -E -e "s/[ 	]+/,/g" | sed -e "/FAIL:/d" -e "s/^/$SHA,/g" # -e "s/$/,$1/g"
-}
-
-ggbench-range() {
-	HEAD=`git rev-parse HEAD`
-	pattern="$1"
-	revlist=`git rev-list --max-count="$2" --reverse HEAD`
-	for sha in $revlist; do
-		git checkout $sha >/dev/null 2>&1
-		if [ $? -ne 0 ]
-		then
-			echo "checkout failed: $sha"
-			break
-		fi
-		ggbuild && ggbench-csv "$pattern"
-		if [ $? -ne 0 ]
-		then
-			echo "ggbench failed: $sha"
-			break
-		fi
-	done
-	git checkout $HEAD
-}
 
 compare() {
 	echo "GIT ==========================="

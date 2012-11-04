@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Report a benchmark in CSV format.
+# usage: ggbuild [pattern]
+
+if [ -z "$1" ]; then
+	return
+fi 
+SHA=`git rev-parse HEAD`
+ggbench "$1" | grep Benchmark | head -1 | sed -E -e "s/[ 	]+/,/g" | sed -e "/FAIL:/d" -e "s/^/$SHA,/g" # -e "s/$/,$1/g"

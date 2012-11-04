@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+HEAD=`git rev-parse HEAD`
+pattern="$1"
+revlist=`git rev-list --max-count="$2" --reverse HEAD`
+for sha in $revlist; do
+	git checkout $sha >/dev/null 2>&1
+	if [ $? -ne 0 ]
+	then
+		echo "checkout failed: $sha"
+		break
+	fi
+	ggbench-csv "$pattern" 2>/dev/null
+	if [ $? -ne 0 ]
+	then
+		echo "ggbench failed: $sha"
+		break
+	fi
+done
+git checkout $HEAD
