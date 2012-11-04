@@ -348,7 +348,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 	checksumPack := p.idxParser.ReadNBytes(20)
 	checksumIdx := p.idxParser.ReadNBytes(20)
 	if !p.idxParser.EOF() {
-		util.ParseErrf("Found extraneous bytes! %x", p.idxParser.Bytes())
+		util.PanicErrf("Found extraneous bytes! %x", p.idxParser.Bytes())
 	}
 	//order by offset
 	sort.Sort(packedObjectIds(entries))
@@ -414,14 +414,14 @@ func (p *packIdxParser) parsePack() *Pack {
 	}
 	//verify the pack file
 	if err := pack.open(); err != nil {
-		util.ParseErrf("Could not open pack file %s: %s", pack.name, err)
+		util.PanicErrf("Could not open pack file %s: %s", pack.name, err)
 	}
 	dataParser := util.NewDataParser(bufio.NewReader(pack.file))
 	dataParser.ConsumeString(PackSignature)
 	dataParser.ConsumeBytes([]byte{0, 0, 0, PackVersion})
 	count := dataParser.ParseIntBigEndian(4)
 	if count != idx.count {
-		util.ParseErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
+		util.PanicErrf("Pack file count doesn't match idx file count for pack-%s!", p.name) //todo: don't panic.
 	}
 	pack.close()
 	return pack
@@ -433,7 +433,7 @@ func (p *Pack) parseEntry(i int) (obj *PackedObject) {
 		return p.content[i] //already parsed
 	}
 	if err := p.open(); err != nil {
-		util.ParseErrf("Could not open pack file %s: %s", p.name, err.Error())
+		util.PanicErrf("Could not open pack file %s: %s", p.name, err.Error())
 	}
 	size, pot, bytes := p.entrySizeTypeData(i)
 	e := p.idx.entries[i]
@@ -443,7 +443,7 @@ func (p *Pack) parseEntry(i int) (obj *PackedObject) {
 	case pot == ObjectOffsetDelta || pot == ObjectRefDelta:
 		obj = p.parseDeltaEntry(bytes, pot, e.ObjectId, i)
 	default:
-		util.ParseErrf("Unrecognized object type %d in pack %s for entry with id %s", pot, p.name, e.ObjectId)
+		util.PanicErrf("Unrecognized object type %d in pack %s for entry with id %s", pot, p.name, e.ObjectId)
 	}
 	return
 }
@@ -476,14 +476,14 @@ func (p *Pack) readEntry(i int) []byte {
 		size = p.idx.entries[i+1].offset - e.offset
 	} else {
 		if info, err := p.file.Stat(); err != nil {
-			util.ParseErrf("Could not determine size of pack file %s: %s", p.file.Name(), err)
+			util.PanicErrf("Could not determine size of pack file %s: %s", p.file.Name(), err)
 		} else {
 			size = info.Size() - e.offset
 		}
 	}
 	data := make([]byte, size, size)
 	if _, err := p.file.ReadAt(data, e.offset); err != nil {
-		util.ParseErrf("Could not read %d bytes from %d of pack file %s: %s", len(data), e.offset, p.file.Name(), err)
+		util.PanicErrf("Could not read %d bytes from %d of pack file %s: %s", len(data), e.offset, p.file.Name(), err)
 	}
 	return data
 }
@@ -496,7 +496,7 @@ func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId, size 
 	if dp, err = newPackedObjectParser(bytes, oid); err != nil {
 		util.PanicErr(err.Error())
 	} else if int64(len(dp.bytes)) != size {
-		util.ParseErrf("Expected object of %d bytes but found %d bytes", size, len(dp.bytes))
+		util.PanicErrf("Expected object of %d bytes but found %d bytes", size, len(dp.bytes))
 	}
 	switch pot {
 	case PackedBlob:
@@ -586,7 +586,7 @@ func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId
 		baseOffset = e.offset
 	case ObjectOffsetDelta:
 		if deltaDeflated, baseOffset, err = readPackedOffsetDelta(bytes); err != nil {
-			util.ParseErrf("Err parsing size: %v. Could not determine size for %s", err, e.repr)
+			util.PanicErrf("Err parsing size: %v. Could not determine size for %s", err, e.repr)
 		}
 		baseOffset = e.offset - baseOffset
 	}
@@ -643,13 +643,13 @@ func (p *Pack) findObjectByOffset(offset int64) *PackedObject {
 		return p.idx.entries[j].offset >= int64(offset)
 	})
 	if p.idx.entries[i].offset != offset {
-		util.ParseErrf("Could not find object with offset %d. Closest match was %d.", offset, i)
+		util.PanicErrf("Could not find object with offset %d. Closest match was %d.", offset, i)
 	}
 	if p.content[i] == nil {
 		p.content[i] = p.parseEntry(i)
 	}
 	if p.content[i] == nil {
-		util.ParseErrf("Could not find or parse object with offset %d", offset)
+		util.PanicErrf("Could not find or parse object with offset %d", offset)
 	}
 	return p.content[i]
 }
@@ -667,7 +667,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 	src := base.bytes
 
 	if int(baseSize) != len(src) {
-		util.ParseErrf("Expected size of base object is %d, but actual size is %d")
+		util.PanicErrf("Expected size of base object is %d, but actual size is %d")
 	}
 
 	out := make([]byte, outputSize, outputSize)
@@ -675,7 +675,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 	cmd := p.ReadByte()
 	for {
 		if cmd == 0 {
-			util.ParseErrf("Invalid delta! Byte 0 is not a supported delta code.")
+			util.PanicErrf("Invalid delta! Byte 0 is not a supported delta code.")
 		}
 		var offset, len int64
 		if cmd&0x80 != 0 {
@@ -685,7 +685,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 				out[appended+(i-offset)] = src[i]
 			}
 			if offset+len > baseSize {
-				util.ParseErrf("Bad delta - references byte %d of a %d-byte source", offset+len, baseSize)
+				util.PanicErrf("Bad delta - references byte %d of a %d-byte source", offset+len, baseSize)
 				break
 			}
 		} else {
@@ -703,10 +703,10 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 		}
 	}
 	if appended != outputSize {
-		util.ParseErrf("Expected output of size %d, got %d. \n", outputSize, appended)
+		util.PanicErrf("Expected output of size %d, got %d. \n", outputSize, appended)
 	}
 	if outputSize != int64(len(out)) {
-		util.ParseErrf("Expected output of len %d, got %d. \n", outputSize, len(out))
+		util.PanicErrf("Expected output of len %d, got %d. \n", outputSize, len(out))
 	}
 	outputType := base.object.Header().Type()
 	outputParser := newObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
