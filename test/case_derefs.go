@@ -28,6 +28,8 @@ type InfoDerefs struct {
 	TagOid     string
 	BranchName string
 	BlobOid    string
+	ObjectsN   int
+	RefsN      int
 }
 
 var Derefs = NewRepoTestCase(
@@ -74,6 +76,8 @@ var Derefs = NewRepoTestCase(
 			TreeOid:    util.RevOid(repo, "HEAD^{tree}"),
 			TagOid:     util.RevOid(repo, tagName),
 			BlobOid:    blobOid,
+			ObjectsN:   4,
+			RefsN:      3,
 		}
 
 		testCase.info = info
