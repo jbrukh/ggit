@@ -22,7 +22,7 @@ type HashObjectBuiltin struct {
 var HashObject = &HashObjectBuiltin{
 	HelpInfo: HelpInfo{
 		Name:        "hash-object",
-		Description: "Provide content or type and size information for repository objects",
+		Description: "Output the SHA1 hash of the specified Git object (blob, tag, commit, or tree)",
 		UsageLine:   "<object>",
 		ManPage:     "TODO",
 	},
