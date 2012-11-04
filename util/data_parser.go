@@ -128,14 +128,16 @@ func SafeParse(f func()) (err error) {
 func (p *DataParser) consume(n int) []byte {
 	b := make([]byte, n)
 	if rd, e := p.buf.Read(b); e != nil {
-		PanicErrf("expected: %d byte(s), read %d, values %x", n, rd, b[0:rd])
-	} else if rd != n {
-		more := p.consume(n - rd)
-		for i, v := range more {
-			b[rd+i] = v
+		PanicErrf("expected: %d byte(s), read %d, values %x, err: %s", n, rd, b[0:rd], e.Error())
+	} else {
+		p.count += int64(rd)
+		if rd != n {
+			more := p.consume(n - rd)
+			for i, v := range more {
+				b[rd+i] = v
+			}
 		}
 	}
-	p.count += int64(n)
 	return b
 }
 
