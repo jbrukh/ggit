@@ -30,7 +30,7 @@ func main() {
 
 	repo := api.Open(repoPath)
 
-	oids, e := repo.ObjectIds()
+	oids, e := api.ObjectIds(repo)
 	if e != nil {
 		fmt.Fprintf(os.Stderr, "could not open repo: %s\n", e.Error())
 		os.Exit(1)

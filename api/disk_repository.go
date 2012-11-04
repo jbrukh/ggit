@@ -156,19 +156,6 @@ func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 	return nil, e
 }
 
-//find all objects and print their ids
-func (repo *DiskRepository) ObjectIds() (oids []*ObjectId, err error) {
-	pOids, err := repo.PackedObjectIds()
-	if err != nil {
-		return nil, err
-	}
-	lOids, err := repo.LooseObjectIds()
-	if err != nil {
-		return nil, err
-	}
-	return append(pOids, lOids...), nil
-}
-
 func (repo *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
 	if err := loadPacks(repo); err != nil {
 		return nil, err
@@ -294,6 +281,23 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 	}
 	sort.Sort(refByName(refList))
 	return refList, nil
+}
+
+// ================================================================= //
+// OPERATIONS
+// ================================================================= //
+
+// List all objects in a disk repository.
+func ObjectIds(repo *DiskRepository) (oids []*ObjectId, err error) {
+	pOids, err := repo.PackedObjectIds()
+	if err != nil {
+		return nil, err
+	}
+	lOids, err := repo.LooseObjectIds()
+	if err != nil {
+		return nil, err
+	}
+	return append(pOids, lOids...), nil
 }
 
 // ================================================================= //

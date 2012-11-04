@@ -46,11 +46,9 @@ func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {
 	)
 
 	// make sure this is a disk repo
-	if b.flagLoose || b.flagPacked {
-		if diskRepo, err = api.AssertDiskRepo(p.Repo); err != nil {
-			fmt.Fprintf(p.Werr, err.Error())
-			return
-		}
+	if diskRepo, err = api.AssertDiskRepo(p.Repo); err != nil {
+		fmt.Fprintf(p.Werr, err.Error())
+		return
 	}
 
 	var (
@@ -62,7 +60,7 @@ func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {
 	} else if b.flagPacked {
 		oids, e = diskRepo.PackedObjectIds()
 	} else {
-		oids, e = p.Repo.ObjectIds()
+		oids, e = api.ObjectIds(diskRepo)
 	}
 
 	if e != nil {

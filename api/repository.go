@@ -25,16 +25,7 @@ type Repository interface {
 	// the existing repository.
 	Destroy() error
 
-	// TODO: this needs to be replaced with
-	// higher level index operations
-	Index() (*Index, error)
-
-	// TODO: while this is ok for now, this debug
-	// method should not be part of the backend interface
-	ObjectIds() ([]*ObjectId, error)
-
 	// Refs returns a list of all refs in the repository.
-	// TODO: perhaps replace with a visitor of refs?
 	Refs() ([]Ref, error)
 
 	// Ref convert a string ref into a Ref object. The
@@ -50,4 +41,8 @@ type Repository interface {
 	// hashes. This functionality is usually tied to the
 	// particular kind of backend the repository is using.
 	ObjectFromShortOid(short string) (Object, error)
+
+	// TODO: this needs to be replaced with
+	// higher level index operations
+	Index() (*Index, error)
 }
