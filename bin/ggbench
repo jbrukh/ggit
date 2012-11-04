@@ -4,4 +4,9 @@
 # usage: ggbench
 
 # we only want to run benchmarks, not any tests; we exclude tests.
-go test -test.bench="Benchmark__.*" -test.run="dontrunanytests" -v ./api
+pattern=".*"
+if [ -n "$1" ]; then
+	pattern="$1"
+fi
+
+go test -test.bench="$pattern" -test.run="dontrunanytests" -v ./api

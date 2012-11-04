@@ -13,34 +13,32 @@ alias gf="gofmt -tabs=false -tabwidth=4 -w *.go"
 alias gg="go run $GOPATH/src/github.com/jbrukh/ggit/cmd/ggit/*.go"
 
 ggbench-csv() {
+	if [ -z "$1" ]; then
+	    return
+	fi 
 	SHA=`git rev-parse HEAD`
-	ggbench | grep Benchmark | sed -E -e "s/[ 	]+/,/g" | sed -e "/FAIL:/d" -e "s/^/$SHA,/g" -e "s/$/,$1/g"
+	ggbench "$1" | grep Benchmark | head -1 | sed -E -e "s/[ 	]+/,/g" | sed -e "/FAIL:/d" -e "s/^/$SHA,/g" # -e "s/$/,$1/g"
 }
 
 ggbench-range() {
-	set -e
 	HEAD=`git rev-parse HEAD`
-	revlist=`git rev-list --max-count=10 --reverse HEAD`
+	pattern="$1"
+	revlist=`git rev-list --max-count="$2" --reverse HEAD`
 	for sha in $revlist; do
 		git checkout $sha >/dev/null 2>&1
 		if [ $? -ne 0 ]
 		then
 			echo "checkout failed: $sha"
-			return 1
+			break
 		fi
-		ggbuild && ggbench-csv 1 2>&1
+		ggbuild && ggbench-csv "$pattern"
 		if [ $? -ne 0 ]
 		then
 			echo "ggbench failed: $sha"
-			return 1
+			break
 		fi
 	done
 	git checkout $HEAD
-}
-
-# list some objects... this is slow, so use on small repos
-objects() {
-    for o in `ggit ls-objects`; do echo $o `ggit cat-file -t $o`; done
 }
 
 compare() {
