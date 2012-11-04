@@ -132,6 +132,7 @@ func (f *Format) Deref(r Ref) (int, error) {
 // REF FILTERING
 // ================================================================= //
 
+// FilterRefs applies a ref filter to a list of refs.
 func FilterRefs(refs []Ref, f Filter) []Ref {
 	var r []Ref
 	for _, v := range refs {
@@ -148,6 +149,8 @@ func FilterRefPattern(pattern string) Filter {
 	}
 }
 
+// FilterRefPrefix returns a filter that matches
+// by the given prefix.
 func FilterRefPrefix(prefix string) Filter {
 	return func(ref interface{}) bool {
 		return strings.HasPrefix(ref.(Ref).Name(), prefix)
@@ -189,7 +192,8 @@ type refParser struct {
 	name string // the name of the ref file
 }
 
-// newRefParser creates a new Ref parser 
+// newRefParser creates a new Ref parser for a ref with the
+// given name.
 func newRefParser(buf *bufio.Reader, name string) *refParser {
 	return &refParser{
 		objectIdParser: objectIdParser{
