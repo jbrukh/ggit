@@ -24,16 +24,16 @@ const (
 // ================================================================= //
 
 type Tag struct {
-	hdr     ObjectHeader // the size of the tag
-	oid     *ObjectId    // the oid of the tag itself
-	name    string       // the tag name
-	object  *ObjectId    // the object this tag is pointing at
-	otype   ObjectType   // the object type
-	tagger  *WhoWhen     // the tagger
-	message string       // the tag message
+	hdr     *ObjectHeader // the size of the tag
+	oid     *ObjectId     // the oid of the tag itself
+	name    string        // the tag name
+	object  *ObjectId     // the object this tag is pointing at
+	otype   ObjectType    // the object type
+	tagger  *WhoWhen      // the tagger
+	message string        // the tag message
 }
 
-func (t *Tag) Header() ObjectHeader {
+func (t *Tag) Header() *ObjectHeader {
 	return t.hdr
 }
 

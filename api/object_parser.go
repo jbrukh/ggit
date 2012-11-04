@@ -13,32 +13,13 @@ import (
 )
 
 // ================================================================= //
-// OBJECT HEADER PARSING
-// ================================================================= //
-
-// ObjectHeader is the deserialized (and more efficiently stored)
-// version of a git object header
-type objectHeader struct {
-	otype ObjectType
-	size  int64
-}
-
-func (h *objectHeader) Type() ObjectType {
-	return h.otype
-}
-
-func (h *objectHeader) Size() int64 {
-	return h.size
-}
-
-// ================================================================= //
 // GGIT OBJECT PARSER
 // ================================================================= //
 
 type objectParser struct {
 	objectIdParser
 	oid *ObjectId
-	hdr *objectHeader
+	hdr *ObjectHeader
 }
 
 func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
@@ -51,9 +32,9 @@ func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
 	return op
 }
 
-func (p *objectParser) ParseHeader() (*objectHeader, error) {
+func (p *objectParser) ParseHeader() (*ObjectHeader, error) {
 	err := util.SafeParse(func() {
-		p.hdr = new(objectHeader)
+		p.hdr = new(ObjectHeader)
 		p.hdr.otype = ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
 		p.hdr.size = p.ParseAtoi(NUL)

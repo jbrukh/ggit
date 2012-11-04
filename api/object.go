@@ -7,12 +7,19 @@
 //
 package api
 
-// ObjectHeader contains the type and size
-// information for an object.
-// TODO: this doesn't need to be an interface
-type ObjectHeader interface {
-	Type() ObjectType
-	Size() int64
+// ObjectHeader is the deserialized (and more efficiently stored)
+// version of a git object header
+type ObjectHeader struct {
+	otype ObjectType
+	size  int64
+}
+
+func (h *ObjectHeader) Type() ObjectType {
+	return h.otype
+}
+
+func (h *ObjectHeader) Size() int64 {
+	return h.size
 }
 
 // Object represents a generic git object: a blob, a tree,
@@ -21,7 +28,7 @@ type Object interface {
 
 	// Header returns the object header, which
 	// contains the object's type and size.
-	Header() ObjectHeader
+	Header() *ObjectHeader
 
 	// ObjectId returns the object id of the object.
 	ObjectId() *ObjectId

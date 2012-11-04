@@ -34,7 +34,7 @@ const (
 // ================================================================= //
 
 type Commit struct {
-	hdr       ObjectHeader
+	hdr       *ObjectHeader
 	oid       *ObjectId
 	treeOid   *ObjectId
 	parents   []*ObjectId
@@ -43,7 +43,7 @@ type Commit struct {
 	message   string
 }
 
-func (c *Commit) Header() ObjectHeader {
+func (c *Commit) Header() *ObjectHeader {
 	return c.hdr
 }
 

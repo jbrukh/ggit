@@ -512,7 +512,7 @@ func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId, size 
 }
 
 func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
-	dp.hdr = &objectHeader{
+	dp.hdr = &ObjectHeader{
 		ObjectCommit,
 		size,
 	}
@@ -524,7 +524,7 @@ func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 	}
 }
 func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
-	dp.hdr = &objectHeader{
+	dp.hdr = &ObjectHeader{
 		ObjectTag,
 		size,
 	}
@@ -539,7 +539,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 	blob := new(Blob)
 	blob.data = dp.Bytes()
 	blob.oid = dp.objectParser.oid
-	blob.hdr = &objectHeader{
+	blob.hdr = &ObjectHeader{
 		ObjectBlob,
 		size,
 	}
@@ -550,7 +550,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 }
 
 func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
-	dp.hdr = &objectHeader{
+	dp.hdr = &ObjectHeader{
 		ObjectTree,
 		size,
 	}
@@ -710,7 +710,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 	}
 	outputType := base.object.Header().Type()
 	outputParser := newObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
-	outputParser.hdr = &objectHeader{
+	outputParser.hdr = &ObjectHeader{
 		outputType,
 		outputSize,
 	}
