@@ -146,17 +146,7 @@ func GitNow(repo string, params ...string) string {
 
 func TreeEntryOid(repo string, file string) string {
 	line := GitNow(repo, "ls-files", "-s", file)
-	p := ParserForString(line)
-	var oid string
-	const SP = ' '
-	err := SafeParse(func() {
-		p.ReadString(SP)
-		oid = p.ReadString(SP)
-	})
-	if err != nil {
-		panic(err)
-	}
-	return oid
+	return line[7:47] // get out the sha
 }
 
 // RevOid returns the git-rev-parse of the current

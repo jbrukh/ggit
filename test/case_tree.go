@@ -15,6 +15,7 @@ package test
 import (
 	//"fmt"
 	"github.com/jbrukh/ggit/util"
+	"path"
 )
 
 // ================================================================= //
@@ -44,9 +45,9 @@ var Tree = NewRepoTestCase(
 		var n int
 
 		// add some files
-		file1 := "one.txt"
-		file2 := "two.txt"
-		file3 := "three.txt"
+		file1 := "1.txt"
+		file2 := "2.txt"
+		file3 := "3.txt"
 
 		err = util.TestFile(repo, file1, "1")
 		if err != nil {
@@ -67,16 +68,16 @@ var Tree = NewRepoTestCase(
 		n++
 
 		// add some trees
-		subtree1 := "mytree/hello.txt"
-		subtree2 := "anothertree/bye.txt"
+		subtree1 := "4"
+		subtree2 := "5"
 
-		err = util.TestFile(repo, subtree1, "hello")
+		err = util.TestFile(repo, path.Join(subtree1, "haha.txt"), "hello")
 		if err != nil {
 			return err
 		}
 		n++
 
-		err = util.TestFile(repo, subtree2, "bye")
+		err = util.TestFile(repo, path.Join(subtree2, "hehe.txt"), "bye")
 		if err != nil {
 			return err
 		}

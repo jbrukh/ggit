@@ -51,6 +51,22 @@ type TreeEntry struct {
 	oid   *ObjectId
 }
 
+func (e *TreeEntry) Mode() FileMode {
+	return e.mode
+}
+
+func (e *TreeEntry) ObjectId() *ObjectId {
+	return e.oid
+}
+
+func (e *TreeEntry) ObjectType() ObjectType {
+	return e.otype
+}
+
+func (e *TreeEntry) Name() string {
+	return e.name
+}
+
 func (e *TreeEntry) String() (s string) {
 	s = fmt.Sprintf("%.6o %s %s\t%s", e.mode, e.otype, e.oid, e.name)
 	return

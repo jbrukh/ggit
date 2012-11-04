@@ -45,9 +45,16 @@ func Test_readTree(t *testing.T) {
 		tree = o.(*Tree)
 	})
 
-	// check a file
+	// check entries
 	entries := tree.Entries()
 	util.AssertEqualInt(t, info.N, len(entries))
+	util.Assert(t, info.N > 2)
+
+	// check a file
+	file := entries[0]
+	util.AssertEqualString(t, info.File1Oid, file.ObjectId().String())
+	util.Assert(t, file.Mode() == ModeBlob)
+	// TODO: add checks for type, etc.
 
 	// check the output
 	// check the whole representation, which will catch
