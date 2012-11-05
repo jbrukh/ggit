@@ -10,7 +10,7 @@ package builtin
 import (
 	"flag"
 	//"fmt"
-	//"github.com/jbrukh/ggit/api"
+	"github.com/jbrukh/ggit/api"
 )
 
 type RevListBuiltin struct {
@@ -47,4 +47,7 @@ func (b *RevListBuiltin) Execute(p *Params, args []string) {
 		b.WriteUsage(p.Werr)
 		return
 	}
+
+	rev := args[0]
+	api.RevWalkFromRevision(p.Repo, rev, api.RevPrinter)
 }
