@@ -223,3 +223,13 @@ func CommitFromRef(repo Repository, spec string) (*Commit, error) {
 	}
 	return CommitFromObject(repo, o)
 }
+
+// CommitFromRevision returns a commit from the repository that
+// corresponds to the given specification.
+func CommitFromRevision(repo Repository, rev string) (*Commit, error) {
+	o, err := ObjectFromRevision(repo, rev)
+	if err != nil {
+		return nil, err
+	}
+	return CommitFromObject(repo, o)
+}
