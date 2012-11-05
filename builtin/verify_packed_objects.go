@@ -16,7 +16,7 @@ type VerifyPackedObjectsBuiltin struct {
 
 var VerifyPackedObjects = &VerifyPackedObjectsBuiltin{
 	HelpInfo: HelpInfo{
-		Name:        "verify-packed-objects",
+		Name:        "+verify-packed-objects",
 		Description: "Debug command for listing packed objects by id",
 		UsageLine:   "",
 		ManPage:     "TODO",

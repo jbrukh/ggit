@@ -22,7 +22,7 @@ type LsObjectsBuiltin struct {
 
 var LsObjects = &LsObjectsBuiltin{
 	HelpInfo: HelpInfo{
-		Name:        "ls-objects",
+		Name:        "+ls-objects",
 		Description: "Provide a debug dump of all loose object ids", //TODO all object ids
 		UsageLine:   "[--loose] [--packed]",
 		ManPage:     "TODO",

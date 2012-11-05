@@ -22,7 +22,7 @@ type CatIndexBuiltin struct {
 
 var CatIndex = &CatIndexBuiltin{
 	HelpInfo: HelpInfo{
-		Name:        "cat-index",
+		Name:        "+cat-index",
 		Description: "Provide a debug dump of the index file",
 		UsageLine:   "",
 		ManPage:     "TODO",
