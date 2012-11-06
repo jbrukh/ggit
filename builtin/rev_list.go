@@ -16,9 +16,7 @@ import (
 type RevListBuiltin struct {
 	HelpInfo
 	flag.FlagSet
-	// flagShowType    bool
-	// flagShowSize    bool
-	// flagPrettyPrint bool
+	flagNoMerges bool
 }
 
 var RevList = &RevListBuiltin{
@@ -31,9 +29,7 @@ var RevList = &RevListBuiltin{
 }
 
 func init() {
-	// CatFile.BoolVar(&CatFile.flagShowType, "t", false, "show object type")
-	// CatFile.BoolVar(&CatFile.flagPrettyPrint, "p", false, "pretty-print object's contents")
-	// CatFile.BoolVar(&CatFile.flagShowSize, "s", false, "show object size")
+	RevList.BoolVar(&RevList.flagNoMerges, "no-merges", false, "Do not print commits with more than one parent.")
 
 	// add to command list
 	Add(RevList)
@@ -49,5 +45,9 @@ func (b *RevListBuiltin) Execute(p *Params, args []string) {
 	}
 
 	rev := args[0]
-	api.RevWalkFromRevision(p.Repo, rev, api.RevPrinter)
+	opts := new(api.RevWalkOptions)
+	if b.flagNoMerges {
+		opts.NoMerges = true
+	}
+	api.RevWalkDateOrder(p.Repo, rev, opts, api.RevPrinter)
 }
