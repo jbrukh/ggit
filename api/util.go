@@ -54,11 +54,6 @@ func MakeHash(o Object) (hash.Hash, error) {
 	return sha, nil
 }
 
-// get the first OID_SZ of the hash
-func getHash(h hash.Hash) []byte {
-	return h.Sum(nil)[0:OidSize]
-}
-
 func min(a, b int) int {
 	if a < b {
 		return a

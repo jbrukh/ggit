@@ -7,6 +7,8 @@
 //
 package api
 
+import "github.com/jbrukh/ggit/api/objects"
+
 const (
 	DefaultGitDir     = ".git"
 	DefaultObjectsDir = "objects"
@@ -35,7 +37,7 @@ type Repository interface {
 	// ObjectFromOid is the fundamental object retrieval
 	// operation of a repository. It is the basis for
 	// working with any object.
-	ObjectFromOid(oid *ObjectId) (Object, error)
+	ObjectFromOid(oid *objects.ObjectId) (Object, error)
 
 	// ObjectFromShortOid provides support for shortened
 	// hashes. This functionality is usually tied to the

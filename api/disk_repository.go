@@ -12,6 +12,7 @@ import (
 	"compress/zlib"
 	"errors"
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"io"
 	"os"
@@ -49,7 +50,7 @@ func (repo *DiskRepository) Destroy() error {
 	return os.RemoveAll(dir)
 }
 
-func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error) {
+func (repo *DiskRepository) ObjectFromOid(oid *objects.ObjectId) (obj Object, err error) {
 	var (
 		f  *os.File
 		e  error
@@ -78,13 +79,13 @@ func (repo *DiskRepository) ObjectFromOid(oid *ObjectId) (obj Object, err error)
 
 func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 	l := len(short)
-	if l < 4 || l > OidHexSize {
+	if l < 4 || l > objects.OidHexSize {
 		return nil, fmt.Errorf("fatal: Not a valid object name %s", short)
 	}
 
 	// don't bother with directories if we know the full SHA
-	if l == OidHexSize {
-		oid, err := OidFromString(short)
+	if l == objects.OidHexSize {
+		oid, err := objects.OidFromString(short)
 		if err != nil {
 			return nil, fmt.Errorf("fatal: Not a valid object name %s", short)
 		}
@@ -93,7 +94,7 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 
 	head, tail := short[:2], short[2:]
 	root := path.Join(repo.path, DefaultObjectsDir, head)
-	var matching []*ObjectId
+	var matching []*objects.ObjectId
 	e := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		// root doesn't exist, or there was a problem reading it
 		if err != nil {
@@ -102,7 +103,7 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
 		if !info.IsDir() {
 			name := info.Name()
 			if strings.HasPrefix(name, tail) {
-				if oid, err := OidFromString(head + name); err == nil {
+				if oid, err := objects.OidFromString(head + name); err == nil {
 					matching = append(matching, oid)
 				}
 			}
@@ -156,7 +157,7 @@ func (repo *DiskRepository) Ref(spec string) (Ref, error) {
 	return nil, e
 }
 
-func (repo *DiskRepository) PackedObjectIds() ([]*ObjectId, error) {
+func (repo *DiskRepository) PackedObjectIds() ([]*objects.ObjectId, error) {
 	if err := loadPacks(repo); err != nil {
 		return nil, err
 	}
@@ -170,17 +171,17 @@ func (repo *DiskRepository) PackedObjects() ([]*PackedObject, error) {
 	return objectsFromPacks(repo.packs), nil
 }
 
-func (repo *DiskRepository) LooseObjectIds() (oids []*ObjectId, err error) {
+func (repo *DiskRepository) LooseObjectIds() (oids []*objects.ObjectId, err error) {
 	objectsRoot := path.Join(repo.path, DefaultObjectsDir)
-	oids = make([]*ObjectId, 0)
+	oids = make([]*objects.ObjectId, 0)
 	//look in each objectsDir and make ObjectIds out of the files there.
 	err = filepath.Walk(objectsRoot, func(path string, info os.FileInfo, errr error) error {
 		if name := info.Name(); name == "info" || name == "pack" {
 			return filepath.SkipDir
 		} else if !info.IsDir() {
 			hash := filepath.Base(filepath.Dir(path)) + name
-			var oid *ObjectId
-			if oid, err = OidFromString(hash); err != nil {
+			var oid *objects.ObjectId
+			if oid, err = objects.OidFromString(hash); err != nil {
 				return err
 			}
 			oids = append(oids, oid)
@@ -317,7 +318,7 @@ func AssertDiskRepo(repo Repository) (*DiskRepository, error) {
 // objectFile turns an oid into a path relative to the
 // git directory of a repository where that object should
 // be located (if it is a loose object).
-func objectFile(repo *DiskRepository, oid *ObjectId) (file *os.File, err error) {
+func objectFile(repo *DiskRepository, oid *objects.ObjectId) (file *os.File, err error) {
 	hex := oid.String()
 	path := path.Join(repo.path, DefaultObjectsDir, hex[0:2], hex[2:])
 	return os.Open(path)

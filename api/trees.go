@@ -14,6 +14,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -24,7 +25,7 @@ import (
 type Tree struct {
 	entries []*TreeEntry
 	hdr     *ObjectHeader
-	oid     *ObjectId
+	oid     *objects.ObjectId
 }
 
 // TODO: is this necessary?
@@ -36,7 +37,7 @@ func (t *Tree) Header() *ObjectHeader {
 	return t.hdr
 }
 
-func (t *Tree) ObjectId() *ObjectId {
+func (t *Tree) ObjectId() *objects.ObjectId {
 	return t.oid
 }
 
@@ -48,14 +49,14 @@ type TreeEntry struct {
 	mode  FileMode
 	otype ObjectType
 	name  string
-	oid   *ObjectId
+	oid   *objects.ObjectId
 }
 
 func (e *TreeEntry) Mode() FileMode {
 	return e.mode
 }
 
-func (e *TreeEntry) ObjectId() *ObjectId {
+func (e *TreeEntry) ObjectId() *objects.ObjectId {
 	return e.oid
 }
 
@@ -126,7 +127,7 @@ func deduceObjectType(mode FileMode) ObjectType {
 func (f *Format) Tree(t *Tree) (int, error) {
 	N := 0
 	for _, e := range t.entries {
-		n, err := fmt.Fprintf(f.Writer, "%o %s%s%s", e.mode, e.name, string(NUL), string(e.oid.bytes))
+		n, err := fmt.Fprintf(f.Writer, "%o %s%s%s", e.mode, e.name, string(NUL), string(e.oid.Bytes()))
 		N += n
 		if err != nil {
 			return N, err

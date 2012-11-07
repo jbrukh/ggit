@@ -9,6 +9,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -24,20 +25,20 @@ const (
 // ================================================================= //
 
 type Tag struct {
-	hdr     *ObjectHeader // the size of the tag
-	oid     *ObjectId     // the oid of the tag itself
-	name    string        // the tag name
-	object  *ObjectId     // the object this tag is pointing at
-	otype   ObjectType    // the object type
-	tagger  *WhoWhen      // the tagger
-	message string        // the tag message
+	hdr     *ObjectHeader     // the size of the tag
+	oid     *objects.ObjectId // the oid of the tag itself
+	name    string            // the tag name
+	object  *objects.ObjectId // the object this tag is pointing at
+	otype   ObjectType        // the object type
+	tagger  *WhoWhen          // the tagger
+	message string            // the tag message
 }
 
 func (t *Tag) Header() *ObjectHeader {
 	return t.hdr
 }
 
-func (t *Tag) ObjectId() *ObjectId {
+func (t *Tag) ObjectId() *objects.ObjectId {
 	return t.oid
 }
 
@@ -45,7 +46,7 @@ func (t *Tag) Name() string {
 	return t.name
 }
 
-func (t *Tag) Object() *ObjectId {
+func (t *Tag) Object() *objects.ObjectId {
 	return t.object
 }
 

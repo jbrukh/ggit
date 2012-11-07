@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
+	"github.com/jbrukh/ggit/api/objects"
 )
 
 type LsObjectsBuiltin struct {
@@ -52,7 +53,7 @@ func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {
 	}
 
 	var (
-		oids []*api.ObjectId
+		oids []*objects.ObjectId
 		e    error
 	)
 	if b.flagLoose {
@@ -70,7 +71,7 @@ func (b *LsObjectsBuiltin) Execute(p *Params, args []string) {
 	printAll(p, oids)
 }
 
-func printAll(p *Params, oids []*api.ObjectId) {
+func printAll(p *Params, oids []*objects.ObjectId) {
 	for _, oid := range oids {
 		fmt.Fprintln(p.Wout, oid.String())
 	}

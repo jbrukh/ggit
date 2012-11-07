@@ -7,6 +7,8 @@
 //
 package api
 
+import "github.com/jbrukh/ggit/api/objects"
+
 // ObjectHeader is the deserialized (and more efficiently stored)
 // version of a git object header
 type ObjectHeader struct {
@@ -31,7 +33,7 @@ type Object interface {
 	Header() *ObjectHeader
 
 	// ObjectId returns the object id of the object.
-	ObjectId() *ObjectId
+	ObjectId() *objects.ObjectId
 }
 
 // ================================================================= //
@@ -76,7 +78,7 @@ func (f *Format) ObjectPretty(o Object) (int, error) {
 
 // ObjectFromOid turns an ObjectId into an Object given the parent
 // repository of the object.
-func ObjectFromOid(repo Repository, oid *ObjectId) (Object, error) {
+func ObjectFromOid(repo Repository, oid *objects.ObjectId) (Object, error) {
 	return repo.ObjectFromOid(oid)
 }
 

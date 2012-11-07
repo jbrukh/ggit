@@ -12,6 +12,7 @@ refs_git_test.go implements tests for reading conrete and symbolic refs.
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
 	"testing"
@@ -23,8 +24,8 @@ func Test_refPaths(t *testing.T) {
 	info := testRepo.Info().(*test.InfoRefs)
 
 	var (
-		oid    = OidNow(info.CommitOid)
-		tagOid = OidNow(info.AnnTagOid)
+		oid    = objects.OidNow(info.CommitOid)
+		tagOid = objects.OidNow(info.AnnTagOid)
 
 		master   = "refs/heads/master"
 		branch   = expandHeadRef(info.BranchName)
@@ -84,7 +85,7 @@ func Test_refPaths(t *testing.T) {
 
 }
 
-func testShortRefResolvesSymbolic(t *testing.T, repo Repository, spec string, tget string, oid *ObjectId) {
+func testShortRefResolvesSymbolic(t *testing.T, repo Repository, spec string, tget string, oid *objects.ObjectId) {
 	symbolicRef, err := RefFromSpec(repo, spec)
 	util.AssertNoErr(t, err)
 	assertSymbolicRef(t, symbolicRef, tget)
@@ -94,7 +95,7 @@ func testShortRefResolvesSymbolic(t *testing.T, repo Repository, spec string, tg
 	assertPeeledRef(t, peeledRef, oid)
 }
 
-func testShortRefResolvesPeeled(t *testing.T, repo Repository, spec string, oid *ObjectId) {
+func testShortRefResolvesPeeled(t *testing.T, repo Repository, spec string, oid *objects.ObjectId) {
 	peeledRef, err := RefFromSpec(repo, spec)
 	util.AssertNoErr(t, err)
 	assertPeeledRef(t, peeledRef, oid)
@@ -137,7 +138,7 @@ func testRefRetrieval(t *testing.T, repo Repository, f func() ([]Ref, error), ex
 	}
 }
 
-func testRefPathPeeled(t *testing.T, repo Repository, spec string, oid *ObjectId) {
+func testRefPathPeeled(t *testing.T, repo Repository, spec string, oid *objects.ObjectId) {
 	ref, err := repo.Ref(spec)
 	util.AssertNoErr(t, err)
 	util.AssertEqualString(t, ref.Name(), spec)
@@ -152,7 +153,7 @@ func testRefPathSymbolic(t *testing.T, repo Repository, spec string, tget string
 	assertSymbolicRef(t, symbolicRef, tget)
 }
 
-func testPackedTagDerefInfo(t *testing.T, repo Repository, spec string, oid *ObjectId) {
+func testPackedTagDerefInfo(t *testing.T, repo Repository, spec string, oid *objects.ObjectId) {
 	ref, err := repo.Ref(spec)
 	util.AssertNoErr(t, err)
 	util.AssertEqualString(t, ref.Name(), spec)
@@ -165,7 +166,7 @@ func testPackedTagDerefInfo(t *testing.T, repo Repository, spec string, oid *Obj
 	util.AssertEqualString(t, ref.Commit().String(), oid.String())
 }
 
-func testPeelRef(t *testing.T, repo Repository, spec string, oid *ObjectId) {
+func testPeelRef(t *testing.T, repo Repository, spec string, oid *objects.ObjectId) {
 	// first peel it manually
 	ref, err := repo.Ref(spec)
 	util.AssertNoErr(t, err)
@@ -182,13 +183,13 @@ func testPeelRef(t *testing.T, repo Repository, spec string, oid *ObjectId) {
 	assertPeeledRef(t, peeledRef, oid)
 }
 
-func assertPeeledRef(t *testing.T, peeledRef Ref, oid *ObjectId) {
+func assertPeeledRef(t *testing.T, peeledRef Ref, oid *objects.ObjectId) {
 	symbolic, target := peeledRef.Target()
 	util.Assert(t, !symbolic)
 	if target == nil {
 		t.Fatalf("nil target")
 	}
-	util.AssertEqualString(t, target.(*ObjectId).String(), oid.String())
+	util.AssertEqualString(t, target.(*objects.ObjectId).String(), oid.String())
 	util.AssertEqualString(t, peeledRef.ObjectId().String(), oid.String())
 	util.AssertPanic(t, func() {
 		s := target.(string)
@@ -204,7 +205,7 @@ func assertSymbolicRef(t *testing.T, symbolicRef Ref, tget string) {
 	}
 	util.AssertEqualString(t, target.(string), tget)
 	util.AssertPanic(t, func() {
-		oid := target.(*ObjectId)
+		oid := target.(*objects.ObjectId)
 		oid.String() // for compilation
 	})
 	util.AssertPanic(t, func() {

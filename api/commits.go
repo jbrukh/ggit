@@ -15,6 +15,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -35,9 +36,9 @@ const (
 
 type Commit struct {
 	hdr       *ObjectHeader
-	oid       *ObjectId
-	treeOid   *ObjectId
-	parents   []*ObjectId
+	oid       *objects.ObjectId
+	treeOid   *objects.ObjectId
+	parents   []*objects.ObjectId
 	author    *WhoWhen
 	committer *WhoWhen
 	message   string
@@ -47,15 +48,15 @@ func (c *Commit) Header() *ObjectHeader {
 	return c.hdr
 }
 
-func (c *Commit) ObjectId() *ObjectId {
+func (c *Commit) ObjectId() *objects.ObjectId {
 	return c.oid
 }
 
-func (c *Commit) Tree() *ObjectId {
+func (c *Commit) Tree() *objects.ObjectId {
 	return c.treeOid
 }
 
-func (c *Commit) Parents() []*ObjectId {
+func (c *Commit) Parents() []*objects.ObjectId {
 	return c.parents
 }
 
@@ -71,7 +72,7 @@ func (c *Commit) Message() string {
 	return c.message
 }
 
-func (c *Commit) addParent(oid *ObjectId) {
+func (c *Commit) addParent(oid *objects.ObjectId) {
 	c.parents = append(c.parents, oid)
 }
 
@@ -81,7 +82,7 @@ func (c *Commit) addParent(oid *ObjectId) {
 
 func (p *objectParser) parseCommit() *Commit {
 	c := &Commit{
-		parents: make([]*ObjectId, 0),
+		parents: make([]*objects.ObjectId, 0),
 		oid:     p.oid,
 	}
 	p.ResetCount()
@@ -204,7 +205,7 @@ func CommitFromObject(repo Repository, o Object) (*Commit, error) {
 // oid points at a commit, the Commit object is returned. If the oid 
 // points at an annotated tag, then the target commit is returned. If
 // the oid points to another type of object, an error is returned.
-func CommitFromOid(repo Repository, oid *ObjectId) (*Commit, error) {
+func CommitFromOid(repo Repository, oid *objects.ObjectId) (*Commit, error) {
 	o, err := ObjectFromOid(repo, oid)
 	if err != nil {
 		return nil, err

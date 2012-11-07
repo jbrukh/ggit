@@ -9,6 +9,7 @@ package api
 
 import (
 	"bufio"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -18,11 +19,11 @@ import (
 
 type objectParser struct {
 	objectIdParser
-	oid *ObjectId
+	oid *objects.ObjectId
 	hdr *ObjectHeader
 }
 
-func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
+func newObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *objectParser {
 	op := &objectParser{
 		objectIdParser: objectIdParser{
 			*util.NewDataParser(buf),

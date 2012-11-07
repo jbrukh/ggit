@@ -13,6 +13,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -24,7 +25,7 @@ import (
 // of a Git blob object.
 type Blob struct {
 	data []byte
-	oid  *ObjectId
+	oid  *objects.ObjectId
 	hdr  *ObjectHeader
 }
 
@@ -32,7 +33,7 @@ func (b *Blob) Header() *ObjectHeader {
 	return b.hdr
 }
 
-func (b *Blob) ObjectId() *ObjectId {
+func (b *Blob) ObjectId() *objects.ObjectId {
 	return b.oid
 }
 

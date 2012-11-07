@@ -8,6 +8,7 @@
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
 	"testing"
@@ -25,7 +26,7 @@ func Test_readCommits(t *testing.T) {
 
 	f := NewStrFormat()
 	for _, detail := range info.Commits {
-		o, err := repo.ObjectFromOid(OidNow(detail.CommitOid))
+		o, err := repo.ObjectFromOid(objects.OidNow(detail.CommitOid))
 		util.AssertNoErr(t, err)
 
 		// check the id
