@@ -7,7 +7,7 @@
 //
 
 /*
-tag_git_test.go implements git comparison tests for tag reading.
+tags_git_test.go implements git comparison tests for tag reading.
 */
 package api
 

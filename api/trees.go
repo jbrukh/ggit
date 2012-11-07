@@ -7,7 +7,7 @@
 //
 
 /*
-tree.go implements ggit Tree objects, TreeEntries, their parsing and
+trees.go implements ggit Tree objects, TreeEntries, their parsing and
 formatting.
 */
 package api

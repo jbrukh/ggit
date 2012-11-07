@@ -7,7 +7,7 @@
 //
 
 /*
-blob.go implements ggit Blob objects and their parsing and formatting.
+blobs.go implements ggit Blob objects and their parsing and formatting.
 */
 package api
 

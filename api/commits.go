@@ -7,7 +7,7 @@
 //
 
 /*
-commit.go implements ggit Commit objects, their parsing and formatting,
+commits.go implements ggit Commit objects, their parsing and formatting,
 and useful operations that allow users to resolve and navigate commits.
 */
 package api

@@ -7,7 +7,7 @@
 //
 
 /*
-file_mode.go implements the git-supported file modes used mainly in trees.
+file_modes.go implements the git-supported file modes used mainly in trees.
 */
 package api
 

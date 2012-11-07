@@ -7,7 +7,7 @@
 //
 
 /*
-who_when.go implements user credentials and timestamps.
+who_whens.go implements user credentials and timestamps.
 */
 package api
 
