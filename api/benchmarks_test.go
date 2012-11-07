@@ -83,13 +83,13 @@ func packedRef() (repo Repository, spec string) {
 	return
 }
 
-func justBlob() (Repository, *Blob) {
+func justBlob() (Repository, *objects.Blob) {
 	repo, oid := packedBlobOid()
 	o, err := repo.ObjectFromOid(oid)
 	if err != nil {
 		panic(err)
 	}
-	return repo, o.(*Blob)
+	return repo, o.(*objects.Blob)
 }
 
 func justCommit() (Repository, *Commit) {

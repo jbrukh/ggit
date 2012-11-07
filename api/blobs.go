@@ -18,30 +18,6 @@ import (
 )
 
 // ================================================================= //
-// BLOB OBJECT
-// ================================================================= //
-
-// Blob represents the deserialized version
-// of a Git blob object.
-type Blob struct {
-	data []byte
-	oid  *objects.ObjectId
-	hdr  *objects.ObjectHeader
-}
-
-func (b *Blob) Header() *objects.ObjectHeader {
-	return b.hdr
-}
-
-func (b *Blob) ObjectId() *objects.ObjectId {
-	return b.oid
-}
-
-func (b *Blob) Data() []byte {
-	return b.data
-}
-
-// ================================================================= //
 // OBJECT PARSER
 // ================================================================= //
 
@@ -49,14 +25,11 @@ func (b *Blob) Data() []byte {
 // and converts it to Blob. If there are parsing errors,
 // it panics with parseErr, so this method should be
 // called as a parameter a safeParse().
-func (p *objectParser) parseBlob() *Blob {
-	b := new(Blob)
-	b.oid = p.oid
+func (p *objectParser) parseBlob() *objects.Blob {
 
 	p.ResetCount()
-
-	b.data = p.Bytes()
-	b.hdr = p.hdr
+	data := p.Bytes()
+	b := objects.NewBlob(p.oid, p.hdr, data)
 
 	if p.Count() != p.hdr.Size() {
 		util.PanicErr("payload doesn't match prescibed size")
@@ -71,6 +44,6 @@ func (p *objectParser) parseBlob() *Blob {
 
 // Blob formats the contents of the blog as a string
 // for output to the screen.
-func (f *Format) Blob(b *Blob) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s", string(b.data))
+func (f *Format) Blob(b *objects.Blob) (int, error) {
+	return fmt.Fprintf(f.Writer, "%s", string(b.Data()))
 }

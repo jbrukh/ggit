@@ -33,7 +33,7 @@ func Test_readBlobs(t *testing.T) {
 		o, err := repo.ObjectFromOid(oid)
 		util.AssertNoErr(t, err)
 		util.Assert(t, o.Header().Type() == objects.ObjectBlob)
-		b := o.(*Blob)
+		b := o.(*objects.Blob)
 		util.AssertEqualString(t, string(b.Data()), detail.Contents)
 		util.AssertEqualInt(t, int(b.Header().Size()), len(detail.Contents))
 	}

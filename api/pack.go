@@ -525,13 +525,13 @@ func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 }
 
 func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
-	blob := new(Blob)
-	blob.data = dp.Bytes()
-	blob.oid = dp.objectParser.oid
-	blob.hdr = objects.NewObjectHeader(objects.ObjectBlob, size)
+	data := dp.Bytes()
+	oid := dp.objectParser.oid
+	hdr := objects.NewObjectHeader(objects.ObjectBlob, size)
+	blob := objects.NewBlob(oid, hdr, data)
 	return &PackedObject{
 		object: blob,
-		bytes:  blob.data,
+		bytes:  data,
 	}
 }
 

@@ -17,7 +17,7 @@ import "github.com/jbrukh/ggit/api/objects"
 // to reproduce the contents or SHA1 hash of an Object.
 func (f *Format) Object(o objects.Object) (int, error) {
 	switch t := o.(type) {
-	case *Blob:
+	case *objects.Blob:
 		return f.Blob(t)
 	case *Tree:
 		return f.Tree(t)
@@ -33,7 +33,7 @@ func (f *Format) Object(o objects.Object) (int, error) {
 // of use as an api call; it is for humans.
 func (f *Format) ObjectPretty(o objects.Object) (int, error) {
 	switch t := o.(type) {
-	case *Blob:
+	case *objects.Blob:
 		return f.Blob(t)
 	case *Tree:
 		return f.TreePretty(t)
