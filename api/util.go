@@ -35,6 +35,13 @@ var signs []string = []string{
 	MINUS,
 }
 
+var objectTypes []string = []string{
+	string(objects.ObjectBlob),
+	string(objects.ObjectTree),
+	string(objects.ObjectCommit),
+	string(objects.ObjectTag),
+}
+
 // the hash object used to build
 // hashes of our objects
 var sha hash.Hash = sha1.New()
