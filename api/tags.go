@@ -30,7 +30,7 @@ type Tag struct {
 	name    string                // the tag name
 	object  *objects.ObjectId     // the object this tag is pointing at
 	otype   objects.ObjectType    // the object type
-	tagger  *WhoWhen              // the tagger
+	tagger  *objects.WhoWhen      // the tagger
 	message string                // the tag message
 }
 
@@ -54,7 +54,7 @@ func (t *Tag) ObjectType() objects.ObjectType {
 	return t.otype
 }
 
-func (t *Tag) Tagger() *WhoWhen {
+func (t *Tag) Tagger() *objects.WhoWhen {
 	return t.tagger
 }
 

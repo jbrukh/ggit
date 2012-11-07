@@ -39,8 +39,8 @@ type Commit struct {
 	oid       *objects.ObjectId
 	treeOid   *objects.ObjectId
 	parents   []*objects.ObjectId
-	author    *WhoWhen
-	committer *WhoWhen
+	author    *objects.WhoWhen
+	committer *objects.WhoWhen
 	message   string
 }
 
@@ -60,11 +60,11 @@ func (c *Commit) Parents() []*objects.ObjectId {
 	return c.parents
 }
 
-func (c *Commit) Author() *WhoWhen {
+func (c *Commit) Author() *objects.WhoWhen {
 	return c.author
 }
 
-func (c *Commit) Committer() *WhoWhen {
+func (c *Commit) Committer() *objects.WhoWhen {
 	return c.committer
 }
 

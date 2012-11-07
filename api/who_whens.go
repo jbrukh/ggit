@@ -13,78 +13,28 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"strings"
-	"time"
 )
-
-// ================================================================= //
-// WHO
-// ================================================================= //
-
-type Who struct {
-	name  string
-	email string
-}
-
-func (w *Who) Name() string {
-	return w.name
-}
-
-func (w *Who) Email() string {
-	return w.email
-}
-
-// ================================================================= //
-// WHEN
-// ================================================================= //
-
-type When struct {
-	seconds int64 // seconds since epoch
-	offset  int   // timezone offset in minutes
-}
-
-func (w *When) Seconds() int64 {
-	return w.seconds
-}
-
-func (w *When) Offset() int {
-	return w.offset
-}
-
-func (w *When) Date() string {
-	t := time.Unix(w.seconds, int64(0))
-	// standard time: Mon Jan 2 15:04:05 -0700 MST 2006
-	return t.Format("Mon Jan 2 15:04:05 2006")
-
-}
-
-// ================================================================= //
-// WHO WHEN
-// ================================================================= //
-
-type WhoWhen struct {
-	Who
-	When
-}
 
 // ================================================================= //
 // FORMATTING
 // ================================================================= //
 
-func (f *Format) WhoWhenDate(ww *WhoWhen) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s <%s> %s %s", ww.Name(), ww.Email(), ww.Date(), zone(ww.offset))
+func (f *Format) WhoWhenDate(ww *objects.WhoWhen) (int, error) {
+	return fmt.Fprintf(f.Writer, "%s <%s> %s %s", ww.Name(), ww.Email(), ww.Date(), zone(ww.Offset()))
 }
 
-func (f *Format) WhoWhen(ww *WhoWhen) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s <%s> %d %s", ww.Name(), ww.Email(), ww.Seconds(), zone(ww.offset))
+func (f *Format) WhoWhen(ww *objects.WhoWhen) (int, error) {
+	return fmt.Fprintf(f.Writer, "%s <%s> %d %s", ww.Name(), ww.Email(), ww.Seconds(), zone(ww.Offset()))
 }
 
 // ================================================================= //
 // PARSING
 // ================================================================= //
 
-func (p *objectParser) parseWhoWhen(marker string) *WhoWhen {
+func (p *objectParser) parseWhoWhen(marker string) *objects.WhoWhen {
 	p.ConsumeString(marker)
 	p.ConsumeByte(SP)
 	user := strings.Trim(p.ReadString(LT), string(SP))
@@ -112,10 +62,8 @@ func (p *objectParser) parseWhoWhen(marker string) *WhoWhen {
 	// time zone offset in signed minutes
 	tz := int(sign * (tzHours*int64(60) + tzMins))
 
-	ww := &WhoWhen{
-		Who{user, email},
-		When{seconds, tz},
-	}
+	ww := objects.NewWhoWhen(user, email, seconds, tz)
+
 	return ww
 }
 
