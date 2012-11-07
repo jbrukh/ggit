@@ -110,14 +110,14 @@ func justTree() (Repository, *Tree) {
 	return repo, o.(*Tree)
 }
 
-func justTag() (Repository, *Tag) {
+func justTag() (Repository, *objects.Tag) {
 	repo, info := packedDerefs()
 	tagOid := objects.OidNow(info.TagOid)
 	o, err := repo.ObjectFromOid(tagOid)
 	if err != nil {
 		panic(err)
 	}
-	return repo, o.(*Tag)
+	return repo, o.(*objects.Tag)
 }
 
 // ================================================================= //

@@ -141,7 +141,7 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 				o, err := api.ObjectFromOid(p.Repo, oid.(*objects.ObjectId))
 				if err == nil {
 					if o.Header().Type() == objects.ObjectTag {
-						tag := o.(*api.Tag)
+						tag := o.(*objects.Tag)
 						fmtr.Printf("%s %s^{}\n", tag.Object(), r.Name()) // TODO
 					}
 				}

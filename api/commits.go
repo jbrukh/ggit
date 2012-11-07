@@ -191,7 +191,7 @@ func CommitFromObject(repo Repository, o objects.Object) (*Commit, error) {
 	switch t := o.(type) {
 	case *Commit:
 		return t, nil
-	case *Tag:
+	case *objects.Tag:
 		obj, err := ObjectFromOid(repo, t.Object())
 		if err != nil {
 			return nil, err

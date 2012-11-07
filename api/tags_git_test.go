@@ -42,9 +42,9 @@ func Test_readTags(t *testing.T) {
 		util.AssertEqualInt(t, int(o.Header().Size()), detail.TagSize)
 
 		// now convert to a tag and check the fields
-		var tag *Tag
+		var tag *objects.Tag
 		util.AssertPanicFree(t, func() {
-			tag = o.(*Tag)
+			tag = o.(*objects.Tag)
 		})
 
 		// check the name

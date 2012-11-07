@@ -21,111 +21,66 @@ const (
 )
 
 // ================================================================= //
-// TAGS
-// ================================================================= //
-
-type Tag struct {
-	hdr     *objects.ObjectHeader // the size of the tag
-	oid     *objects.ObjectId     // the oid of the tag itself
-	name    string                // the tag name
-	object  *objects.ObjectId     // the object this tag is pointing at
-	otype   objects.ObjectType    // the object type
-	tagger  *objects.WhoWhen      // the tagger
-	message string                // the tag message
-}
-
-func (t *Tag) Header() *objects.ObjectHeader {
-	return t.hdr
-}
-
-func (t *Tag) ObjectId() *objects.ObjectId {
-	return t.oid
-}
-
-func (t *Tag) Name() string {
-	return t.name
-}
-
-func (t *Tag) Object() *objects.ObjectId {
-	return t.object
-}
-
-func (t *Tag) ObjectType() objects.ObjectType {
-	return t.otype
-}
-
-func (t *Tag) Tagger() *objects.WhoWhen {
-	return t.tagger
-}
-
-func (t *Tag) Message() string {
-	return t.message
-}
-
-// ================================================================= //
 // PARSING
 // ================================================================= //
 
-func (p *objectParser) parseTag() *Tag {
-	tag := new(Tag)
-	tag.oid = p.oid
+func (p *objectParser) parseTag() *objects.Tag {
 	p.ResetCount()
 
 	// read the object id
 	p.ConsumeString(markerObject)
 	p.ConsumeByte(SP)
-	tag.object = p.ParseOid()
+	target := p.ParseOid()
 	p.ConsumeByte(LF)
 
 	// read object type
 	p.ConsumeString(markerType)
 	p.ConsumeByte(SP)
-	tag.otype = objects.ObjectType(p.ConsumeStrings(objectTypes))
+	t := objects.ObjectType(p.ConsumeStrings(objectTypes))
 	p.ConsumeByte(LF)
 
 	// read the tag name
 	p.ConsumeString(markerTag)
 	p.ConsumeByte(SP)
-	tag.name = p.ReadString(LF) // gets rid of the LF!
+	name := p.ReadString(LF) // gets rid of the LF!
 
 	// read the tagger
-	tag.tagger = p.parseWhoWhen(markerTagger)
+	tagger := p.parseWhoWhen(markerTagger)
 	p.ConsumeByte(LF)
 
 	// read the commit message
 	p.ConsumeByte(LF)
-	tag.message = p.String()
-	tag.hdr = p.hdr
+	msg := p.String()
 
 	if p.Count() != p.hdr.Size() {
 		util.PanicErr("payload doesn't match prescibed size")
 	}
 
-	return tag
+	return objects.NewTag(p.oid, target, t, p.hdr, name, msg, tagger)
 }
 
 // ================================================================= //
 // FORMATTING
 // ================================================================= //
 
-func (f *Format) Tag(t *Tag) (int, error) {
-	fmt.Fprintf(f.Writer, "object %s\n", t.object)
-	fmt.Fprintf(f.Writer, "type %s\n", t.otype)
-	fmt.Fprintf(f.Writer, "tag %s\n", t.name)
+func (f *Format) Tag(t *objects.Tag) (int, error) {
+	fmt.Fprintf(f.Writer, "object %s\n", t.Object())
+	fmt.Fprintf(f.Writer, "type %s\n", t.ObjectType())
+	fmt.Fprintf(f.Writer, "tag %s\n", t.Name())
 	sf := NewStrFormat()
-	sf.WhoWhen(t.tagger)
+	sf.WhoWhen(t.Tagger())
 	fmt.Fprintf(f.Writer, "tagger %s\n\n", sf.String())
-	fmt.Fprintf(f.Writer, "%s", t.message)
+	fmt.Fprintf(f.Writer, "%s", t.Message())
 	return 0, nil // TODO
 }
 
-func (f *Format) TagPretty(t *Tag) (int, error) {
-	fmt.Fprintf(f.Writer, "object %s\n", t.object)
-	fmt.Fprintf(f.Writer, "type %s\n", t.otype)
-	fmt.Fprintf(f.Writer, "tag %s\n", t.name)
+func (f *Format) TagPretty(t *objects.Tag) (int, error) {
+	fmt.Fprintf(f.Writer, "object %s\n", t.Object())
+	fmt.Fprintf(f.Writer, "type %s\n", t.ObjectType())
+	fmt.Fprintf(f.Writer, "tag %s\n", t.Name())
 	sf := NewStrFormat()
-	sf.WhoWhenDate(t.tagger) // git-cat-file -p displays full dates for tags
+	sf.WhoWhenDate(t.Tagger()) // git-cat-file -p displays full dates for tags
 	fmt.Fprintf(f.Writer, "tagger %s\n\n", sf.String())
-	fmt.Fprintf(f.Writer, "%s", t.message)
+	fmt.Fprintf(f.Writer, "%s", t.Message())
 	return 0, nil // TODO
 }

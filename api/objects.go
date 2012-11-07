@@ -23,7 +23,7 @@ func (f *Format) Object(o objects.Object) (int, error) {
 		return f.Tree(t)
 	case *Commit:
 		return f.Commit(t)
-	case *Tag:
+	case *objects.Tag:
 		return f.Tag(t)
 	}
 	panic("unknown object")
@@ -39,7 +39,7 @@ func (f *Format) ObjectPretty(o objects.Object) (int, error) {
 		return f.TreePretty(t)
 	case *Commit:
 		return f.Commit(t)
-	case *Tag:
+	case *objects.Tag:
 		return f.TagPretty(t)
 	}
 	panic("unknown object")
