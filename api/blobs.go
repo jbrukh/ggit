@@ -26,10 +26,10 @@ import (
 type Blob struct {
 	data []byte
 	oid  *objects.ObjectId
-	hdr  *ObjectHeader
+	hdr  *objects.ObjectHeader
 }
 
-func (b *Blob) Header() *ObjectHeader {
+func (b *Blob) Header() *objects.ObjectHeader {
 	return b.hdr
 }
 

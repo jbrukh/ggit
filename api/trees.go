@@ -24,7 +24,7 @@ import (
 
 type Tree struct {
 	entries []*TreeEntry
-	hdr     *ObjectHeader
+	hdr     *objects.ObjectHeader
 	oid     *objects.ObjectId
 }
 
@@ -33,7 +33,7 @@ func (t *Tree) Entries() []*TreeEntry {
 	return t.entries
 }
 
-func (t *Tree) Header() *ObjectHeader {
+func (t *Tree) Header() *objects.ObjectHeader {
 	return t.hdr
 }
 

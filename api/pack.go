@@ -40,14 +40,14 @@ const (
 )
 
 type PackedObject struct {
-	object  Object
+	object  objects.Object
 	bytes   []byte
 	DeltaOf *objects.ObjectId
 	//the length of this object's delta chain. 0 for non-delta objects.
 	Depth int
 }
 
-func (p *PackedObject) Object() Object {
+func (p *PackedObject) Object() objects.Object {
 	return p.object
 }
 
@@ -165,7 +165,7 @@ func (idx *Idx) entryById(oid *objects.ObjectId) *PackedObjectId {
 
 // Returns the one Object in this pack with the given ObjectId,
 // or nil, NoSuchObject if no such Object is in this pack.
-func (pack *Pack) unpack(oid *objects.ObjectId) (obj Object, result packSearch) {
+func (pack *Pack) unpack(oid *objects.ObjectId) (obj objects.Object, result packSearch) {
 	defer pack.close()
 	if entry := pack.idx.entryById(oid); entry != nil {
 		if pack.content[entry.index] == nil {
@@ -184,7 +184,7 @@ const (
 	MultipleObjects packSearch = 2
 )
 
-func (pack *Pack) unpackFromShortOid(short string) (obj Object, result packSearch) {
+func (pack *Pack) unpackFromShortOid(short string) (obj objects.Object, result packSearch) {
 	prefix, err := strconv.ParseUint(short[0:2], 16, 8)
 	if err != nil {
 		util.PanicErrf("invalid short oid; non-hex characters: %s. %s", short, err.Error())
@@ -208,7 +208,7 @@ func (pack *Pack) unpackFromShortOid(short string) (obj Object, result packSearc
 
 // Returns the object for the given short oid, if exactly one such object exists.
 // Otherwise returns nil, false.
-func unpackFromShortOid(packs []*Pack, short string) (obj Object, ok bool) {
+func unpackFromShortOid(packs []*Pack, short string) (obj objects.Object, ok bool) {
 	//this function could be O(1) if we... tried... hard enough. tried. get it?
 	//awwwwwwwwwwwwwwwww yeh
 	var already bool
@@ -224,7 +224,7 @@ func unpackFromShortOid(packs []*Pack, short string) (obj Object, ok bool) {
 	return obj, already
 }
 
-func unpack(packs []*Pack, oid *objects.ObjectId) (obj Object, ok bool) {
+func unpack(packs []*Pack, oid *objects.ObjectId) (obj objects.Object, ok bool) {
 	var result packSearch
 	for _, pack := range packs {
 		if obj, result = pack.unpack(oid); result == OneSuchObject {
@@ -507,10 +507,7 @@ func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *objects.ObjectI
 }
 
 func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
-	dp.hdr = &ObjectHeader{
-		objects.ObjectCommit,
-		size,
-	}
+	dp.hdr = objects.NewObjectHeader(objects.ObjectCommit, size)
 	commit := dp.objectParser.parseCommit()
 
 	return &PackedObject{
@@ -519,10 +516,7 @@ func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 	}
 }
 func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
-	dp.hdr = &ObjectHeader{
-		objects.ObjectTag,
-		size,
-	}
+	dp.hdr = objects.NewObjectHeader(objects.ObjectTag, size)
 	tag := dp.objectParser.parseTag()
 	return &PackedObject{
 		object: tag,
@@ -534,10 +528,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 	blob := new(Blob)
 	blob.data = dp.Bytes()
 	blob.oid = dp.objectParser.oid
-	blob.hdr = &ObjectHeader{
-		objects.ObjectBlob,
-		size,
-	}
+	blob.hdr = objects.NewObjectHeader(objects.ObjectBlob, size)
 	return &PackedObject{
 		object: blob,
 		bytes:  blob.data,
@@ -545,10 +536,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 }
 
 func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
-	dp.hdr = &ObjectHeader{
-		objects.ObjectTree,
-		size,
-	}
+	dp.hdr = objects.NewObjectHeader(objects.ObjectTree, size)
 	tree := dp.objectParser.parseTree()
 	return &PackedObject{
 		object: tree,
@@ -705,11 +693,8 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *objects.ObjectI
 	}
 	outputType := base.object.Header().Type()
 	outputParser := newObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
-	outputParser.hdr = &ObjectHeader{
-		outputType,
-		outputSize,
-	}
-	var obj Object
+	outputParser.hdr = objects.NewObjectHeader(outputType, outputSize)
+	var obj objects.Object
 	switch outputType {
 	case objects.ObjectBlob:
 		obj = outputParser.parseBlob()

@@ -43,7 +43,7 @@ type revParser struct {
 	inx int
 	rev string
 
-	o Object
+	o objects.Object
 }
 
 func newRevParser(repo Repository, rev string) *revParser {
@@ -56,7 +56,7 @@ func newRevParser(repo Repository, rev string) *revParser {
 
 // Object returns the object that the rev spec
 // refers to after (and during) parsing.
-func (p *revParser) Object() Object {
+func (p *revParser) Object() objects.Object {
 	return p.o
 }
 
@@ -192,7 +192,7 @@ func applyDereference(p *revParser, otype objects.ObjectType) error {
 
 func (p *revParser) findObject(spec string) (err error) {
 	// oid or short oid
-	var o Object
+	var o objects.Object
 	switch {
 	case hexRegex.MatchString(spec):
 		o, err = ObjectFromShortOid(p.repo, spec)

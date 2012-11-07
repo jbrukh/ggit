@@ -50,7 +50,7 @@ func (repo *DiskRepository) Destroy() error {
 	return os.RemoveAll(dir)
 }
 
-func (repo *DiskRepository) ObjectFromOid(oid *objects.ObjectId) (obj Object, err error) {
+func (repo *DiskRepository) ObjectFromOid(oid *objects.ObjectId) (obj objects.Object, err error) {
 	var (
 		f  *os.File
 		e  error
@@ -77,7 +77,7 @@ func (repo *DiskRepository) ObjectFromOid(oid *objects.ObjectId) (obj Object, er
 	return p.ParsePayload()
 }
 
-func (repo *DiskRepository) ObjectFromShortOid(short string) (Object, error) {
+func (repo *DiskRepository) ObjectFromShortOid(short string) (objects.Object, error) {
 	l := len(short)
 	if l < 4 || l > objects.OidHexSize {
 		return nil, fmt.Errorf("fatal: Not a valid object name %s", short)

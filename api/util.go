@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"hash"
 )
 
@@ -39,7 +40,7 @@ var signs []string = []string{
 var sha hash.Hash = sha1.New()
 
 // produce the SHA1 hash for any Object.
-func MakeHash(o Object) (hash.Hash, error) {
+func MakeHash(o objects.Object) (hash.Hash, error) {
 	sha.Reset()
 	kind := string(o.Header().Type())
 	f := NewStrFormat()

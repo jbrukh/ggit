@@ -35,7 +35,7 @@ const (
 // ================================================================= //
 
 type Commit struct {
-	hdr       *ObjectHeader
+	hdr       *objects.ObjectHeader
 	oid       *objects.ObjectId
 	treeOid   *objects.ObjectId
 	parents   []*objects.ObjectId
@@ -44,7 +44,7 @@ type Commit struct {
 	message   string
 }
 
-func (c *Commit) Header() *ObjectHeader {
+func (c *Commit) Header() *objects.ObjectHeader {
 	return c.hdr
 }
 
@@ -187,7 +187,7 @@ func CommitNthAncestor(repo Repository, c *Commit, n int) (rc *Commit, err error
 // the object is a commit object, it is converted and returned. If the
 // object is a tag, then the target of the tag is returned. Other object
 // types cause an error to be returned.
-func CommitFromObject(repo Repository, o Object) (*Commit, error) {
+func CommitFromObject(repo Repository, o objects.Object) (*Commit, error) {
 	switch t := o.(type) {
 	case *Commit:
 		return t, nil

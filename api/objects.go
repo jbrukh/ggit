@@ -9,40 +9,13 @@ package api
 
 import "github.com/jbrukh/ggit/api/objects"
 
-// ObjectHeader is the deserialized (and more efficiently stored)
-// version of a git object header
-type ObjectHeader struct {
-	otype objects.ObjectType
-	size  int64
-}
-
-func (h *ObjectHeader) Type() objects.ObjectType {
-	return h.otype
-}
-
-func (h *ObjectHeader) Size() int64 {
-	return h.size
-}
-
-// Object represents a generic git object: a blob, a tree,
-// a tag, or a commit.
-type Object interface {
-
-	// Header returns the object header, which
-	// contains the object's type and size.
-	Header() *ObjectHeader
-
-	// ObjectId returns the object id of the object.
-	ObjectId() *objects.ObjectId
-}
-
 // ================================================================= //
 // FORMATTING
 // ================================================================= //
 
 // The "plumbing" string output of an Object. This output can be used
 // to reproduce the contents or SHA1 hash of an Object.
-func (f *Format) Object(o Object) (int, error) {
+func (f *Format) Object(o objects.Object) (int, error) {
 	switch t := o.(type) {
 	case *Blob:
 		return f.Blob(t)
@@ -58,7 +31,7 @@ func (f *Format) Object(o Object) (int, error) {
 
 // The pretty string output of an Object. This format is not necessarily
 // of use as an api call; it is for humans.
-func (f *Format) ObjectPretty(o Object) (int, error) {
+func (f *Format) ObjectPretty(o objects.Object) (int, error) {
 	switch t := o.(type) {
 	case *Blob:
 		return f.Blob(t)
@@ -78,19 +51,19 @@ func (f *Format) ObjectPretty(o Object) (int, error) {
 
 // ObjectFromOid turns an ObjectId into an Object given the parent
 // repository of the object.
-func ObjectFromOid(repo Repository, oid *objects.ObjectId) (Object, error) {
+func ObjectFromOid(repo Repository, oid *objects.ObjectId) (objects.Object, error) {
 	return repo.ObjectFromOid(oid)
 }
 
 // ObjectFromOid turns a short hex into an Object given the parent
 // repository of the object.
-func ObjectFromShortOid(repo Repository, short string) (Object, error) {
+func ObjectFromShortOid(repo Repository, short string) (objects.Object, error) {
 	return repo.ObjectFromShortOid(short)
 }
 
 // ObjectFromRef is similar to OidFromRef, except it derefernces the
 // target ObjectId into an actual Object.
-func ObjectFromRef(repo Repository, spec string) (Object, error) {
+func ObjectFromRef(repo Repository, spec string) (objects.Object, error) {
 	ref, err := PeeledRefFromSpec(repo, spec)
 	if err != nil {
 		return nil, err
@@ -100,7 +73,7 @@ func ObjectFromRef(repo Repository, spec string) (Object, error) {
 
 // ObjectFromRevision takes a revision specification and obtains the
 // object that this revision specifies.
-func ObjectFromRevision(repo Repository, rev string) (Object, error) {
+func ObjectFromRevision(repo Repository, rev string) (objects.Object, error) {
 	p := newRevParser(repo, rev)
 	e := p.Parse()
 	if e != nil {

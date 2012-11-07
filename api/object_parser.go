@@ -20,7 +20,7 @@ import (
 type objectParser struct {
 	objectIdParser
 	oid *objects.ObjectId
-	hdr *ObjectHeader
+	hdr *objects.ObjectHeader
 }
 
 func newObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *objectParser {
@@ -33,12 +33,12 @@ func newObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *objectParser {
 	return op
 }
 
-func (p *objectParser) ParseHeader() (*ObjectHeader, error) {
+func (p *objectParser) ParseHeader() (*objects.ObjectHeader, error) {
 	err := util.SafeParse(func() {
-		p.hdr = new(ObjectHeader)
-		p.hdr.otype = objects.ObjectType(p.ConsumeStrings(objectTypes))
+		ot := objects.ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
-		p.hdr.size = p.ParseAtoi(NUL)
+		size := p.ParseAtoi(NUL)
+		p.hdr = objects.NewObjectHeader(ot, size)
 	})
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (p *objectParser) ParseHeader() (*ObjectHeader, error) {
 	return p.hdr, nil
 }
 
-func (p *objectParser) ParsePayload() (Object, error) {
+func (p *objectParser) ParsePayload() (objects.Object, error) {
 	// parse header if it wasn't parsed already
 	if p.hdr == nil {
 		if _, e := p.ParseHeader(); e != nil {
@@ -54,12 +54,12 @@ func (p *objectParser) ParsePayload() (Object, error) {
 		}
 	}
 	var (
-		obj Object
+		obj objects.Object
 		err error
 	)
 
 	err = util.SafeParse(func() {
-		switch p.hdr.otype {
+		switch p.hdr.Type() {
 		case objects.ObjectBlob:
 			obj = p.parseBlob()
 		case objects.ObjectTree:
