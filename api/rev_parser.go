@@ -9,6 +9,7 @@ package api
 
 import (
 	"errors"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"regexp"
 	"strconv"
@@ -122,7 +123,7 @@ func (p *revParser) Parse() error {
 			if b == '^' {
 				if !p.EOF() && p.PeekByte() == '{' {
 					p.ConsumeByte('{')
-					otype := ObjectType(p.ConsumeStrings(objectTypes))
+					otype := objects.ObjectType(p.ConsumeStrings(objectTypes))
 					err = applyDereference(p, otype)
 					if err != nil {
 
@@ -160,15 +161,15 @@ func applyParentFunc(p *revParser, f parentFunc) (err error) {
 	return
 }
 
-func applyDereference(p *revParser, otype ObjectType) error {
+func applyDereference(p *revParser, otype objects.ObjectType) error {
 	switch otype {
-	case ObjectCommit:
+	case objects.ObjectCommit:
 		c, err := CommitFromObject(p.repo, p.o)
 		if err != nil {
 			return err
 		}
 		p.o = c
-	case ObjectTree:
+	case objects.ObjectTree:
 		c, err := CommitFromObject(p.repo, p.o)
 		if err != nil {
 			return err
@@ -177,12 +178,12 @@ func applyDereference(p *revParser, otype ObjectType) error {
 		if err != nil {
 			return err
 		}
-	case ObjectTag:
-		if p.o.Header().Type() != ObjectTag {
+	case objects.ObjectTag:
+		if p.o.Header().Type() != objects.ObjectTag {
 			return errors.New("cannot dereference non-tag to tag")
 		}
-	case ObjectBlob:
-		if p.o.Header().Type() != ObjectBlob {
+	case objects.ObjectBlob:
+		if p.o.Header().Type() != objects.ObjectBlob {
 			return errors.New("cannot dereference non-blob to blob")
 		}
 	}

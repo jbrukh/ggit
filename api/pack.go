@@ -508,7 +508,7 @@ func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *objects.ObjectI
 
 func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 	dp.hdr = &ObjectHeader{
-		ObjectCommit,
+		objects.ObjectCommit,
 		size,
 	}
 	commit := dp.objectParser.parseCommit()
@@ -520,7 +520,7 @@ func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 }
 func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 	dp.hdr = &ObjectHeader{
-		ObjectTag,
+		objects.ObjectTag,
 		size,
 	}
 	tag := dp.objectParser.parseTag()
@@ -535,7 +535,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 	blob.data = dp.Bytes()
 	blob.oid = dp.objectParser.oid
 	blob.hdr = &ObjectHeader{
-		ObjectBlob,
+		objects.ObjectBlob,
 		size,
 	}
 	return &PackedObject{
@@ -546,7 +546,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 
 func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
 	dp.hdr = &ObjectHeader{
-		ObjectTree,
+		objects.ObjectTree,
 		size,
 	}
 	tree := dp.objectParser.parseTree()
@@ -711,13 +711,13 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *objects.ObjectI
 	}
 	var obj Object
 	switch outputType {
-	case ObjectBlob:
+	case objects.ObjectBlob:
 		obj = outputParser.parseBlob()
-	case ObjectTree:
+	case objects.ObjectTree:
 		obj = outputParser.parseTree()
-	case ObjectCommit:
+	case objects.ObjectCommit:
 		obj = outputParser.parseCommit()
-	case ObjectTag:
+	case objects.ObjectTag:
 		obj = outputParser.parseTag()
 	}
 	return &PackedObject{

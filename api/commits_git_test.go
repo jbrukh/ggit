@@ -33,7 +33,7 @@ func Test_readCommits(t *testing.T) {
 		util.Assert(t, o.ObjectId().String() == detail.CommitOid)
 
 		// check the header
-		util.Assert(t, o.Header().Type() == ObjectCommit)
+		util.Assert(t, o.Header().Type() == objects.ObjectCommit)
 		util.AssertEqualInt(t, int(o.Header().Size()), detail.CommitSize)
 
 		// now convert to a commit and check the fields

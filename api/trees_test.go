@@ -13,6 +13,7 @@ package api
 
 import (
 	//"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"testing"
 )
@@ -109,7 +110,7 @@ func parseAndCompareTree(t *testing.T, repo Repository, treeRepr string) {
 	util.AssertNoErr(t, err)
 
 	hdr := o.Header()
-	util.Assert(t, hdr.Type() == ObjectTree)
+	util.Assert(t, hdr.Type() == objects.ObjectTree)
 	util.Assert(t, hdr.Size() == size)
 
 	tree := o.(*Tree)
@@ -117,7 +118,7 @@ func parseAndCompareTree(t *testing.T, repo Repository, treeRepr string) {
 
 	for !p.EOF() {
 		mode := p.ParseFileMode(SP)
-		otype := ObjectType(p.ConsumeStrings(objectTypes))
+		otype := objects.ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
 		oidStr := p.ParseOid().String()
 		p.ConsumeByte(TAB)

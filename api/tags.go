@@ -25,13 +25,13 @@ const (
 // ================================================================= //
 
 type Tag struct {
-	hdr     *ObjectHeader     // the size of the tag
-	oid     *objects.ObjectId // the oid of the tag itself
-	name    string            // the tag name
-	object  *objects.ObjectId // the object this tag is pointing at
-	otype   ObjectType        // the object type
-	tagger  *WhoWhen          // the tagger
-	message string            // the tag message
+	hdr     *ObjectHeader      // the size of the tag
+	oid     *objects.ObjectId  // the oid of the tag itself
+	name    string             // the tag name
+	object  *objects.ObjectId  // the object this tag is pointing at
+	otype   objects.ObjectType // the object type
+	tagger  *WhoWhen           // the tagger
+	message string             // the tag message
 }
 
 func (t *Tag) Header() *ObjectHeader {
@@ -50,7 +50,7 @@ func (t *Tag) Object() *objects.ObjectId {
 	return t.object
 }
 
-func (t *Tag) ObjectType() ObjectType {
+func (t *Tag) ObjectType() objects.ObjectType {
 	return t.otype
 }
 
@@ -80,7 +80,7 @@ func (p *objectParser) parseTag() *Tag {
 	// read object type
 	p.ConsumeString(markerType)
 	p.ConsumeByte(SP)
-	tag.otype = ObjectType(p.ConsumeStrings(objectTypes))
+	tag.otype = objects.ObjectType(p.ConsumeStrings(objectTypes))
 	p.ConsumeByte(LF)
 
 	// read the tag name

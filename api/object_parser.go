@@ -36,7 +36,7 @@ func newObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *objectParser {
 func (p *objectParser) ParseHeader() (*ObjectHeader, error) {
 	err := util.SafeParse(func() {
 		p.hdr = new(ObjectHeader)
-		p.hdr.otype = ObjectType(p.ConsumeStrings(objectTypes))
+		p.hdr.otype = objects.ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
 		p.hdr.size = p.ParseAtoi(NUL)
 	})
@@ -60,13 +60,13 @@ func (p *objectParser) ParsePayload() (Object, error) {
 
 	err = util.SafeParse(func() {
 		switch p.hdr.otype {
-		case ObjectBlob:
+		case objects.ObjectBlob:
 			obj = p.parseBlob()
-		case ObjectTree:
+		case objects.ObjectTree:
 			obj = p.parseTree()
-		case ObjectCommit:
+		case objects.ObjectCommit:
 			obj = p.parseCommit()
-		case ObjectTag:
+		case objects.ObjectTag:
 			obj = p.parseTag()
 		default:
 			panic("unsupported type")

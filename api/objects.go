@@ -12,11 +12,11 @@ import "github.com/jbrukh/ggit/api/objects"
 // ObjectHeader is the deserialized (and more efficiently stored)
 // version of a git object header
 type ObjectHeader struct {
-	otype ObjectType
+	otype objects.ObjectType
 	size  int64
 }
 
-func (h *ObjectHeader) Type() ObjectType {
+func (h *ObjectHeader) Type() objects.ObjectType {
 	return h.otype
 }
 

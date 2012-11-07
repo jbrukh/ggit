@@ -38,7 +38,7 @@ func Test_readTags(t *testing.T) {
 		util.Assert(t, o.ObjectId().String() == detail.TagOid)
 
 		// check the header
-		util.Assert(t, o.Header().Type() == ObjectTag)
+		util.Assert(t, o.Header().Type() == objects.ObjectTag)
 		util.AssertEqualInt(t, int(o.Header().Size()), detail.TagSize)
 
 		// now convert to a tag and check the fields
@@ -53,7 +53,7 @@ func Test_readTags(t *testing.T) {
 		// check the target object
 		util.Assert(t, tag.Object() != nil)
 		util.AssertEqualString(t, tag.Object().String(), detail.CommitOid)
-		util.Assert(t, tag.ObjectType() == ObjectCommit)
+		util.Assert(t, tag.ObjectType() == objects.ObjectCommit)
 
 		// check the whole representation, which will catch
 		// most of the other stuff

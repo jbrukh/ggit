@@ -36,7 +36,7 @@ func Test_readTree(t *testing.T) {
 	util.Assert(t, o.ObjectId().String() == info.TreeOid)
 
 	// check the header
-	util.Assert(t, o.Header().Type() == ObjectTree)
+	util.Assert(t, o.Header().Type() == objects.ObjectTree)
 	util.AssertEqualInt(t, int(o.Header().Size()), info.TreeSize)
 
 	// get the tree
