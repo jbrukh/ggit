@@ -100,7 +100,7 @@ func (pq PriorityQueue) Len() int {
 }
 
 func (pq PriorityQueue) Less(i, j int) bool {
-	return pq[i].Committer().Seconds() < pq[j].Committer().Seconds()
+	return pq[i].Committer().Seconds() > pq[j].Committer().Seconds()
 }
 
 func (pq PriorityQueue) Swap(i, j int) {
@@ -116,7 +116,7 @@ func (pq *PriorityQueue) Pop() interface{} {
 	if n < 1 {
 		return nil
 	}
-	result := (*pq)[0]
-	*pq = (*pq)[1:]
+	result := (*pq)[n-1]
+	*pq = (*pq)[:n-1]
 	return result
 }
