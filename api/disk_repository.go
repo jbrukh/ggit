@@ -289,7 +289,7 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 // ================================================================= //
 
 // List all objects in a disk repository.
-func ObjectIds(repo *DiskRepository) (oids []*ObjectId, err error) {
+func ObjectIds(repo *DiskRepository) (oids []*objects.ObjectId, err error) {
 	pOids, err := repo.PackedObjectIds()
 	if err != nil {
 		return nil, err
