@@ -19,61 +19,6 @@ import (
 )
 
 // ================================================================= //
-// TREE
-// ================================================================= //
-
-type Tree struct {
-	entries []*TreeEntry
-	hdr     *objects.ObjectHeader
-	oid     *objects.ObjectId
-}
-
-// TODO: is this necessary?
-func (t *Tree) Entries() []*TreeEntry {
-	return t.entries
-}
-
-func (t *Tree) Header() *objects.ObjectHeader {
-	return t.hdr
-}
-
-func (t *Tree) ObjectId() *objects.ObjectId {
-	return t.oid
-}
-
-// ================================================================= //
-// TREE ENTRY
-// ================================================================= //
-
-type TreeEntry struct {
-	mode  objects.FileMode
-	otype objects.ObjectType
-	name  string
-	oid   *objects.ObjectId
-}
-
-func (e *TreeEntry) Mode() objects.FileMode {
-	return e.mode
-}
-
-func (e *TreeEntry) ObjectId() *objects.ObjectId {
-	return e.oid
-}
-
-func (e *TreeEntry) ObjectType() objects.ObjectType {
-	return e.otype
-}
-
-func (e *TreeEntry) Name() string {
-	return e.name
-}
-
-func (e *TreeEntry) String() (s string) {
-	s = fmt.Sprintf("%.6o %s %s\t%s", e.mode, e.otype, e.oid, e.name)
-	return
-}
-
-// ================================================================= //
 // PARSING
 // ================================================================= //
 
@@ -81,29 +26,22 @@ func (e *TreeEntry) String() (s string) {
 // object, or panics with panicErr if there is a problem parsing.
 // For this reason, it should be called as a parameter to
 // safeParse().
-func (p *objectParser) parseTree() *Tree {
-	t := &Tree{
-		entries: make([]*TreeEntry, 0), // TODO
-		oid:     p.oid,
-	}
+func (p *objectParser) parseTree() *objects.Tree {
+	entries := make([]*objects.TreeEntry, 0)
 	p.ResetCount()
 	for !p.EOF() {
 		mode := p.ParseFileMode(SP)
 		name := p.ReadString(NUL)
 		oid := p.ParseOidBytes()
-		entry := &TreeEntry{
-			mode:  mode,
-			otype: deduceObjectType(mode),
-			name:  name,
-			oid:   oid,
-		}
-		t.entries = append(t.entries, entry)
+		t := deduceObjectType(mode)
+		entry := objects.NewTreeEntry(mode, t, name, oid)
+		entries = append(entries, entry)
 	}
-	t.hdr = p.hdr
+
 	if p.Count() != p.hdr.Size() {
 		util.PanicErrf("payload of size %d isn't of expected size %d", p.Count(), p.hdr.Size())
 	}
-	return t
+	return objects.NewTree(p.oid, p.hdr, entries)
 }
 
 // The file mode of a tree entry implies an object type.
@@ -124,10 +62,10 @@ func deduceObjectType(mode objects.FileMode) objects.ObjectType {
 
 // Tree formats this tree object into an API-friendly string that is
 // the same as the output of git-cat-file tree <tree>.
-func (f *Format) Tree(t *Tree) (int, error) {
+func (f *Format) Tree(t *objects.Tree) (int, error) {
 	N := 0
-	for _, e := range t.entries {
-		n, err := fmt.Fprintf(f.Writer, "%o %s%s%s", e.mode, e.name, string(NUL), string(e.oid.Bytes()))
+	for _, e := range t.Entries() {
+		n, err := fmt.Fprintf(f.Writer, "%o %s%s%s", e.Mode(), e.Name(), string(NUL), string(e.ObjectId().Bytes()))
 		N += n
 		if err != nil {
 			return N, err
@@ -138,10 +76,10 @@ func (f *Format) Tree(t *Tree) (int, error) {
 
 // TreePretty formats this tree object into a human-friendly table
 // that is the same as the output of git-cat-file -p <tree>.
-func (f *Format) TreePretty(t *Tree) (int, error) {
+func (f *Format) TreePretty(t *objects.Tree) (int, error) {
 	N := 0
-	for _, e := range t.entries {
-		n, err := fmt.Fprintf(f.Writer, "%.6o %s %s\t%s\n", e.mode, e.otype, e.oid, e.name)
+	for _, e := range t.Entries() {
+		n, err := fmt.Fprintf(f.Writer, "%.6o %s %s\t%s\n", e.Mode(), e.ObjectType(), e.ObjectId(), e.Name())
 		N += n
 		if err != nil {
 			return N, err

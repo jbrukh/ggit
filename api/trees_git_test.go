@@ -41,9 +41,9 @@ func Test_readTree(t *testing.T) {
 
 	// get the tree
 	// now convert to a tag and check the fields
-	var tree *Tree
+	var tree *objects.Tree
 	util.AssertPanicFree(t, func() {
-		tree = o.(*Tree)
+		tree = o.(*objects.Tree)
 	})
 
 	// check entries

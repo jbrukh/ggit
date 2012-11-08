@@ -101,13 +101,13 @@ func justCommit() (Repository, *Commit) {
 	return repo, o.(*Commit)
 }
 
-func justTree() (Repository, *Tree) {
+func justTree() (Repository, *objects.Tree) {
 	repo, commit := justCommit()
 	o, err := repo.ObjectFromOid(commit.Tree())
 	if err != nil {
 		panic(err)
 	}
-	return repo, o.(*Tree)
+	return repo, o.(*objects.Tree)
 }
 
 func justTag() (Repository, *objects.Tag) {
