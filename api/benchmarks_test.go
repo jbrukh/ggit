@@ -92,13 +92,13 @@ func justBlob() (Repository, *objects.Blob) {
 	return repo, o.(*objects.Blob)
 }
 
-func justCommit() (Repository, *Commit) {
+func justCommit() (Repository, *objects.Commit) {
 	repo, oid := packedCommitOid()
 	o, err := repo.ObjectFromOid(oid)
 	if err != nil {
 		panic(err)
 	}
-	return repo, o.(*Commit)
+	return repo, o.(*objects.Commit)
 }
 
 func justTree() (Repository, *objects.Tree) {

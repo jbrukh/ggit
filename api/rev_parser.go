@@ -25,7 +25,7 @@ var hexRegex *regexp.Regexp
 
 // parentFunc specifies a strategy for selecting a parent
 // or an ancestor of a commit
-type parentFunc func(Repository, *Commit, int) (*Commit, error)
+type parentFunc func(Repository, *objects.Commit, int) (*objects.Commit, error)
 
 func init() {
 	hexRegex, _ = regexp.Compile("[0-9a-fA-F]{4,40}")
@@ -148,7 +148,7 @@ func (p *revParser) Parse() error {
 
 func applyParentFunc(p *revParser, f parentFunc) (err error) {
 	n := p.number()
-	var c, parent *Commit
+	var c, parent *objects.Commit
 	c, err = CommitFromObject(p.repo, p.o)
 	if err != nil {
 		return err

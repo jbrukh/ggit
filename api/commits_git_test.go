@@ -37,9 +37,9 @@ func Test_readCommits(t *testing.T) {
 		util.AssertEqualInt(t, int(o.Header().Size()), detail.CommitSize)
 
 		// now convert to a commit and check the fields
-		var cmt *Commit
+		var cmt *objects.Commit
 		util.AssertPanicFree(t, func() {
-			cmt = o.(*Commit)
+			cmt = o.(*objects.Commit)
 		})
 
 		// check the tree

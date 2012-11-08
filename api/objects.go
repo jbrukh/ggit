@@ -21,7 +21,7 @@ func (f *Format) Object(o objects.Object) (int, error) {
 		return f.Blob(t)
 	case *objects.Tree:
 		return f.Tree(t)
-	case *Commit:
+	case *objects.Commit:
 		return f.Commit(t)
 	case *objects.Tag:
 		return f.Tag(t)
@@ -37,7 +37,7 @@ func (f *Format) ObjectPretty(o objects.Object) (int, error) {
 		return f.Blob(t)
 	case *objects.Tree:
 		return f.TreePretty(t)
-	case *Commit:
+	case *objects.Commit:
 		return f.Commit(t)
 	case *objects.Tag:
 		return f.TagPretty(t)

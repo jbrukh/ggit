@@ -31,66 +31,18 @@ const (
 )
 
 // ================================================================= //
-// GGIT COMMIT OBJECT
-// ================================================================= //
-
-type Commit struct {
-	hdr       *objects.ObjectHeader
-	oid       *objects.ObjectId
-	treeOid   *objects.ObjectId
-	parents   []*objects.ObjectId
-	author    *objects.WhoWhen
-	committer *objects.WhoWhen
-	message   string
-}
-
-func (c *Commit) Header() *objects.ObjectHeader {
-	return c.hdr
-}
-
-func (c *Commit) ObjectId() *objects.ObjectId {
-	return c.oid
-}
-
-func (c *Commit) Tree() *objects.ObjectId {
-	return c.treeOid
-}
-
-func (c *Commit) Parents() []*objects.ObjectId {
-	return c.parents
-}
-
-func (c *Commit) Author() *objects.WhoWhen {
-	return c.author
-}
-
-func (c *Commit) Committer() *objects.WhoWhen {
-	return c.committer
-}
-
-func (c *Commit) Message() string {
-	return c.message
-}
-
-func (c *Commit) addParent(oid *objects.ObjectId) {
-	c.parents = append(c.parents, oid)
-}
-
-// ================================================================= //
 // OBJECT PARSER COMMIT PARSING METHODS
 // ================================================================= //
 
-func (p *objectParser) parseCommit() *Commit {
-	c := &Commit{
-		parents: make([]*objects.ObjectId, 0),
-		oid:     p.oid,
-	}
+func (p *objectParser) parseCommit() *objects.Commit {
+	parents := make([]*objects.ObjectId, 0)
+
 	p.ResetCount()
 
 	// read the tree line
 	p.ConsumeString(markerTree)
 	p.ConsumeByte(SP)
-	c.treeOid = p.ParseOid()
+	treeOid := p.ParseOid()
 	p.ConsumeByte(LF)
 
 	// read an arbitrary number of parent lines
@@ -98,27 +50,27 @@ func (p *objectParser) parseCommit() *Commit {
 	for p.PeekString(n) == markerParent {
 		p.ConsumeString(markerParent)
 		p.ConsumeByte(SP)
-		c.addParent(p.ParseOid())
+		parents = append(parents, p.ParseOid())
 		p.ConsumeByte(LF)
 	}
 
 	// parse author
-	c.author = p.parseWhoWhen(markerAuthor)
+	author := p.parseWhoWhen(markerAuthor)
 	p.ConsumeByte(LF)
 
 	// parse committer
-	c.committer = p.parseWhoWhen(markerCommitter)
+	committer := p.parseWhoWhen(markerCommitter)
 	p.ConsumeByte(LF)
 
 	// commit message
 	p.ConsumeByte(LF)
-	c.message = p.String()
+	message := p.String()
 
-	c.hdr = p.hdr
 	if p.Count() != p.hdr.Size() {
 		util.PanicErr("payload doesn't match prescibed size")
 	}
-	return c
+
+	return objects.NewCommit(p.oid, treeOid, p.hdr.Size(), parents, author, committer, message)
 }
 
 // ================================================================= //
@@ -126,25 +78,25 @@ func (p *objectParser) parseCommit() *Commit {
 // ================================================================= //
 
 // TODO: the return values of this method are broken
-func (f *Format) Commit(c *Commit) (int, error) {
+func (f *Format) Commit(c *objects.Commit) (int, error) {
 	// tree
-	fmt.Fprintf(f.Writer, "tree %s\n", c.treeOid)
+	fmt.Fprintf(f.Writer, "tree %s\n", c.Tree())
 
 	// parents
-	for _, p := range c.parents {
+	for _, p := range c.Parents() {
 		fmt.Fprintf(f.Writer, "parent %s\n", p)
 	}
 
 	// author
 	sf := NewStrFormat()
-	sf.WhoWhen(c.author)
+	sf.WhoWhen(c.Author())
 	fmt.Fprintf(f.Writer, "author %s\n", sf.String())
 	sf.Reset()
-	sf.WhoWhen(c.committer)
+	sf.WhoWhen(c.Committer())
 	fmt.Fprintf(f.Writer, "committer %s\n", sf.String())
 
 	// commit message
-	fmt.Fprintf(f.Writer, "\n%s", c.message)
+	fmt.Fprintf(f.Writer, "\n%s", c.Message())
 	return 0, nil // TODO TODO
 }
 
@@ -152,13 +104,13 @@ func (f *Format) Commit(c *Commit) (int, error) {
 // COMMIT OPERATIONS
 // ================================================================= //
 
-func CommitNthParent(repo Repository, c *Commit, n int) (rc *Commit, err error) {
+func CommitNthParent(repo Repository, c *objects.Commit, n int) (rc *objects.Commit, err error) {
 	if n == 0 {
 		return c, nil
 	}
-	l := len(c.parents)
+	l := len(c.Parents())
 	if 0 < n && n <= l {
-		oid := c.parents[n-1]
+		oid := c.Parents()[n-1]
 		return CommitFromOid(repo, oid)
 	}
 	return nil, fmt.Errorf("cannot find parent n=%d", n)
@@ -168,11 +120,11 @@ func CommitNthParent(repo Repository, c *Commit, n int) (rc *Commit, err error) 
 // following the first parent. If n == 0, then the parameterized
 // commit is returned. If along the way, a commit is found
 // to not have a first parent, an error is returned.
-func CommitNthAncestor(repo Repository, c *Commit, n int) (rc *Commit, err error) {
+func CommitNthAncestor(repo Repository, c *objects.Commit, n int) (rc *objects.Commit, err error) {
 	rc = c
 	for i := 0; i < n; i++ {
-		if len(rc.parents) > 0 {
-			rc, err = CommitFromOid(repo, rc.parents[0])
+		if len(rc.Parents()) > 0 {
+			rc, err = CommitFromOid(repo, rc.Parents()[0])
 			if err != nil {
 				return nil, err
 			}
@@ -187,16 +139,16 @@ func CommitNthAncestor(repo Repository, c *Commit, n int) (rc *Commit, err error
 // the object is a commit object, it is converted and returned. If the
 // object is a tag, then the target of the tag is returned. Other object
 // types cause an error to be returned.
-func CommitFromObject(repo Repository, o objects.Object) (*Commit, error) {
+func CommitFromObject(repo Repository, o objects.Object) (*objects.Commit, error) {
 	switch t := o.(type) {
-	case *Commit:
+	case *objects.Commit:
 		return t, nil
 	case *objects.Tag:
 		obj, err := ObjectFromOid(repo, t.Object())
 		if err != nil {
 			return nil, err
 		}
-		return obj.(*Commit), nil
+		return obj.(*objects.Commit), nil
 	}
 	return nil, errors.New("not a commit or tag")
 }
@@ -205,7 +157,7 @@ func CommitFromObject(repo Repository, o objects.Object) (*Commit, error) {
 // oid points at a commit, the Commit object is returned. If the oid 
 // points at an annotated tag, then the target commit is returned. If
 // the oid points to another type of object, an error is returned.
-func CommitFromOid(repo Repository, oid *objects.ObjectId) (*Commit, error) {
+func CommitFromOid(repo Repository, oid *objects.ObjectId) (*objects.Commit, error) {
 	o, err := ObjectFromOid(repo, oid)
 	if err != nil {
 		return nil, err
@@ -217,7 +169,7 @@ func CommitFromOid(repo Repository, oid *objects.ObjectId) (*Commit, error) {
 // object. If the reference is a reference to a commit, the commit
 // object is returned. If the reference is a tag, then the target commit
 // of the tag is returned.
-func CommitFromRef(repo Repository, spec string) (*Commit, error) {
+func CommitFromRef(repo Repository, spec string) (*objects.Commit, error) {
 	o, err := ObjectFromRef(repo, spec)
 	if err != nil {
 		return nil, err
