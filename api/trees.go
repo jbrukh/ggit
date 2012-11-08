@@ -46,13 +46,13 @@ func (t *Tree) ObjectId() *objects.ObjectId {
 // ================================================================= //
 
 type TreeEntry struct {
-	mode  FileMode
+	mode  objects.FileMode
 	otype objects.ObjectType
 	name  string
 	oid   *objects.ObjectId
 }
 
-func (e *TreeEntry) Mode() FileMode {
+func (e *TreeEntry) Mode() objects.FileMode {
 	return e.mode
 }
 
@@ -107,11 +107,11 @@ func (p *objectParser) parseTree() *Tree {
 }
 
 // The file mode of a tree entry implies an object type.
-func deduceObjectType(mode FileMode) objects.ObjectType {
+func deduceObjectType(mode objects.FileMode) objects.ObjectType {
 	switch mode {
-	case ModeNew, ModeBlob, ModeBlobExec, ModeLink:
+	case objects.ModeNew, objects.ModeBlob, objects.ModeBlobExec, objects.ModeLink:
 		return objects.ObjectBlob
-	case ModeTree:
+	case objects.ModeTree:
 		return objects.ObjectTree
 	}
 	// TODO

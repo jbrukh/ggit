@@ -8,6 +8,7 @@
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"testing"
 )
@@ -20,28 +21,28 @@ func Test_assertFileMode(t *testing.T) {
 	m5 := uint16(0120000)
 	m6 := uint16(0160000)
 
-	test := func(m uint16, exp FileMode) {
+	test := func(m uint16, exp objects.FileMode) {
 		mode, ok := assertFileMode(m)
 		util.Assert(t, ok, "could not convert to file mode")
 		util.Assert(t, mode == exp)
 	}
 
-	test(m1, ModeNew)
-	test(m2, ModeTree)
-	test(m3, ModeBlob)
-	test(m4, ModeBlobExec)
-	test(m5, ModeLink)
-	test(m6, ModeCommit)
+	test(m1, objects.ModeNew)
+	test(m2, objects.ModeTree)
+	test(m3, objects.ModeBlob)
+	test(m4, objects.ModeBlobExec)
+	test(m5, objects.ModeLink)
+	test(m6, objects.ModeCommit)
 }
 
 func Test_parseValidFileMode(t *testing.T) {
 	p := objectParserForString("0000000\n0040000\n0100644\n0100755\n0120000\n0160000\n")
-	util.Assert(t, p.ParseFileMode(LF) == ModeNew)
-	util.Assert(t, p.ParseFileMode(LF) == ModeTree)
-	util.Assert(t, p.ParseFileMode(LF) == ModeBlob)
-	util.Assert(t, p.ParseFileMode(LF) == ModeBlobExec)
-	util.Assert(t, p.ParseFileMode(LF) == ModeLink)
-	util.Assert(t, p.ParseFileMode(LF) == ModeCommit)
+	util.Assert(t, p.ParseFileMode(LF) == objects.ModeNew)
+	util.Assert(t, p.ParseFileMode(LF) == objects.ModeTree)
+	util.Assert(t, p.ParseFileMode(LF) == objects.ModeBlob)
+	util.Assert(t, p.ParseFileMode(LF) == objects.ModeBlobExec)
+	util.Assert(t, p.ParseFileMode(LF) == objects.ModeLink)
+	util.Assert(t, p.ParseFileMode(LF) == objects.ModeCommit)
 	util.Assert(t, p.EOF())
 }
 

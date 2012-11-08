@@ -54,7 +54,7 @@ func Test_readTree(t *testing.T) {
 	// check a file
 	file := entries[0]
 	util.AssertEqualString(t, info.File1Oid, file.ObjectId().String())
-	util.Assert(t, file.Mode() == ModeBlob)
+	util.Assert(t, file.Mode() == objects.ModeBlob)
 	// TODO: add checks for type, etc.
 
 	// check the output
