@@ -7,11 +7,12 @@
 //
 
 /*
-tag_git_test.go implements git comparison tests for tag reading.
+tags_git_test.go implements git comparison tests for tag reading.
 */
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
 	"testing"
@@ -29,7 +30,7 @@ func Test_readTags(t *testing.T) {
 
 	f := NewStrFormat()
 	for _, detail := range info.Commits {
-		tagOid := OidNow(detail.TagOid)
+		tagOid := objects.OidNow(detail.TagOid)
 		o, err := repo.ObjectFromOid(tagOid)
 		util.AssertNoErr(t, err)
 
@@ -37,13 +38,13 @@ func Test_readTags(t *testing.T) {
 		util.Assert(t, o.ObjectId().String() == detail.TagOid)
 
 		// check the header
-		util.Assert(t, o.Header().Type() == ObjectTag)
+		util.Assert(t, o.Header().Type() == objects.ObjectTag)
 		util.AssertEqualInt(t, int(o.Header().Size()), detail.TagSize)
 
 		// now convert to a tag and check the fields
-		var tag *Tag
+		var tag *objects.Tag
 		util.AssertPanicFree(t, func() {
-			tag = o.(*Tag)
+			tag = o.(*objects.Tag)
 		})
 
 		// check the name
@@ -52,7 +53,7 @@ func Test_readTags(t *testing.T) {
 		// check the target object
 		util.Assert(t, tag.Object() != nil)
 		util.AssertEqualString(t, tag.Object().String(), detail.CommitOid)
-		util.Assert(t, tag.ObjectType() == ObjectCommit)
+		util.Assert(t, tag.ObjectType() == objects.ObjectCommit)
 
 		// check the whole representation, which will catch
 		// most of the other stuff

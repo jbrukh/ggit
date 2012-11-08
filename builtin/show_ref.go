@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
+	"github.com/jbrukh/ggit/api/objects"
 )
 
 // ================================================================= //
@@ -137,10 +138,10 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 				fmtr.Lf()
 			} else {
 				_, oid := r.Target() // better not be symbolic
-				o, err := api.ObjectFromOid(p.Repo, oid.(*api.ObjectId))
+				o, err := api.ObjectFromOid(p.Repo, oid.(*objects.ObjectId))
 				if err == nil {
-					if o.Header().Type() == api.ObjectTag {
-						tag := o.(*api.Tag)
+					if o.Header().Type() == objects.ObjectTag {
+						tag := o.(*objects.Tag)
 						fmtr.Printf("%s %s^{}\n", tag.Object(), r.Name()) // TODO
 					}
 				}

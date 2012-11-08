@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
+	"github.com/jbrukh/ggit/api/objects"
 )
 
 type HashObjectBuiltin struct {
@@ -54,6 +55,6 @@ func (b *HashObjectBuiltin) Execute(p *Params, args []string) {
 		fmt.Fprintf(p.Werr, "fatal: could not get hash for %s: %s", o.ObjectId().String(), err.Error())
 		fmt.Fprintln(p.Werr, err.Error())
 	} else {
-		fmt.Fprintln(p.Wout, api.OidFromHash(h))
+		fmt.Fprintln(p.Wout, objects.OidFromHash(h))
 	}
 }

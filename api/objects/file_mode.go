@@ -9,11 +9,7 @@
 /*
 file_mode.go implements the git-supported file modes used mainly in trees.
 */
-package api
-
-import (
-	"github.com/jbrukh/ggit/util"
-)
+package objects
 
 // ================================================================= //
 // FILE MODE
@@ -29,29 +25,3 @@ const (
 	ModeLink     FileMode = 0120000
 	ModeCommit   FileMode = 0160000
 )
-
-func assertFileMode(u uint16) (FileMode, bool) {
-	m := FileMode(u)
-	switch m {
-	case ModeNew,
-		ModeTree,
-		ModeBlob,
-		ModeBlobExec,
-		ModeLink,
-		ModeCommit:
-		return m, true
-	}
-	return 0, false
-}
-
-// ================================================================= //
-// OBJECT PARSER FUNCTIONS FOR FILE MODE
-// ================================================================= //
-
-func (p *objectParser) ParseFileMode(delim byte) (mode FileMode) {
-	var ok bool
-	if mode, ok = assertFileMode(uint16(p.ParseInt(delim, 8, 32))); !ok {
-		util.PanicErrf("expected: filemode")
-	}
-	return
-}

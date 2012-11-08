@@ -7,11 +7,12 @@
 //
 
 /*
-tree_git_test.go implements git-comparison tests for ggit tree parsing.
+trees_git_test.go implements git-comparison tests for ggit tree parsing.
 */
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
 	"testing"
@@ -26,7 +27,7 @@ func Test_readTree(t *testing.T) {
 	f := NewStrFormat()
 
 	var (
-		oid = OidNow(info.TreeOid)
+		oid = objects.OidNow(info.TreeOid)
 	)
 	o, err := ObjectFromOid(repo, oid)
 	util.AssertNoErr(t, err)
@@ -35,14 +36,14 @@ func Test_readTree(t *testing.T) {
 	util.Assert(t, o.ObjectId().String() == info.TreeOid)
 
 	// check the header
-	util.Assert(t, o.Header().Type() == ObjectTree)
+	util.Assert(t, o.Header().Type() == objects.ObjectTree)
 	util.AssertEqualInt(t, int(o.Header().Size()), info.TreeSize)
 
 	// get the tree
 	// now convert to a tag and check the fields
-	var tree *Tree
+	var tree *objects.Tree
 	util.AssertPanicFree(t, func() {
-		tree = o.(*Tree)
+		tree = o.(*objects.Tree)
 	})
 
 	// check entries
@@ -53,7 +54,7 @@ func Test_readTree(t *testing.T) {
 	// check a file
 	file := entries[0]
 	util.AssertEqualString(t, info.File1Oid, file.ObjectId().String())
-	util.Assert(t, file.Mode() == ModeBlob)
+	util.Assert(t, file.Mode() == objects.ModeBlob)
 	// TODO: add checks for type, etc.
 
 	// check the output

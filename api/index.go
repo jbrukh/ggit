@@ -13,6 +13,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"time"
 )
@@ -103,7 +104,7 @@ func (inx *Index) String() string {
 }
 
 type IndexEntry struct {
-	eid   *ObjectId // TODO: is this an object id, or just a SHA??
+	eid   *objects.ObjectId // TODO: is this an object id, or just a SHA??
 	flags EntryFlagsV2
 	name  string
 	info  *statInfo
@@ -168,7 +169,7 @@ type CachedTreeEntry struct {
 	Path         string
 	Count        int
 	SubtreeCount int
-	Oid          *ObjectId
+	Oid          *objects.ObjectId
 }
 
 type ResolveUndoIndexExtention struct {
@@ -385,7 +386,7 @@ func toIndex(file *bufio.Reader) (idx *Index, err error) {
 
 func toIndexEntry(entry *indexEntry, name string) *IndexEntry {
 	return &IndexEntry{
-		eid:   OidFromArray(entry.Sha1),
+		eid:   objects.OidFromArray(entry.Sha1),
 		flags: EntryFlagsV2(entry.Flags),
 		name:  name,
 		info:  &entry.Info,

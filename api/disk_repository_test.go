@@ -8,6 +8,7 @@
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
 	"testing"
@@ -34,16 +35,16 @@ func Test_LooseObjectIds(t *testing.T) {
 	util.AssertNoErr(t, err)
 
 	util.AssertEqualInt(t, info.ObjectsN, len(oids))
-	util.Assert(t, compareLists(oids, []*ObjectId{
-		OidNow(info.BlobOid),
-		OidNow(info.CommitOid),
-		OidNow(info.TagOid),
-		OidNow(info.TreeOid),
+	util.Assert(t, compareLists(oids, []*objects.ObjectId{
+		objects.OidNow(info.BlobOid),
+		objects.OidNow(info.CommitOid),
+		objects.OidNow(info.TagOid),
+		objects.OidNow(info.TreeOid),
 	}),
 	)
 }
 
-func compareLists(one []*ObjectId, two []*ObjectId) bool {
+func compareLists(one []*objects.ObjectId, two []*objects.ObjectId) bool {
 	if len(one) != len(two) {
 		return false
 	}
@@ -66,20 +67,20 @@ func Test_PackedObjects(t *testing.T) {
 	repo := Open(testCase.Repo())
 	info := testCase.Info().(*test.InfoDerefsPacked)
 
-	objects, err := repo.PackedObjects()
+	packed, err := repo.PackedObjects()
 	util.AssertNoErr(t, err)
 
-	var oids []*ObjectId
-	for _, o := range objects {
+	var oids []*objects.ObjectId
+	for _, o := range packed {
 		oids = append(oids, o.Object().ObjectId())
 	}
 
 	util.AssertEqualInt(t, info.ObjectsN, len(oids))
-	util.Assert(t, compareLists(oids, []*ObjectId{
-		OidNow(info.BlobOid),
-		OidNow(info.CommitOid),
-		OidNow(info.TagOid),
-		OidNow(info.TreeOid),
+	util.Assert(t, compareLists(oids, []*objects.ObjectId{
+		objects.OidNow(info.BlobOid),
+		objects.OidNow(info.CommitOid),
+		objects.OidNow(info.TagOid),
+		objects.OidNow(info.TreeOid),
 	}),
 	)
 }
@@ -93,11 +94,11 @@ func Test_PackedObjectIds(t *testing.T) {
 	util.AssertNoErr(t, err)
 
 	util.AssertEqualInt(t, info.ObjectsN, len(oids))
-	util.Assert(t, compareLists(oids, []*ObjectId{
-		OidNow(info.BlobOid),
-		OidNow(info.CommitOid),
-		OidNow(info.TagOid),
-		OidNow(info.TreeOid),
+	util.Assert(t, compareLists(oids, []*objects.ObjectId{
+		objects.OidNow(info.BlobOid),
+		objects.OidNow(info.CommitOid),
+		objects.OidNow(info.TagOid),
+		objects.OidNow(info.TreeOid),
 	}),
 	)
 }

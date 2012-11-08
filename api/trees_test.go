@@ -7,12 +7,13 @@
 //
 
 /*
-tree_test.go implements git-comparison tests for ggit tree parsing.
+trees_test.go implements git-comparison tests for ggit tree parsing.
 */
 package api
 
 import (
 	//"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"testing"
 )
@@ -109,25 +110,25 @@ func parseAndCompareTree(t *testing.T, repo Repository, treeRepr string) {
 	util.AssertNoErr(t, err)
 
 	hdr := o.Header()
-	util.Assert(t, hdr.Type() == ObjectTree)
+	util.Assert(t, hdr.Type() == objects.ObjectTree)
 	util.Assert(t, hdr.Size() == size)
 
-	tree := o.(*Tree)
+	tree := o.(*objects.Tree)
 	entries := tree.Entries()
 
 	for !p.EOF() {
 		mode := p.ParseFileMode(SP)
-		otype := ObjectType(p.ConsumeStrings(objectTypes))
+		otype := objects.ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
 		oidStr := p.ParseOid().String()
 		p.ConsumeByte(TAB)
 		name := p.ReadString(LF)
 		util.Assert(t, len(entries) > 0)
 		entry := entries[0]
-		util.Assert(t, mode == entry.mode)
-		util.Assertf(t, name == entry.name, "expecting: `%s` got: `%s", name, entry.name)
-		util.Assert(t, otype == entry.otype)
-		util.Assertf(t, oidStr == entry.oid.String(), "expecting: `%s` got: `%s", oidStr, entry.oid)
+		util.Assert(t, mode == entry.Mode())
+		util.Assertf(t, name == entry.Name(), "expecting: `%s` got: `%s", name, entry.Name())
+		util.Assert(t, otype == entry.ObjectType())
+		util.Assertf(t, oidStr == entry.ObjectId().String(), "expecting: `%s` got: `%s", oidStr, entry.ObjectId())
 		entries = entries[1:]
 	}
 	util.Assert(t, len(entries) == 0)

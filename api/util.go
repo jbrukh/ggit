@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"hash"
 )
 
@@ -34,12 +35,19 @@ var signs []string = []string{
 	MINUS,
 }
 
+var objectTypes []string = []string{
+	string(objects.ObjectBlob),
+	string(objects.ObjectTree),
+	string(objects.ObjectCommit),
+	string(objects.ObjectTag),
+}
+
 // the hash object used to build
 // hashes of our objects
 var sha hash.Hash = sha1.New()
 
 // produce the SHA1 hash for any Object.
-func MakeHash(o Object) (hash.Hash, error) {
+func MakeHash(o objects.Object) (hash.Hash, error) {
 	sha.Reset()
 	kind := string(o.Header().Type())
 	f := NewStrFormat()
@@ -52,11 +60,6 @@ func MakeHash(o Object) (hash.Hash, error) {
 	toHash := []byte(value)
 	sha.Write(toHash)
 	return sha, nil
-}
-
-// get the first OID_SZ of the hash
-func getHash(h hash.Hash) []byte {
-	return h.Sum(nil)[0:OidSize]
 }
 
 func min(a, b int) int {

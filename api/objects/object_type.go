@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package api
+package objects
 
 // ================================================================= //
 // CONSTANTS RELATED TO TYPES
@@ -25,13 +25,6 @@ const (
 	ObjectCommit ObjectType = "commit"
 	ObjectTag    ObjectType = "tag"
 )
-
-var objectTypes []string = []string{
-	string(ObjectBlob),
-	string(ObjectTree),
-	string(ObjectCommit),
-	string(ObjectTag),
-}
 
 // Return the ObjectType this string represents.
 // If the string is invalid, return ObjectType(0), false

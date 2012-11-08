@@ -9,6 +9,7 @@ package api
 
 import (
 	"errors"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"regexp"
 	"strconv"
@@ -24,7 +25,7 @@ var hexRegex *regexp.Regexp
 
 // parentFunc specifies a strategy for selecting a parent
 // or an ancestor of a commit
-type parentFunc func(Repository, *Commit, int) (*Commit, error)
+type parentFunc func(Repository, *objects.Commit, int) (*objects.Commit, error)
 
 func init() {
 	hexRegex, _ = regexp.Compile("[0-9a-fA-F]{4,40}")
@@ -42,7 +43,7 @@ type revParser struct {
 	inx int
 	rev string
 
-	o Object
+	o objects.Object
 }
 
 func newRevParser(repo Repository, rev string) *revParser {
@@ -55,7 +56,7 @@ func newRevParser(repo Repository, rev string) *revParser {
 
 // Object returns the object that the rev spec
 // refers to after (and during) parsing.
-func (p *revParser) Object() Object {
+func (p *revParser) Object() objects.Object {
 	return p.o
 }
 
@@ -122,7 +123,7 @@ func (p *revParser) Parse() error {
 			if b == '^' {
 				if !p.EOF() && p.PeekByte() == '{' {
 					p.ConsumeByte('{')
-					otype := ObjectType(p.ConsumeStrings(objectTypes))
+					otype := objects.ObjectType(p.ConsumeStrings(objectTypes))
 					err = applyDereference(p, otype)
 					if err != nil {
 
@@ -147,7 +148,7 @@ func (p *revParser) Parse() error {
 
 func applyParentFunc(p *revParser, f parentFunc) (err error) {
 	n := p.number()
-	var c, parent *Commit
+	var c, parent *objects.Commit
 	c, err = CommitFromObject(p.repo, p.o)
 	if err != nil {
 		return err
@@ -160,15 +161,15 @@ func applyParentFunc(p *revParser, f parentFunc) (err error) {
 	return
 }
 
-func applyDereference(p *revParser, otype ObjectType) error {
+func applyDereference(p *revParser, otype objects.ObjectType) error {
 	switch otype {
-	case ObjectCommit:
+	case objects.ObjectCommit:
 		c, err := CommitFromObject(p.repo, p.o)
 		if err != nil {
 			return err
 		}
 		p.o = c
-	case ObjectTree:
+	case objects.ObjectTree:
 		c, err := CommitFromObject(p.repo, p.o)
 		if err != nil {
 			return err
@@ -177,12 +178,12 @@ func applyDereference(p *revParser, otype ObjectType) error {
 		if err != nil {
 			return err
 		}
-	case ObjectTag:
-		if p.o.Header().Type() != ObjectTag {
+	case objects.ObjectTag:
+		if p.o.Header().Type() != objects.ObjectTag {
 			return errors.New("cannot dereference non-tag to tag")
 		}
-	case ObjectBlob:
-		if p.o.Header().Type() != ObjectBlob {
+	case objects.ObjectBlob:
+		if p.o.Header().Type() != objects.ObjectBlob {
 			return errors.New("cannot dereference non-blob to blob")
 		}
 	}
@@ -191,7 +192,7 @@ func applyDereference(p *revParser, otype ObjectType) error {
 
 func (p *revParser) findObject(spec string) (err error) {
 	// oid or short oid
-	var o Object
+	var o objects.Object
 	switch {
 	case hexRegex.MatchString(spec):
 		o, err = ObjectFromShortOid(p.repo, spec)

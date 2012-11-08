@@ -5,13 +5,11 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package api
+package objects
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"github.com/jbrukh/ggit/util"
 	"hash"
 )
 
@@ -57,7 +55,7 @@ func OidFromArray(bytes [OidSize]byte) (id *ObjectId) {
 }
 
 // OidFromString creates an ObjectId from a string representation
-// of the hash. The length of the string should be OidHexSize, and
+// of the hash. The length of the string should be objects.OidHexSize, and
 // must consist of the characters [a-zA-Z0-9] or else an error is
 // returned.
 func OidFromString(hex string) (id *ObjectId, err error) {
@@ -92,47 +90,11 @@ func (id *ObjectId) String() string {
 	return id.repr
 }
 
-// ================================================================= //
-// PARSING
-// ================================================================= //
-
-// objectIdParser is a dataparser that supports parsing of oids.
-type objectIdParser struct {
-	util.DataParser
+func (id *ObjectId) Bytes() []byte {
+	return id.bytes
 }
 
-func newObjectIdParser(rd *bufio.Reader) *objectIdParser {
-	return &objectIdParser{
-		*util.NewDataParser(rd),
-	}
-}
-
-// ParseOid reads the next OidHexSize bytes from the
-// Reader and places the resulting object id in oid.
-func (p *objectIdParser) ParseOid() *ObjectId {
-	hex := string(p.Consume(OidHexSize))
-	oid, e := OidFromString(hex)
-	if e != nil {
-		util.PanicErrf("expected: hex string of size %d", OidHexSize)
-	}
-	return oid
-}
-
-// ParseOidBytes reads the next OidSize bytes from
-// the Reader and generates an ObjectId.
-func (p *objectIdParser) ParseOidBytes() *ObjectId {
-	b := p.Consume(OidSize)
-	oid, e := OidFromBytes(b)
-	if e != nil {
-		util.PanicErrf("expected: hash bytes %d long", OidSize)
-	}
-	return oid
-}
-
-// ================================================================= //
-// FORMATTING
-// ================================================================= //
-
-func (f *Format) ObjectId(oid *ObjectId) (int, error) {
-	return fmt.Fprint(f.Writer, oid.String())
+// get the first OID_SZ of the hash
+func getHash(h hash.Hash) []byte {
+	return h.Sum(nil)[0:OidSize]
 }

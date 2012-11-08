@@ -9,6 +9,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
 	"testing"
@@ -28,11 +29,11 @@ func Test_readBlobs(t *testing.T) {
 
 	for _, detail := range info.Blobs {
 		// read the blob
-		oid := OidNow(detail.Oid)
+		oid := objects.OidNow(detail.Oid)
 		o, err := repo.ObjectFromOid(oid)
 		util.AssertNoErr(t, err)
-		util.Assert(t, o.Header().Type() == ObjectBlob)
-		b := o.(*Blob)
+		util.Assert(t, o.Header().Type() == objects.ObjectBlob)
+		b := o.(*objects.Blob)
 		util.AssertEqualString(t, string(b.Data()), detail.Contents)
 		util.AssertEqualInt(t, int(b.Header().Size()), len(detail.Contents))
 	}

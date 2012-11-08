@@ -12,6 +12,7 @@ benchmarks_test.go implements the ggit benchmarks.
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"testing"
 )
@@ -20,35 +21,35 @@ import (
 // OBJECT PROVIDERS
 // ================================================================= //
 
-func looseBlobOid() (repo Repository, oid *ObjectId) {
+func looseBlobOid() (repo Repository, oid *objects.ObjectId) {
 	testRepo := test.Derefs
 	info := testRepo.Info().(*test.InfoDerefs)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(info.BlobOid)
+	oid = objects.OidNow(info.BlobOid)
 	return
 }
 
-func looseCommitOid() (repo Repository, oid *ObjectId) {
+func looseCommitOid() (repo Repository, oid *objects.ObjectId) {
 	testRepo := test.Linear
 	info := testRepo.Info().(*test.InfoLinear)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(info.Commits[1].CommitOid)
+	oid = objects.OidNow(info.Commits[1].CommitOid)
 	return
 }
 
-func packedBlobOid() (repo Repository, oid *ObjectId) {
+func packedBlobOid() (repo Repository, oid *objects.ObjectId) {
 	testRepo := test.DerefsPacked
 	info := testRepo.Info().(*test.InfoDerefsPacked)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(info.BlobOid)
+	oid = objects.OidNow(info.BlobOid)
 	return
 }
 
-func packedCommitOid() (repo Repository, oid *ObjectId) {
+func packedCommitOid() (repo Repository, oid *objects.ObjectId) {
 	testRepo := test.LinearPacked
 	info := testRepo.Info().(*test.InfoLinearPacked)
 	repo = Open(testRepo.Repo())
-	oid = OidNow(info.Commits[1].CommitOid)
+	oid = objects.OidNow(info.Commits[1].CommitOid)
 	return
 }
 
@@ -82,48 +83,48 @@ func packedRef() (repo Repository, spec string) {
 	return
 }
 
-func justBlob() (Repository, *Blob) {
+func justBlob() (Repository, *objects.Blob) {
 	repo, oid := packedBlobOid()
 	o, err := repo.ObjectFromOid(oid)
 	if err != nil {
 		panic(err)
 	}
-	return repo, o.(*Blob)
+	return repo, o.(*objects.Blob)
 }
 
-func justCommit() (Repository, *Commit) {
+func justCommit() (Repository, *objects.Commit) {
 	repo, oid := packedCommitOid()
 	o, err := repo.ObjectFromOid(oid)
 	if err != nil {
 		panic(err)
 	}
-	return repo, o.(*Commit)
+	return repo, o.(*objects.Commit)
 }
 
-func justTree() (Repository, *Tree) {
+func justTree() (Repository, *objects.Tree) {
 	repo, commit := justCommit()
 	o, err := repo.ObjectFromOid(commit.Tree())
 	if err != nil {
 		panic(err)
 	}
-	return repo, o.(*Tree)
+	return repo, o.(*objects.Tree)
 }
 
-func justTag() (Repository, *Tag) {
+func justTag() (Repository, *objects.Tag) {
 	repo, info := packedDerefs()
-	tagOid := OidNow(info.TagOid)
+	tagOid := objects.OidNow(info.TagOid)
 	o, err := repo.ObjectFromOid(tagOid)
 	if err != nil {
 		panic(err)
 	}
-	return repo, o.(*Tag)
+	return repo, o.(*objects.Tag)
 }
 
 // ================================================================= //
 // ATOM OPERATIONS
 // ================================================================= //
 
-func objectFromOid(b *testing.B, repo Repository, oid *ObjectId) {
+func objectFromOid(b *testing.B, repo Repository, oid *objects.ObjectId) {
 	b.StartTimer()
 	_, err := repo.ObjectFromOid(oid)
 	if err != nil {
@@ -174,7 +175,7 @@ func resolveShortRef(b *testing.B, repo Repository, spec string) {
 
 func Benchmark__oidFromString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		OidNow("fb5b685ca75023e129b2f3c8172a7a166ad4dca8")
+		objects.OidNow("fb5b685ca75023e129b2f3c8172a7a166ad4dca8")
 	}
 }
 
@@ -182,7 +183,7 @@ func Benchmark__oidToString(b *testing.B) {
 	b.StopTimer()
 	const oidStr = "fb5b685ca75023e129b2f3c8172a7a166ad4dca8"
 	for i := 0; i < b.N; i++ {
-		oid := OidNow(oidStr)
+		oid := objects.OidNow(oidStr)
 		b.StartTimer()
 		oid.String()
 		b.StopTimer()
@@ -296,7 +297,7 @@ func Benchmark__readLooseCommitByOid(b *testing.B) {
 func Benchmark__readLooseTreeByOid(b *testing.B) {
 	b.StopTimer()
 	repo, info := looseDerefs()
-	oid := OidNow(info.TreeOid)
+	oid := objects.OidNow(info.TreeOid)
 	for i := 0; i < b.N; i++ {
 		objectFromOid(b, repo, oid)
 	}
@@ -348,7 +349,7 @@ func Benchmark__readPackedCommitByOid(b *testing.B) {
 func Benchmark__readPackedTreeByOid(b *testing.B) {
 	b.StopTimer()
 	repo, info := packedDerefs()
-	oid := OidNow(info.TreeOid)
+	oid := objects.OidNow(info.TreeOid)
 	for i := 0; i < b.N; i++ {
 		objectFromOid(b, repo, oid)
 	}
@@ -384,7 +385,7 @@ func Benchmark__readPackedTreeByShort(b *testing.B) {
 func Benchmark__derefLooseTreeFromCommit(b *testing.B) {
 	b.StopTimer()
 	repo, info := looseDerefs()
-	oid := OidNow(info.CommitOid)
+	oid := objects.OidNow(info.CommitOid)
 	rev := oid.String() + "^{tree}"
 	for i := 0; i < b.N; i++ {
 		objectFromRev(b, repo, rev)
@@ -403,7 +404,7 @@ func Benchmark__derefLooseTreeFromBranch(b *testing.B) {
 func Benchmark__derefPackedTreeFromCommit(b *testing.B) {
 	b.StopTimer()
 	repo, info := packedDerefs()
-	oid := OidNow(info.CommitOid)
+	oid := objects.OidNow(info.CommitOid)
 	rev := oid.String() + "^{tree}"
 	for i := 0; i < b.N; i++ {
 		objectFromRev(b, repo, rev)

@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"compress/zlib"
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"io"
 	"os"
@@ -39,14 +40,14 @@ const (
 )
 
 type PackedObject struct {
-	object  Object
+	object  objects.Object
 	bytes   []byte
-	DeltaOf *ObjectId
+	DeltaOf *objects.ObjectId
 	//the length of this object's delta chain. 0 for non-delta objects.
 	Depth int
 }
 
-func (p *PackedObject) Object() Object {
+func (p *PackedObject) Object() objects.Object {
 	return p.object
 }
 
@@ -78,13 +79,13 @@ type Idx struct {
 	count int64
 	// copy of the checksum for this idx file's
 	// corresponding pack file.
-	packChecksum *ObjectId
+	packChecksum *objects.ObjectId
 	// checksum for this idx file.
-	idxChecksum *ObjectId
+	idxChecksum *objects.ObjectId
 }
 
 type PackedObjectId struct {
-	*ObjectId
+	*objects.ObjectId
 	offset int64
 	crc32  int64
 	index  int
@@ -136,8 +137,8 @@ func (idx *Idx) entriesWithPrefix(prefix byte) []*PackedObjectId {
 	return idx.entriesById[from:to]
 }
 
-func (idx *Idx) entryById(oid *ObjectId) *PackedObjectId {
-	trimmed := idx.entriesWithPrefix(oid.bytes[0])
+func (idx *Idx) entryById(oid *objects.ObjectId) *PackedObjectId {
+	trimmed := idx.entriesWithPrefix(oid.Bytes()[0])
 	if trimmed == nil {
 		return nil
 	}
@@ -146,7 +147,7 @@ func (idx *Idx) entryById(oid *ObjectId) *PackedObjectId {
 		return idx.idToEntry[id]
 	}
 	gte := func(i int) bool {
-		var oid *ObjectId
+		var oid *objects.ObjectId
 		oid = trimmed[i].ObjectId
 		return oid.String() >= id
 	}
@@ -164,7 +165,7 @@ func (idx *Idx) entryById(oid *ObjectId) *PackedObjectId {
 
 // Returns the one Object in this pack with the given ObjectId,
 // or nil, NoSuchObject if no such Object is in this pack.
-func (pack *Pack) unpack(oid *ObjectId) (obj Object, result packSearch) {
+func (pack *Pack) unpack(oid *objects.ObjectId) (obj objects.Object, result packSearch) {
 	defer pack.close()
 	if entry := pack.idx.entryById(oid); entry != nil {
 		if pack.content[entry.index] == nil {
@@ -183,7 +184,7 @@ const (
 	MultipleObjects packSearch = 2
 )
 
-func (pack *Pack) unpackFromShortOid(short string) (obj Object, result packSearch) {
+func (pack *Pack) unpackFromShortOid(short string) (obj objects.Object, result packSearch) {
 	prefix, err := strconv.ParseUint(short[0:2], 16, 8)
 	if err != nil {
 		util.PanicErrf("invalid short oid; non-hex characters: %s. %s", short, err.Error())
@@ -207,7 +208,7 @@ func (pack *Pack) unpackFromShortOid(short string) (obj Object, result packSearc
 
 // Returns the object for the given short oid, if exactly one such object exists.
 // Otherwise returns nil, false.
-func unpackFromShortOid(packs []*Pack, short string) (obj Object, ok bool) {
+func unpackFromShortOid(packs []*Pack, short string) (obj objects.Object, ok bool) {
 	//this function could be O(1) if we... tried... hard enough. tried. get it?
 	//awwwwwwwwwwwwwwwww yeh
 	var already bool
@@ -223,7 +224,7 @@ func unpackFromShortOid(packs []*Pack, short string) (obj Object, ok bool) {
 	return obj, already
 }
 
-func unpack(packs []*Pack, oid *ObjectId) (obj Object, ok bool) {
+func unpack(packs []*Pack, oid *objects.ObjectId) (obj objects.Object, ok bool) {
 	var result packSearch
 	for _, pack := range packs {
 		if obj, result = pack.unpack(oid); result == OneSuchObject {
@@ -234,12 +235,12 @@ func unpack(packs []*Pack, oid *ObjectId) (obj Object, ok bool) {
 	return
 }
 
-func objectIdsFromPacks(packs []*Pack) (ids []*ObjectId) {
+func objectIdsFromPacks(packs []*Pack) (ids []*objects.ObjectId) {
 	var count int64
 	for _, pack := range packs {
 		count += pack.idx.count
 	}
-	ids = make([]*ObjectId, count, count)
+	ids = make([]*objects.ObjectId, count, count)
 	i := 0
 	for _, pack := range packs {
 		for _, id := range pack.idx.entries {
@@ -330,9 +331,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 	entriesByOid := make([]*PackedObjectId, count, count)
 	for i := 0; i < count; i++ {
 		b := p.idxParser.ReadNBytes(20)
-		oid := &ObjectId{
-			bytes: b,
-		}
+		oid, _ := objects.OidFromBytes(b)
 		entries[i] = &PackedObjectId{
 			ObjectId: oid,
 		}
@@ -355,12 +354,8 @@ func (p *packIdxParser) parseIdx() *Idx {
 	for i, v := range entries {
 		v.index = i
 	}
-	packChecksum := &ObjectId{
-		bytes: checksumPack,
-	}
-	idxChecksum := &ObjectId{
-		bytes: checksumIdx,
-	}
+	packChecksum, _ := objects.OidFromBytes(checksumPack)
+	idxChecksum, _ := objects.OidFromBytes(checksumIdx)
 	return &Idx{
 		entries,
 		entriesByOid,
@@ -381,7 +376,7 @@ type packedObjectParser struct {
 	bytes []byte
 }
 
-func newPackedObjectParser(data []byte, oid *ObjectId) (p *packedObjectParser, e error) {
+func newPackedObjectParser(data []byte, oid *objects.ObjectId) (p *packedObjectParser, e error) {
 	compressedReader := bytes.NewReader(data)
 	var zr io.ReadCloser
 	if zr, e = zlib.NewReader(compressedReader); e == nil {
@@ -488,7 +483,7 @@ func (p *Pack) readEntry(i int) []byte {
 	return data
 }
 
-func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId, size int64) (po *PackedObject) {
+func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *objects.ObjectId, size int64) (po *PackedObject) {
 	var (
 		dp  *packedObjectParser
 		err error
@@ -512,10 +507,7 @@ func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId, size 
 }
 
 func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
-	dp.hdr = &ObjectHeader{
-		ObjectCommit,
-		size,
-	}
+	dp.hdr = objects.NewObjectHeader(objects.ObjectCommit, size)
 	commit := dp.objectParser.parseCommit()
 
 	return &PackedObject{
@@ -524,10 +516,7 @@ func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 	}
 }
 func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
-	dp.hdr = &ObjectHeader{
-		ObjectTag,
-		size,
-	}
+	dp.hdr = objects.NewObjectHeader(objects.ObjectTag, size)
 	tag := dp.objectParser.parseTag()
 	return &PackedObject{
 		object: tag,
@@ -536,24 +525,18 @@ func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 }
 
 func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
-	blob := new(Blob)
-	blob.data = dp.Bytes()
-	blob.oid = dp.objectParser.oid
-	blob.hdr = &ObjectHeader{
-		ObjectBlob,
-		size,
-	}
+	data := dp.Bytes()
+	oid := dp.objectParser.oid
+	hdr := objects.NewObjectHeader(objects.ObjectBlob, size)
+	blob := objects.NewBlob(oid, hdr, data)
 	return &PackedObject{
 		object: blob,
-		bytes:  blob.data,
+		bytes:  data,
 	}
 }
 
 func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
-	dp.hdr = &ObjectHeader{
-		ObjectTree,
-		size,
-	}
+	dp.hdr = objects.NewObjectHeader(objects.ObjectTree, size)
 	tree := dp.objectParser.parseTree()
 	return &PackedObject{
 		object: tree,
@@ -567,7 +550,7 @@ func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
 
 type packedDelta []byte
 
-func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId, i int) *PackedObject {
+func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *objects.ObjectId, i int) *PackedObject {
 	var (
 		deltaDeflated packedDelta
 		baseOffset    int64
@@ -577,7 +560,7 @@ func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId
 	e := p.idx.entries[i]
 	switch pot {
 	case ObjectRefDelta:
-		var oid *ObjectId
+		var oid *objects.ObjectId
 		deltaDeflated, oid = readPackedRefDelta(bytes)
 		e := p.idx.entryById(oid)
 		if e == nil {
@@ -586,7 +569,7 @@ func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId
 		baseOffset = e.offset
 	case ObjectOffsetDelta:
 		if deltaDeflated, baseOffset, err = readPackedOffsetDelta(bytes); err != nil {
-			util.PanicErrf("Err parsing size: %v. Could not determine size for %s", err, e.repr)
+			util.PanicErrf("Err parsing size: %v. Could not determine size for %s", err, e.String())
 		}
 		baseOffset = e.offset - baseOffset
 	}
@@ -598,11 +581,11 @@ func (p *Pack) parseDeltaEntry(bytes []byte, pot PackedObjectType, oid *ObjectId
 	return dp.applyDelta(base, oid)
 }
 
-func readPackedRefDelta(bytes []byte) (delta packedDelta, oid *ObjectId) {
+func readPackedRefDelta(bytes []byte) (delta packedDelta, oid *objects.ObjectId) {
 	baseOidBytes := bytes[0:20]
 	deltaBytes := bytes[20:]
 	delta = packedDelta(deltaBytes)
-	oid, _ = OidFromBytes(baseOidBytes)
+	oid, _ = objects.OidFromBytes(baseOidBytes)
 	return
 }
 
@@ -658,7 +641,7 @@ func (p *objectParser) readByteAsInt() int64 {
 	return int64(p.ReadByte())
 }
 
-func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (object *PackedObject) {
+func (dp *packedObjectParser) applyDelta(base *PackedObject, id *objects.ObjectId) (object *PackedObject) {
 	p := dp.objectParser
 
 	baseSize := p.parseIntWhileMSB()
@@ -710,19 +693,16 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *ObjectId) (obje
 	}
 	outputType := base.object.Header().Type()
 	outputParser := newObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
-	outputParser.hdr = &ObjectHeader{
-		outputType,
-		outputSize,
-	}
-	var obj Object
+	outputParser.hdr = objects.NewObjectHeader(outputType, outputSize)
+	var obj objects.Object
 	switch outputType {
-	case ObjectBlob:
+	case objects.ObjectBlob:
 		obj = outputParser.parseBlob()
-	case ObjectTree:
+	case objects.ObjectTree:
 		obj = outputParser.parseTree()
-	case ObjectCommit:
+	case objects.ObjectCommit:
 		obj = outputParser.parseCommit()
-	case ObjectTag:
+	case objects.ObjectTag:
 		obj = outputParser.parseTag()
 	}
 	return &PackedObject{

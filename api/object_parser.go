@@ -9,6 +9,7 @@ package api
 
 import (
 	"bufio"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -18,11 +19,11 @@ import (
 
 type objectParser struct {
 	objectIdParser
-	oid *ObjectId
-	hdr *ObjectHeader
+	oid *objects.ObjectId
+	hdr *objects.ObjectHeader
 }
 
-func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
+func newObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *objectParser {
 	op := &objectParser{
 		objectIdParser: objectIdParser{
 			*util.NewDataParser(buf),
@@ -32,12 +33,12 @@ func newObjectParser(buf *bufio.Reader, oid *ObjectId) *objectParser {
 	return op
 }
 
-func (p *objectParser) ParseHeader() (*ObjectHeader, error) {
+func (p *objectParser) ParseHeader() (*objects.ObjectHeader, error) {
 	err := util.SafeParse(func() {
-		p.hdr = new(ObjectHeader)
-		p.hdr.otype = ObjectType(p.ConsumeStrings(objectTypes))
+		ot := objects.ObjectType(p.ConsumeStrings(objectTypes))
 		p.ConsumeByte(SP)
-		p.hdr.size = p.ParseAtoi(NUL)
+		size := p.ParseAtoi(NUL)
+		p.hdr = objects.NewObjectHeader(ot, size)
 	})
 	if err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func (p *objectParser) ParseHeader() (*ObjectHeader, error) {
 	return p.hdr, nil
 }
 
-func (p *objectParser) ParsePayload() (Object, error) {
+func (p *objectParser) ParsePayload() (objects.Object, error) {
 	// parse header if it wasn't parsed already
 	if p.hdr == nil {
 		if _, e := p.ParseHeader(); e != nil {
@@ -53,19 +54,19 @@ func (p *objectParser) ParsePayload() (Object, error) {
 		}
 	}
 	var (
-		obj Object
+		obj objects.Object
 		err error
 	)
 
 	err = util.SafeParse(func() {
-		switch p.hdr.otype {
-		case ObjectBlob:
+		switch p.hdr.Type() {
+		case objects.ObjectBlob:
 			obj = p.parseBlob()
-		case ObjectTree:
+		case objects.ObjectTree:
 			obj = p.parseTree()
-		case ObjectCommit:
+		case objects.ObjectCommit:
 			obj = p.parseCommit()
-		case ObjectTag:
+		case objects.ObjectTag:
 			obj = p.parseTag()
 		default:
 			panic("unsupported type")

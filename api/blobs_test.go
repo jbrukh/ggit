@@ -9,6 +9,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"math/rand"
 	"testing"
@@ -36,18 +37,18 @@ func Test_parseValidBlob(t *testing.T) {
 		p := objectParserForString(tb)
 		hdr, err := p.ParseHeader()
 		util.AssertNoErr(t, err)
-		util.Assert(t, hdr.Type() == ObjectBlob)
+		util.Assert(t, hdr.Type() == objects.ObjectBlob)
 		util.Assert(t, hdr.Size() == int64(len(v)))
 
 		o, err := p.ParsePayload()
 		util.AssertNoErr(t, err)
-		util.Assert(t, o.Header().Type() == ObjectBlob)
+		util.Assert(t, o.Header().Type() == objects.ObjectBlob)
 		util.Assert(t, o.Header().Size() == int64(len(v)))
 		util.Assert(t, o.ObjectId() == nil) // wasn't set in the test scenario
 
-		var b *Blob
+		var b *objects.Blob
 		util.AssertPanicFree(t, func() {
-			b = o.(*Blob)
+			b = o.(*objects.Blob)
 		})
 		util.AssertEqualString(t, string(b.Data()), v)
 	}
@@ -75,7 +76,7 @@ func Test_parseBlobBadSize(t *testing.T) {
 		p := objectParserForString(tb)
 		hdr, e := p.ParseHeader()
 		util.AssertNoErr(t, e)
-		util.Assert(t, hdr.Type() == ObjectBlob)
+		util.Assert(t, hdr.Type() == objects.ObjectBlob)
 		util.Assert(t, hdr.Size() == int64(size))
 
 		// should not be able to parse

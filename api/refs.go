@@ -10,6 +10,7 @@ package api
 import (
 	"bufio"
 	"fmt"
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"strings"
 )
@@ -40,12 +41,12 @@ type Ref interface {
 
 	// ObjectId returns the object id that this ref references
 	// provided this ref is not symbolic, and otherwise panics.
-	ObjectId() *ObjectId
+	ObjectId() *objects.ObjectId
 
 	// If this ref is a tag, then this field may contain
 	// the target commit of the tag, if such an optimization
 	// is available. Otherwise, this field is nil.
-	Commit() *ObjectId
+	Commit() *objects.ObjectId
 }
 
 // sort interface for sorting refs
@@ -83,9 +84,9 @@ func IsNoSuchRef(e error) bool {
 
 type ref struct {
 	name   string
-	oid    *ObjectId
+	oid    *objects.ObjectId
 	spec   string
-	commit *ObjectId // if tag, this is the commit the tag points to
+	commit *objects.ObjectId // if tag, this is the commit the tag points to
 }
 
 func (r *ref) Target() (bool, interface{}) {
@@ -102,14 +103,14 @@ func (r *ref) Name() string {
 	return r.name
 }
 
-func (r *ref) Commit() *ObjectId {
+func (r *ref) Commit() *objects.ObjectId {
 	return r.commit
 }
 
-func (r *ref) ObjectId() *ObjectId {
+func (r *ref) ObjectId() *objects.ObjectId {
 	symbolic, oid := r.Target()
 	if !symbolic {
-		return oid.(*ObjectId)
+		return oid.(*objects.ObjectId)
 	}
 	panic("cannot return oid: this is a symbolic ref")
 }

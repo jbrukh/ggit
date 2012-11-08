@@ -8,6 +8,7 @@
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
 	"testing"
@@ -25,20 +26,20 @@ func Test_readCommits(t *testing.T) {
 
 	f := NewStrFormat()
 	for _, detail := range info.Commits {
-		o, err := repo.ObjectFromOid(OidNow(detail.CommitOid))
+		o, err := repo.ObjectFromOid(objects.OidNow(detail.CommitOid))
 		util.AssertNoErr(t, err)
 
 		// check the id
 		util.Assert(t, o.ObjectId().String() == detail.CommitOid)
 
 		// check the header
-		util.Assert(t, o.Header().Type() == ObjectCommit)
+		util.Assert(t, o.Header().Type() == objects.ObjectCommit)
 		util.AssertEqualInt(t, int(o.Header().Size()), detail.CommitSize)
 
 		// now convert to a commit and check the fields
-		var cmt *Commit
+		var cmt *objects.Commit
 		util.AssertPanicFree(t, func() {
-			cmt = o.(*Commit)
+			cmt = o.(*objects.Commit)
 		})
 
 		// check the tree
