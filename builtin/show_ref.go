@@ -119,7 +119,7 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 
 	if b.flagHead {
 		if r, err := api.PeeledRefFromSpec(p.Repo, "HEAD"); err == nil {
-			filtered = append([]api.Ref{r}, filtered...)
+			filtered = append([]objects.Ref{r}, filtered...)
 		}
 	}
 	// formatter

@@ -57,17 +57,17 @@ func Test_refPaths(t *testing.T) {
 	testPeelRef(t, repo, info.SymbolicRef2, oid)
 
 	// make sure we read loose refs correctly
-	testRefRetrieval(t, repo, func() ([]Ref, error) {
+	testRefRetrieval(t, repo, func() ([]objects.Ref, error) {
 		return repo.LooseRefs()
 	}, []string{master, branch})
 
 	// make sure we read packed refs correctly
-	testRefRetrieval(t, repo, func() ([]Ref, error) {
+	testRefRetrieval(t, repo, func() ([]objects.Ref, error) {
 		return repo.PackedRefs()
 	}, []string{annTag, lightTag})
 
 	// make sure we get all refs correctly
-	testRefRetrieval(t, repo, func() ([]Ref, error) {
+	testRefRetrieval(t, repo, func() ([]objects.Ref, error) {
 		return repo.Refs()
 	}, []string{master, branch, annTag, lightTag})
 
@@ -129,7 +129,7 @@ func assertBadRef(t *testing.T, repo Repository, spec string) {
 	util.Assert(t, IsNoSuchRef(err))
 }
 
-func testRefRetrieval(t *testing.T, repo Repository, f func() ([]Ref, error), expected []string) {
+func testRefRetrieval(t *testing.T, repo Repository, f func() ([]objects.Ref, error), expected []string) {
 	refs, err := f()
 	util.AssertNoErr(t, err)
 	util.AssertEqualInt(t, len(expected), len(refs))
@@ -183,7 +183,7 @@ func testPeelRef(t *testing.T, repo Repository, spec string, oid *objects.Object
 	assertPeeledRef(t, peeledRef, oid)
 }
 
-func assertPeeledRef(t *testing.T, peeledRef Ref, oid *objects.ObjectId) {
+func assertPeeledRef(t *testing.T, peeledRef objects.Ref, oid *objects.ObjectId) {
 	symbolic, target := peeledRef.Target()
 	util.Assert(t, !symbolic)
 	if target == nil {
@@ -197,7 +197,7 @@ func assertPeeledRef(t *testing.T, peeledRef Ref, oid *objects.ObjectId) {
 	})
 }
 
-func assertSymbolicRef(t *testing.T, symbolicRef Ref, tget string) {
+func assertSymbolicRef(t *testing.T, symbolicRef objects.Ref, tget string) {
 	symbolic, target := symbolicRef.Target()
 	util.Assert(t, symbolic)
 	if target == nil {

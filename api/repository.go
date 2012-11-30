@@ -28,11 +28,11 @@ type Repository interface {
 	Destroy() error
 
 	// Refs returns a list of all refs in the repository.
-	Refs() ([]Ref, error)
+	Refs() ([]objects.Ref, error)
 
 	// Ref convert a string ref into a Ref object. The
 	// returned object may be a symbolic or concrete ref.
-	Ref(spec string) (Ref, error)
+	Ref(spec string) (objects.Ref, error)
 
 	// ObjectFromOid is the fundamental object retrieval
 	// operation of a repository. It is the basis for

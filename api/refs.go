@@ -20,112 +20,27 @@ const (
 )
 
 // ================================================================= //
-// REF OBJECTS
+// REF SORTING
 // ================================================================= //
 
-// Ref is a representation of a ggit reference. A ref is a nice
-// name for an ObjectId. More precisely, a ref is a path relative
-// to the git directory (without duplicate path separators, ".", or
-// "..").
-type Ref interface {
-
-	// Name returns the string name of this ref. This is
-	// a simple path relative to the git directory, which
-	// may or may not be HEAD, MERGE_HEAD, etc.
-	Name() string
-
-	// Target returns the target reference, whether an oid
-	// or another string ref. If the ref is symbolic then
-	// "symbolic" is true.
-	Target() (symbolic bool, o interface{})
-
-	// ObjectId returns the object id that this ref references
-	// provided this ref is not symbolic, and otherwise panics.
-	ObjectId() *objects.ObjectId
-
-	// If this ref is a tag, then this field may contain
-	// the target commit of the tag, if such an optimization
-	// is available. Otherwise, this field is nil.
-	Commit() *objects.ObjectId
-}
-
 // sort interface for sorting refs
-type refByName []Ref
+type refByName []objects.Ref
 
 func (s refByName) Len() int           { return len(s) }
 func (s refByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s refByName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
 
 // ================================================================= //
-// ERRORS
-// ================================================================= //
-
-type (
-	noSuchRef    error
-	ambiguousRef error
-)
-
-func noSuchRefErrf(ref string) noSuchRef {
-	return noSuchRef(fmt.Errorf("no such ref: %s", ref))
-}
-
-func IsNoSuchRef(e error) bool {
-	switch t := e.(type) {
-	case noSuchRef:
-		e = t // must use t
-		return true
-	}
-	return false
-}
-
-// ================================================================= //
-// REF IMPLEMENTATION
-// ================================================================= //
-
-type ref struct {
-	name   string
-	oid    *objects.ObjectId
-	spec   string
-	commit *objects.ObjectId // if tag, this is the commit the tag points to
-}
-
-func (r *ref) Target() (bool, interface{}) {
-	if r.oid != nil {
-		return false, r.oid
-	}
-	if r.spec != "" {
-		return true, r.spec
-	}
-	panic("does not have an object reference")
-}
-
-func (r *ref) Name() string {
-	return r.name
-}
-
-func (r *ref) Commit() *objects.ObjectId {
-	return r.commit
-}
-
-func (r *ref) ObjectId() *objects.ObjectId {
-	symbolic, oid := r.Target()
-	if !symbolic {
-		return oid.(*objects.ObjectId)
-	}
-	panic("cannot return oid: this is a symbolic ref")
-}
-
-// ================================================================= //
 // REF FORMATTING
 // ================================================================= //
 
-func (f *Format) Ref(r Ref) (int, error) {
+func (f *Format) Ref(r objects.Ref) (int, error) {
 	_, rf := r.Target() // symbolic or oid
 	return fmt.Fprintf(f.Writer, "%s %s", rf, r.Name())
 }
 
 // TODO: come up with a better name for this
-func (f *Format) Deref(r Ref) (int, error) {
+func (f *Format) Deref(r objects.Ref) (int, error) {
 	return fmt.Fprintf(f.Writer, "%s %s^{}", r.Commit(), r.Name())
 }
 
@@ -134,8 +49,8 @@ func (f *Format) Deref(r Ref) (int, error) {
 // ================================================================= //
 
 // FilterRefs applies a ref filter to a list of refs.
-func FilterRefs(refs []Ref, f Filter) []Ref {
-	var r []Ref
+func FilterRefs(refs []objects.Ref, f Filter) []objects.Ref {
+	var r []objects.Ref
 	for _, v := range refs {
 		if f(v) {
 			r = append(r, v)
@@ -146,7 +61,7 @@ func FilterRefs(refs []Ref, f Filter) []Ref {
 
 func FilterRefPattern(pattern string) Filter {
 	return func(ref interface{}) bool {
-		return matchRefs(ref.(Ref).Name(), pattern)
+		return matchRefs(ref.(objects.Ref).Name(), pattern)
 	}
 }
 
@@ -154,7 +69,7 @@ func FilterRefPattern(pattern string) Filter {
 // by the given prefix.
 func FilterRefPrefix(prefix string) Filter {
 	return func(ref interface{}) bool {
-		return strings.HasPrefix(ref.(Ref).Name(), prefix)
+		return strings.HasPrefix(ref.(objects.Ref).Name(), prefix)
 	}
 }
 
@@ -204,8 +119,8 @@ func newRefParser(buf *bufio.Reader, name string) *refParser {
 	}
 }
 
-func (p *refParser) ParsePackedRefs() ([]Ref, error) {
-	r := make([]Ref, 0)
+func (p *refParser) ParsePackedRefs() ([]objects.Ref, error) {
+	r := make([]objects.Ref, 0)
 	err := util.SafeParse(func() {
 		for !p.EOF() {
 			c := p.PeekByte()
@@ -224,36 +139,59 @@ func (p *refParser) ParsePackedRefs() ([]Ref, error) {
 				p.ConsumeByte(LF)
 
 				if l := len(r); l > 0 {
-					r[l-1].(*ref).commit = commit
+					_, oid := r[l-1].Target()
+					//TODO: inefficient (copying):
+					r[l-1] = objects.NewRef(r[l-1].Name(), "", oid.(*objects.ObjectId), commit)
 				}
 			default:
-				re := new(ref)
-				re.oid = p.ParseOid()
+				oid := p.ParseOid()
 				p.ConsumeByte(SP)
-				re.name = p.ReadString(LF)
+				name := p.ReadString(LF)
 
-				r = append(r, re)
+				r = append(r, objects.NewRef(name, "", oid, nil))
 			}
 		}
 	})
 	return r, err
 }
 
-func (p *refParser) parseRef() (r Ref, err error) {
+func (p *refParser) parseRef() (r objects.Ref, err error) {
 	err = util.SafeParse(func() {
 		// is it a symbolic ref?
 		if p.PeekString(len(markerRef)) == markerRef {
 			p.ConsumeString(markerRef)
 			p.ConsumeByte(SP)
 			spec := p.ReadString(LF)
-			r = &ref{name: p.name, spec: spec}
+			r = objects.NewRef(p.name, spec, nil, nil)
 		} else {
 			oid := p.ParseOid()
 			p.ConsumeByte(LF)
-			r = &ref{name: p.name, oid: oid}
+			r = objects.NewRef(p.name, "", oid, nil)
 		}
 	})
 	return r, err
+}
+
+// ================================================================= //
+// ERRORS - used by DiskRepository
+// ================================================================= //
+
+type (
+	noSuchRef    error
+	ambiguousRef error
+)
+
+func noSuchRefErrf(ref string) noSuchRef {
+	return noSuchRef(fmt.Errorf("no such ref: %s", ref))
+}
+
+func IsNoSuchRef(e error) bool {
+	switch t := e.(type) {
+	case noSuchRef:
+		e = t // must use t
+		return true
+	}
+	return false
 }
 
 // ================================================================= //
@@ -281,7 +219,7 @@ var refSearchPath = []string{
 // under "Specifying Revisions/<refname>". If the ref does not exist
 // then you can check the returned error with api.IsNoSuchRef.
 // TODO: what about ambiguous refs?
-func RefFromSpec(repo Repository, spec string) (ref Ref, err error) {
+func RefFromSpec(repo Repository, spec string) (ref objects.Ref, err error) {
 	for _, prefix := range refSearchPath {
 		refPath := fmt.Sprintf(prefix, spec)
 		if ref, err = repo.Ref(refPath); err == nil {
@@ -295,7 +233,7 @@ func RefFromSpec(repo Repository, spec string) (ref Ref, err error) {
 
 // PeeledRefFromSpec takes the same arguments as RefFromSpec, but
 // peels the ref before sending it back.
-func PeeledRefFromSpec(repo Repository, spec string) (ref Ref, err error) {
+func PeeledRefFromSpec(repo Repository, spec string) (ref objects.Ref, err error) {
 	if ref, err = RefFromSpec(repo, spec); err != nil {
 		return nil, err
 	}
@@ -307,7 +245,7 @@ func PeeledRefFromSpec(repo Repository, spec string) (ref Ref, err error) {
 // given ref and if the target is symbolic, it is followed and
 // resolved. This process repeats as many times as necessary to
 // obtain a peeled ref.
-func PeelRef(repo Repository, r Ref) (Ref, error) {
+func PeelRef(repo Repository, r objects.Ref) (objects.Ref, error) {
 	var (
 		err      error
 		symbolic bool

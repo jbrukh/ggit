@@ -26,7 +26,7 @@ import (
 type DiskRepository struct {
 	path       string
 	packs      []*Pack
-	packedRefs []Ref
+	packedRefs []objects.Ref
 }
 
 // Open a reprository that is located at the given path. The
@@ -135,7 +135,7 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (objects.Object, er
 //
 // For smart disambiguation of refs, or ref peeling, thou shalt
 // use helper operations.
-func (repo *DiskRepository) Ref(spec string) (Ref, error) {
+func (repo *DiskRepository) Ref(spec string) (objects.Ref, error) {
 	file, e := relativeFile(repo, spec)
 	if e == nil {
 		defer file.Close()
@@ -200,7 +200,7 @@ func (repo *DiskRepository) Index() (idx *Index, err error) {
 	return toIndex(bufio.NewReader(file))
 }
 
-func (repo *DiskRepository) PackedRefs() ([]Ref, error) {
+func (repo *DiskRepository) PackedRefs() ([]objects.Ref, error) {
 	if repo.packedRefs == nil {
 		file, e := relativeFile(repo, PackedRefsFile)
 		if e != nil {
@@ -208,7 +208,7 @@ func (repo *DiskRepository) PackedRefs() ([]Ref, error) {
 		}
 		defer file.Close()
 		p := newRefParser(bufio.NewReader(file), "")
-		var refs []Ref
+		var refs []objects.Ref
 		if refs, e = p.ParsePackedRefs(); e != nil {
 			return nil, e
 		}
@@ -217,20 +217,20 @@ func (repo *DiskRepository) PackedRefs() ([]Ref, error) {
 	return repo.packedRefs, nil
 }
 
-func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
+func (repo *DiskRepository) LooseRefs() ([]objects.Ref, error) {
 	// TODO: figure out a way to decouple this logic
 	repoPath := repo.path + "/"
 	dir := path.Join(repoPath, "refs")
-	refs := make([]Ref, 0)
+	refs := make([]objects.Ref, 0)
 	err := filepath.Walk(dir,
 		func(path string, f os.FileInfo, err error) error {
 			if !f.IsDir() {
-				spec := util.TrimPrefix(path, repoPath)
-				r, e := PeeledRefFromSpec(repo, spec)
+				name := util.TrimPrefix(path, repoPath)
+				r, e := PeeledRefFromSpec(repo, name)
 				if e != nil {
 					return e
 				}
-				refs = append(refs, &ref{name: spec, oid: r.ObjectId()})
+				refs = append(refs, objects.NewRef(name, "", r.ObjectId(), nil))
 			}
 			return nil
 		},
@@ -238,7 +238,7 @@ func (repo *DiskRepository) LooseRefs() ([]Ref, error) {
 	return refs, err
 }
 
-func (repo *DiskRepository) Refs() ([]Ref, error) {
+func (repo *DiskRepository) Refs() ([]objects.Ref, error) {
 
 	// First, get all the packed refs.
 	pr, err := repo.PackedRefs()
@@ -247,7 +247,7 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 	}
 
 	// Refs will be stores in a map by their symbolic name.
-	refs := make(map[string]Ref)
+	refs := make(map[string]objects.Ref)
 	for _, ref := range pr {
 		refs[ref.Name()] = ref
 	}
@@ -261,12 +261,12 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 		func(path string, f os.FileInfo, err error) error {
 			// refs are files, so...
 			if !f.IsDir() {
-				spec := util.TrimPrefix(path, repo.path+"/")
-				r, e := PeeledRefFromSpec(repo, spec)
+				name := util.TrimPrefix(path, repo.path+"/")
+				r, e := PeeledRefFromSpec(repo, name)
 				if e != nil {
 					return e
 				}
-				refs[spec] = &ref{name: spec, oid: r.ObjectId()}
+				refs[name] = objects.NewRef(name, "", r.ObjectId(), nil)
 			}
 			return nil
 		},
@@ -276,7 +276,7 @@ func (repo *DiskRepository) Refs() ([]Ref, error) {
 	}
 
 	// collect the refs into a list
-	refList := make([]Ref, 0, len(refs))
+	refList := make([]objects.Ref, 0, len(refs))
 	for _, v := range refs {
 		refList = append(refList, v)
 	}
