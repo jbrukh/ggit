@@ -12,6 +12,7 @@ benchmarks_test.go implements the ggit benchmarks.
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"testing"
@@ -196,7 +197,7 @@ func Benchmark__oidToString(b *testing.B) {
 
 func Benchmark__blobString(b *testing.B) {
 	b.StopTimer()
-	f := NewStrFormat()
+	f := format.NewStrFormat()
 	_, blob := justBlob()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -206,7 +207,7 @@ func Benchmark__blobString(b *testing.B) {
 
 func Benchmark__commitString(b *testing.B) {
 	b.StopTimer()
-	f := NewStrFormat()
+	f := format.NewStrFormat()
 	_, commit := justCommit()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -216,7 +217,7 @@ func Benchmark__commitString(b *testing.B) {
 
 func Benchmark__treeString(b *testing.B) {
 	b.StopTimer()
-	f := NewStrFormat()
+	f := format.NewStrFormat()
 	_, tree := justTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -226,7 +227,7 @@ func Benchmark__treeString(b *testing.B) {
 
 func Benchmark__tagString(b *testing.B) {
 	b.StopTimer()
-	f := NewStrFormat()
+	f := format.NewStrFormat()
 	_, tag := justTag()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {

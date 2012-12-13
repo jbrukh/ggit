@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
+	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/api/objects"
 	"hash"
 )
@@ -50,7 +51,7 @@ var sha hash.Hash = sha1.New()
 func MakeHash(o objects.Object) (hash.Hash, error) {
 	sha.Reset()
 	kind := string(o.Header().Type())
-	f := NewStrFormat()
+	f := format.NewStrFormat()
 	if _, err := f.Object(o); err != nil {
 		return nil, err
 	}

@@ -12,23 +12,10 @@ who_whens.go implements user credentials and timestamps.
 package api
 
 import (
-	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 	"strings"
 )
-
-// ================================================================= //
-// FORMATTING
-// ================================================================= //
-
-func (f *Format) WhoWhenDate(ww *objects.WhoWhen) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s <%s> %s %s", ww.Name(), ww.Email(), ww.Date(), zone(ww.Offset()))
-}
-
-func (f *Format) WhoWhen(ww *objects.WhoWhen) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s <%s> %d %s", ww.Name(), ww.Email(), ww.Seconds(), zone(ww.Offset()))
-}
 
 // ================================================================= //
 // PARSING
@@ -65,21 +52,4 @@ func (p *objectParser) parseWhoWhen(marker string) *objects.WhoWhen {
 	ww := objects.NewWhoWhen(user, email, seconds, tz)
 
 	return ww
-}
-
-// ================================================================= //
-// UTIL
-// ================================================================= //
-
-func zone(offset int) string {
-	sign := ""
-	if offset < 0 {
-		sign = MINUS
-		offset = -offset
-	} else {
-		sign = PLUS
-	}
-	hours := int(offset / 60)
-	minutes := offset - hours*60
-	return fmt.Sprintf("%s%02d%02d", sign, hours, minutes)
 }

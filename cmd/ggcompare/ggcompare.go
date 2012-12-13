@@ -12,6 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
+	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/util"
 	"os"
 )
@@ -55,7 +56,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		f := api.NewStrFormat()
+		f := format.NewStrFormat()
 		f.Object(o)
 		str := f.String()
 		if str != cat {

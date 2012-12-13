@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package api
+package format
 
 import (
 	"github.com/jbrukh/ggit/util"

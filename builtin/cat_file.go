@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
+	"github.com/jbrukh/ggit/api/format"
 )
 
 type CatFileBuiltin struct {
@@ -59,7 +60,7 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 
 	switch {
 	case b.flagPrettyPrint:
-		f := api.Format{p.Wout}
+		f := format.Format{p.Wout}
 		f.ObjectPretty(o)
 	case b.flagShowType:
 		fmt.Fprintln(p.Wout, o.Header().Type())
@@ -71,7 +72,7 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 			b.HelpInfo.WriteUsage(p.Werr)
 			return
 		}
-		f := api.Format{p.Wout}
+		f := format.Format{p.Wout}
 		f.Object(o)
 	}
 }

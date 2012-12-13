@@ -8,7 +8,6 @@
 package api
 
 import (
-	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
@@ -57,30 +56,4 @@ func (p *objectParser) parseTag() *objects.Tag {
 	}
 
 	return objects.NewTag(p.oid, target, t, p.hdr, name, msg, tagger)
-}
-
-// ================================================================= //
-// FORMATTING
-// ================================================================= //
-
-func (f *Format) Tag(t *objects.Tag) (int, error) {
-	fmt.Fprintf(f.Writer, "object %s\n", t.Object())
-	fmt.Fprintf(f.Writer, "type %s\n", t.ObjectType())
-	fmt.Fprintf(f.Writer, "tag %s\n", t.Name())
-	sf := NewStrFormat()
-	sf.WhoWhen(t.Tagger())
-	fmt.Fprintf(f.Writer, "tagger %s\n\n", sf.String())
-	fmt.Fprintf(f.Writer, "%s", t.Message())
-	return 0, nil // TODO
-}
-
-func (f *Format) TagPretty(t *objects.Tag) (int, error) {
-	fmt.Fprintf(f.Writer, "object %s\n", t.Object())
-	fmt.Fprintf(f.Writer, "type %s\n", t.ObjectType())
-	fmt.Fprintf(f.Writer, "tag %s\n", t.Name())
-	sf := NewStrFormat()
-	sf.WhoWhenDate(t.Tagger()) // git-cat-file -p displays full dates for tags
-	fmt.Fprintf(f.Writer, "tagger %s\n\n", sf.String())
-	fmt.Fprintf(f.Writer, "%s", t.Message())
-	return 0, nil // TODO
 }

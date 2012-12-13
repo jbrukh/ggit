@@ -12,7 +12,6 @@ blobs.go implements ggit Blob objects and their parsing and formatting.
 package api
 
 import (
-	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
@@ -36,14 +35,4 @@ func (p *objectParser) parseBlob() *objects.Blob {
 	}
 
 	return b
-}
-
-// ================================================================= //
-// OBJECT FORMATTER
-// ================================================================= //
-
-// Blob formats the contents of the blog as a string
-// for output to the screen.
-func (f *Format) Blob(b *objects.Blob) (int, error) {
-	return fmt.Fprintf(f.Writer, "%s", string(b.Data()))
 }

@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jbrukh/ggit/api"
+	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/api/objects"
 )
 
@@ -123,7 +124,7 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 		}
 	}
 	// formatter
-	fmtr := api.Format{p.Wout}
+	fmtr := format.Format{p.Wout}
 
 	if b.flagQuiet {
 		return
@@ -160,7 +161,7 @@ TODO: remove this method, it is mainly for debugging
 */
 func (b *ShowRefBuiltin) Which(p *Params) {
 	repo := p.Repo.(*api.DiskRepository)
-	fmtr := api.Format{p.Wout}
+	fmtr := format.Format{p.Wout}
 
 	fmt.Fprintln(p.Wout, "Loose refs:")
 	refs, e := repo.LooseRefs()

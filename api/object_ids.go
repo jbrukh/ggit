@@ -9,7 +9,6 @@ package api
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/util"
 )
@@ -49,12 +48,4 @@ func (p *objectIdParser) ParseOidBytes() *objects.ObjectId {
 		util.PanicErrf("expected: hash bytes %d long", objects.OidSize)
 	}
 	return oid
-}
-
-// ================================================================= //
-// FORMATTING
-// ================================================================= //
-
-func (f *Format) ObjectId(oid *objects.ObjectId) (int, error) {
-	return fmt.Fprint(f.Writer, oid.String())
 }

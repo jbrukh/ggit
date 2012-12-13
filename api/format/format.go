@@ -14,7 +14,7 @@ function is implemented in the file relevant to the object that it formats.
 Format prints to an io.Writer, or optionally, one can print a string by
 using a strFormat object and calling String() on it.
 */
-package api
+package format
 
 import (
 	"bytes"

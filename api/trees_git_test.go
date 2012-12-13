@@ -12,6 +12,7 @@ trees_git_test.go implements git-comparison tests for ggit tree parsing.
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
@@ -24,7 +25,7 @@ func Test_readTree(t *testing.T) {
 	testCase := test.Tree
 	repo := Open(testCase.Repo())
 	info := testCase.Info().(*test.InfoTree)
-	f := NewStrFormat()
+	f := format.NewStrFormat()
 
 	var (
 		oid = objects.OidNow(info.TreeOid)

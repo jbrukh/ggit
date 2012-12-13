@@ -12,6 +12,7 @@ tags_git_test.go implements git comparison tests for tag reading.
 package api
 
 import (
+	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/jbrukh/ggit/test"
 	"github.com/jbrukh/ggit/util"
@@ -28,7 +29,7 @@ func Test_readTags(t *testing.T) {
 	util.Assert(t, info.N > 1)
 	util.Assert(t, len(info.Commits) == info.N)
 
-	f := NewStrFormat()
+	f := format.NewStrFormat()
 	for _, detail := range info.Commits {
 		tagOid := objects.OidNow(detail.TagOid)
 		o, err := repo.ObjectFromOid(tagOid)
