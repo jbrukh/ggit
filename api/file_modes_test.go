@@ -9,6 +9,7 @@ package api
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 	"testing"
 )
@@ -37,12 +38,12 @@ func Test_assertFileMode(t *testing.T) {
 
 func Test_parseValidFileMode(t *testing.T) {
 	p := objectParserForString("0000000\n0040000\n0100644\n0100755\n0120000\n0160000\n")
-	util.Assert(t, p.ParseFileMode(LF) == objects.ModeNew)
-	util.Assert(t, p.ParseFileMode(LF) == objects.ModeTree)
-	util.Assert(t, p.ParseFileMode(LF) == objects.ModeBlob)
-	util.Assert(t, p.ParseFileMode(LF) == objects.ModeBlobExec)
-	util.Assert(t, p.ParseFileMode(LF) == objects.ModeLink)
-	util.Assert(t, p.ParseFileMode(LF) == objects.ModeCommit)
+	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeNew)
+	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeTree)
+	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeBlob)
+	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeBlobExec)
+	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeLink)
+	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeCommit)
 	util.Assert(t, p.EOF())
 }
 
@@ -51,7 +52,7 @@ func Test_parseInvalidFileMode(t *testing.T) {
 	p := objectParserForString("000200\n002000\n000644\n000755\n0120200\n01600990\n")
 	for !p.EOF() {
 		util.AssertPanic(t, func() {
-			m := p.ParseFileMode(LF)
+			m := p.ParseFileMode(token.LF)
 			m++ // for compilation, should not get here
 		})
 	}

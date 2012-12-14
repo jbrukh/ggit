@@ -10,6 +10,7 @@ package api
 import (
 	"bufio"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -36,8 +37,8 @@ func newObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *objectParser {
 func (p *objectParser) ParseHeader() (*objects.ObjectHeader, error) {
 	err := util.SafeParse(func() {
 		ot := objects.ObjectType(p.ConsumeStrings(objectTypes))
-		p.ConsumeByte(SP)
-		size := p.ParseAtoi(NUL)
+		p.ConsumeByte(token.SP)
+		size := p.ParseAtoi(token.NUL)
 		p.hdr = objects.NewObjectHeader(ot, size)
 	})
 	if err != nil {

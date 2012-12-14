@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 	"time"
 )
@@ -291,7 +292,7 @@ func parseIndexEntry(r *bufio.Reader) (entry *IndexEntry, err error) {
 	}
 
 	// TODO: what if it is corrupted and too long?
-	name, e := r.ReadBytes(NUL)
+	name, e := r.ReadBytes(token.NUL)
 	if e != nil {
 		return nil, e
 	}

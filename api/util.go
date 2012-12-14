@@ -14,26 +14,13 @@ import (
 	"fmt"
 	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"hash"
 )
 
-const (
-	NUL = '\000'
-	SP  = ' '
-	LF  = '\n'
-	LT  = '<'
-	GT  = '>'
-	TAB = '\t'
-)
-
-const (
-	PLUS  = "+"
-	MINUS = "-"
-)
-
 var signs []string = []string{
-	PLUS,
-	MINUS,
+	token.PLUS,
+	token.MINUS,
 }
 
 var objectTypes []string = []string{
@@ -57,7 +44,7 @@ func MakeHash(o objects.Object) (hash.Hash, error) {
 	}
 	content := f.String()
 	len := len([]byte(content))
-	value := kind + string(SP) + fmt.Sprint(len) + string(NUL) + content
+	value := kind + string(token.SP) + fmt.Sprint(len) + string(token.NUL) + content
 	toHash := []byte(value)
 	sha.Write(toHash)
 	return sha, nil

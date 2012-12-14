@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 	"strings"
 )
@@ -116,13 +117,13 @@ func (p *refParser) ParsePackedRefs() ([]objects.Ref, error) {
 				// that says '# pack-refs with: <extention>' and <extention>
 				// is exactly one of the items in this set: { 'peeled' }.
 				// currently, we are just ignoring all comments.
-				p.ReadString(LF)
+				p.ReadString(token.LF)
 			case '^':
 				// this means the previous line is an annotated tag and the the current
 				// line contains the commit that tag points to
 				p.ConsumeByte('^')
 				commit := p.ParseOid()
-				p.ConsumeByte(LF)
+				p.ConsumeByte(token.LF)
 
 				if l := len(r); l > 0 {
 					_, oid := r[l-1].Target()
@@ -131,8 +132,8 @@ func (p *refParser) ParsePackedRefs() ([]objects.Ref, error) {
 				}
 			default:
 				oid := p.ParseOid()
-				p.ConsumeByte(SP)
-				name := p.ReadString(LF)
+				p.ConsumeByte(token.SP)
+				name := p.ReadString(token.LF)
 
 				r = append(r, objects.NewRef(name, "", oid, nil))
 			}
@@ -146,12 +147,12 @@ func (p *refParser) parseRef() (r objects.Ref, err error) {
 		// is it a symbolic ref?
 		if p.PeekString(len(markerRef)) == markerRef {
 			p.ConsumeString(markerRef)
-			p.ConsumeByte(SP)
-			spec := p.ReadString(LF)
+			p.ConsumeByte(token.SP)
+			spec := p.ReadString(token.LF)
 			r = objects.NewRef(p.name, spec, nil, nil)
 		} else {
 			oid := p.ParseOid()
-			p.ConsumeByte(LF)
+			p.ConsumeByte(token.LF)
 			r = objects.NewRef(p.name, "", oid, nil)
 		}
 	})

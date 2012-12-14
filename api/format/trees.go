@@ -9,6 +9,7 @@ package format
 import (
 	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 )
 
 // ================================================================= //
@@ -20,7 +21,7 @@ import (
 func (f *Format) Tree(t *objects.Tree) (int, error) {
 	N := 0
 	for _, e := range t.Entries() {
-		n, err := fmt.Fprintf(f.Writer, "%o %s%s%s", e.Mode(), e.Name(), string(NUL), string(e.ObjectId().Bytes()))
+		n, err := fmt.Fprintf(f.Writer, "%o %s%s%s", e.Mode(), e.Name(), string(token.NUL), string(e.ObjectId().Bytes()))
 		N += n
 		if err != nil {
 			return N, err

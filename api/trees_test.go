@@ -14,6 +14,7 @@ package api
 import (
 	//"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 	"testing"
 )
@@ -103,8 +104,8 @@ func parseAndCompareTree(t *testing.T, repo Repository, treeRepr string) {
 	p := objectParserForString(treeRepr)
 
 	oid := p.ParseOid()
-	p.ConsumeByte(LF)
-	size := p.ParseInt(LF, 10, 32)
+	p.ConsumeByte(token.LF)
+	size := p.ParseInt(token.LF, 10, 32)
 
 	o, err := repo.ObjectFromOid(oid)
 	util.AssertNoErr(t, err)
@@ -117,12 +118,12 @@ func parseAndCompareTree(t *testing.T, repo Repository, treeRepr string) {
 	entries := tree.Entries()
 
 	for !p.EOF() {
-		mode := p.ParseFileMode(SP)
+		mode := p.ParseFileMode(token.SP)
 		otype := objects.ObjectType(p.ConsumeStrings(objectTypes))
-		p.ConsumeByte(SP)
+		p.ConsumeByte(token.SP)
 		oidStr := p.ParseOid().String()
-		p.ConsumeByte(TAB)
-		name := p.ReadString(LF)
+		p.ConsumeByte(token.TAB)
+		name := p.ReadString(token.LF)
 		util.Assert(t, len(entries) > 0)
 		entry := entries[0]
 		util.Assert(t, mode == entry.Mode())

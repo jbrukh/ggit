@@ -4,12 +4,19 @@
 // see the README file.
 //
 // Copyright (c) 2012 The ggit Authors
-package format
 
-//todo: consolidate. these constants are repeated in api's util.go
+package token
 
 const (
-	NUL   = '\000'
+	NUL = '\000'
+	SP  = ' '
+	LF  = '\n'
+	LT  = '<'
+	GT  = '>'
+	TAB = '\t'
+)
+
+const (
 	PLUS  = "+"
 	MINUS = "-"
 )

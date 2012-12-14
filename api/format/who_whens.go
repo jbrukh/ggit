@@ -9,6 +9,7 @@ package format
 import (
 	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 )
 
 // ================================================================= //
@@ -30,10 +31,10 @@ func (f *Format) WhoWhen(ww *objects.WhoWhen) (int, error) {
 func zone(offset int) string {
 	sign := ""
 	if offset < 0 {
-		sign = MINUS
+		sign = token.MINUS
 		offset = -offset
 	} else {
-		sign = PLUS
+		sign = token.PLUS
 	}
 	hours := int(offset / 60)
 	minutes := offset - hours*60

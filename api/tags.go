@@ -9,6 +9,7 @@ package api
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -28,27 +29,27 @@ func (p *objectParser) parseTag() *objects.Tag {
 
 	// read the object id
 	p.ConsumeString(markerObject)
-	p.ConsumeByte(SP)
+	p.ConsumeByte(token.SP)
 	target := p.ParseOid()
-	p.ConsumeByte(LF)
+	p.ConsumeByte(token.LF)
 
 	// read object type
 	p.ConsumeString(markerType)
-	p.ConsumeByte(SP)
+	p.ConsumeByte(token.SP)
 	t := objects.ObjectType(p.ConsumeStrings(objectTypes))
-	p.ConsumeByte(LF)
+	p.ConsumeByte(token.LF)
 
 	// read the tag name
 	p.ConsumeString(markerTag)
-	p.ConsumeByte(SP)
-	name := p.ReadString(LF) // gets rid of the LF!
+	p.ConsumeByte(token.SP)
+	name := p.ReadString(token.LF) // gets rid of the LF!
 
 	// read the tagger
 	tagger := p.parseWhoWhen(markerTagger)
-	p.ConsumeByte(LF)
+	p.ConsumeByte(token.LF)
 
 	// read the commit message
-	p.ConsumeByte(LF)
+	p.ConsumeByte(token.LF)
 	msg := p.String()
 
 	if p.Count() != p.hdr.Size() {

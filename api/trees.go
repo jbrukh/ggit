@@ -14,6 +14,7 @@ package api
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 )
 
@@ -29,8 +30,8 @@ func (p *objectParser) parseTree() *objects.Tree {
 	entries := make([]*objects.TreeEntry, 0)
 	p.ResetCount()
 	for !p.EOF() {
-		mode := p.ParseFileMode(SP)
-		name := p.ReadString(NUL)
+		mode := p.ParseFileMode(token.SP)
+		name := p.ReadString(token.NUL)
 		oid := p.ParseOidBytes()
 		t := deduceObjectType(mode)
 		entry := objects.NewTreeEntry(mode, t, name, oid)

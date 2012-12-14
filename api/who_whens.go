@@ -13,6 +13,7 @@ package api
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 	"strings"
 )
@@ -23,18 +24,18 @@ import (
 
 func (p *objectParser) parseWhoWhen(marker string) *objects.WhoWhen {
 	p.ConsumeString(marker)
-	p.ConsumeByte(SP)
-	user := strings.Trim(p.ReadString(LT), string(SP))
-	email := p.ReadString(GT)
-	p.ConsumeByte(SP)
-	seconds := p.ParseInt(SP, 10, 64)
+	p.ConsumeByte(token.SP)
+	user := strings.Trim(p.ReadString(token.LT), string(token.SP))
+	email := p.ReadString(token.GT)
+	p.ConsumeByte(token.SP)
+	seconds := p.ParseInt(token.SP, 10, 64)
 
 	// time zone
 	signStr := p.ConsumeStrings(signs)
 	var sign int64
-	if signStr == PLUS {
+	if signStr == token.PLUS {
 		sign = 1
-	} else if signStr == MINUS {
+	} else if signStr == token.MINUS {
 		sign = -1
 	} else {
 		util.PanicErrf("expecting: +/- sign")
