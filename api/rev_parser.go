@@ -195,7 +195,7 @@ func (p *revParser) findObject(spec string) (err error) {
 	var o objects.Object
 	switch {
 	case hexRegex.MatchString(spec):
-		o, err = ObjectFromShortOid(p.repo, spec)
+		o, err = p.repo.ObjectFromShortOid(spec)
 		if err != nil {
 			return err
 		}
