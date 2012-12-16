@@ -7,6 +7,8 @@
 
 package token
 
+import "github.com/jbrukh/ggit/api/objects"
+
 const (
 	NUL = '\000'
 	SP  = ' '
@@ -20,3 +22,10 @@ const (
 	PLUS  = "+"
 	MINUS = "-"
 )
+
+var ObjectTypes []string = []string{
+	string(objects.ObjectBlob),
+	string(objects.ObjectTree),
+	string(objects.ObjectCommit),
+	string(objects.ObjectTag),
+}

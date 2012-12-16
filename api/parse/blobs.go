@@ -9,7 +9,7 @@
 /*
 blobs.go implements ggit Blob objects and their parsing and formatting.
 */
-package api
+package parse
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
@@ -24,7 +24,7 @@ import (
 // and converts it to Blob. If there are parsing errors,
 // it panics with parseErr, so this method should be
 // called as a parameter a safeParse().
-func (p *objectParser) parseBlob() *objects.Blob {
+func (p *ObjectParser) parseBlob() *objects.Blob {
 
 	p.ResetCount()
 	data := p.Bytes()

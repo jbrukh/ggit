@@ -19,12 +19,6 @@ func ObjectFromOid(repo Repository, oid *objects.ObjectId) (objects.Object, erro
 	return repo.ObjectFromOid(oid)
 }
 
-// ObjectFromOid turns a short hex into an Object given the parent
-// repository of the object.
-func ObjectFromShortOid(repo Repository, short string) (objects.Object, error) {
-	return repo.ObjectFromShortOid(short)
-}
-
 // ObjectFromRef is similar to OidFromRef, except it derefernces the
 // target ObjectId into an actual Object.
 func ObjectFromRef(repo Repository, spec string) (objects.Object, error) {

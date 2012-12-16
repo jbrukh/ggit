@@ -6,7 +6,9 @@
 // Copyright (c) 2012 The ggit Authors
 //
 
-package api
+//TODO: separate pack package? or just a disk package?
+
+package parse
 
 import (
 	"bufio"
@@ -59,7 +61,7 @@ type Pack struct {
 	content []*PackedObject
 	idx     *Idx
 	name    string
-	opener  opener
+	opener  Opener
 	file    *os.File
 }
 
@@ -91,7 +93,7 @@ type PackedObjectId struct {
 	index  int
 }
 
-type opener func() (*os.File, error)
+type Opener func() (*os.File, error)
 
 func (pack *Pack) open() error {
 	if pack.file != nil {
@@ -208,7 +210,7 @@ func (pack *Pack) unpackFromShortOid(short string) (obj objects.Object, result p
 
 // Returns the object for the given short oid, if exactly one such object exists.
 // Otherwise returns nil, false.
-func unpackFromShortOid(packs []*Pack, short string) (obj objects.Object, ok bool) {
+func UnpackFromShortOid(packs []*Pack, short string) (obj objects.Object, ok bool) {
 	//this function could be O(1) if we... tried... hard enough. tried. get it?
 	//awwwwwwwwwwwwwwwww yeh
 	var already bool
@@ -224,7 +226,7 @@ func unpackFromShortOid(packs []*Pack, short string) (obj objects.Object, ok boo
 	return obj, already
 }
 
-func unpack(packs []*Pack, oid *objects.ObjectId) (obj objects.Object, ok bool) {
+func Unpack(packs []*Pack, oid *objects.ObjectId) (obj objects.Object, ok bool) {
 	var result packSearch
 	for _, pack := range packs {
 		if obj, result = pack.unpack(oid); result == OneSuchObject {
@@ -235,7 +237,7 @@ func unpack(packs []*Pack, oid *objects.ObjectId) (obj objects.Object, ok bool) 
 	return
 }
 
-func objectIdsFromPacks(packs []*Pack) (ids []*objects.ObjectId) {
+func ObjectIdsFromPacks(packs []*Pack) (ids []*objects.ObjectId) {
 	var count int64
 	for _, pack := range packs {
 		count += pack.idx.count
@@ -251,7 +253,7 @@ func objectIdsFromPacks(packs []*Pack) (ids []*objects.ObjectId) {
 	return ids
 }
 
-func objectsFromPacks(packs []*Pack) (objects []*PackedObject) {
+func ObjectsFromPacks(packs []*Pack) (objects []*PackedObject) {
 	var count int64
 	for _, pack := range packs {
 		count += pack.idx.count
@@ -274,15 +276,13 @@ func objectsFromPacks(packs []*Pack) (objects []*PackedObject) {
 // ================================================================= //
 
 type packIdxParser struct {
-	idxParser  *objectIdParser
+	idxParser  *ObjectIdParser
 	name       string
-	packOpener opener
+	packOpener Opener
 }
 
-func newPackIdxParser(idx *bufio.Reader, packOpener opener, name string) *packIdxParser {
-	oidParser := &objectIdParser{
-		*util.NewDataParser(idx),
-	}
+func NewPackIdxParser(idx *bufio.Reader, packOpener Opener, name string) *packIdxParser {
+	oidParser := NewObjectIdParser(idx)
 	return &packIdxParser{
 		idxParser:  oidParser,
 		name:       name,
@@ -372,7 +372,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 // ================================================================= //
 
 type packedObjectParser struct {
-	*objectParser
+	*ObjectParser
 	bytes []byte
 }
 
@@ -384,7 +384,7 @@ func newPackedObjectParser(data []byte, oid *objects.ObjectId) (p *packedObjectP
 		exploder := util.NewDataParser(bufio.NewReader(zr))
 		exploded := exploder.Bytes()
 		explodedReader := bufio.NewReader(bytes.NewReader(exploded))
-		op := newObjectParser(explodedReader, oid)
+		op := NewObjectParser(explodedReader, oid)
 		pop := packedObjectParser{
 			op,
 			exploded,
@@ -395,7 +395,7 @@ func newPackedObjectParser(data []byte, oid *objects.ObjectId) (p *packedObjectP
 }
 
 //parse the pack's meta data and close it
-func (p *packIdxParser) parsePack() *Pack {
+func (p *packIdxParser) ParsePack() *Pack {
 	//parse the index and construct the pack
 	idx := p.parseIdx()
 	objects := make([]*PackedObject, idx.count)
@@ -508,7 +508,7 @@ func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *objects.ObjectI
 
 func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 	dp.hdr = objects.NewObjectHeader(objects.ObjectCommit, size)
-	commit := dp.objectParser.parseCommit()
+	commit := dp.ObjectParser.parseCommit()
 
 	return &PackedObject{
 		object: commit,
@@ -517,7 +517,7 @@ func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 }
 func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 	dp.hdr = objects.NewObjectHeader(objects.ObjectTag, size)
-	tag := dp.objectParser.parseTag()
+	tag := dp.ObjectParser.parseTag()
 	return &PackedObject{
 		object: tag,
 		bytes:  dp.bytes,
@@ -526,7 +526,7 @@ func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 
 func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 	data := dp.Bytes()
-	oid := dp.objectParser.oid
+	oid := dp.ObjectParser.oid
 	hdr := objects.NewObjectHeader(objects.ObjectBlob, size)
 	blob := objects.NewBlob(oid, hdr, data)
 	return &PackedObject{
@@ -537,7 +537,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 
 func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
 	dp.hdr = objects.NewObjectHeader(objects.ObjectTree, size)
-	tree := dp.objectParser.parseTree()
+	tree := dp.ObjectParser.parseTree()
 	return &PackedObject{
 		object: tree,
 		bytes:  dp.bytes,
@@ -637,12 +637,12 @@ func (p *Pack) findObjectByOffset(offset int64) *PackedObject {
 	return p.content[i]
 }
 
-func (p *objectParser) readByteAsInt() int64 {
+func (p *ObjectParser) readByteAsInt() int64 {
 	return int64(p.ReadByte())
 }
 
 func (dp *packedObjectParser) applyDelta(base *PackedObject, id *objects.ObjectId) (object *PackedObject) {
-	p := dp.objectParser
+	p := dp.ObjectParser
 
 	baseSize := p.parseIntWhileMSB()
 	outputSize := p.parseIntWhileMSB()
@@ -692,7 +692,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *objects.ObjectI
 		util.PanicErrf("Expected output of len %d, got %d. \n", outputSize, len(out))
 	}
 	outputType := base.object.Header().Type()
-	outputParser := newObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
+	outputParser := NewObjectParser(bufio.NewReader(bytes.NewReader(out)), id)
 	outputParser.hdr = objects.NewObjectHeader(outputType, outputSize)
 	var obj objects.Object
 	switch outputType {
@@ -717,7 +717,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *objects.ObjectI
 // the next seven bytes may be read, as determined by the seven least significant
 // bits of the copy command.
 func (dp *packedObjectParser) parseCopyCmd(cmd byte) (offset int64, len int64) {
-	p := dp.objectParser
+	p := dp.ObjectParser
 	offset, len = 0, 0
 	if cmd&0x01 != 0 {
 		offset = p.readByteAsInt()
@@ -750,7 +750,7 @@ func (dp *packedObjectParser) parseCopyCmd(cmd byte) (offset int64, len int64) {
 // size and output size. The function is named after the decoding mechanism:
 // bytes are read and computed until a byte is found whose most significant
 // bit is not set.
-func (p *objectParser) parseIntWhileMSB() (i int64) {
+func (p *ObjectParser) parseIntWhileMSB() (i int64) {
 	n := 0
 	for {
 		v := p.ReadByte()
@@ -772,6 +772,6 @@ func isSetMSB(b byte) bool {
 	return b > 127
 }
 
-func packName(fileName string) string {
+func PackName(fileName string) string {
 	return fileName[5 : len(fileName)-4]
 }

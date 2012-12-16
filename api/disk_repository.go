@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/parse"
 	"github.com/jbrukh/ggit/util"
 	"io"
 	"os"
@@ -25,7 +26,7 @@ import (
 // a representation of a git repository
 type DiskRepository struct {
 	path       string
-	packs      []*Pack
+	packs      []*parse.Pack
 	packedRefs []objects.Ref
 }
 
@@ -61,7 +62,7 @@ func (repo *DiskRepository) ObjectFromOid(oid *objects.ObjectId) (obj objects.Ob
 			if err := loadPacks(repo); err != nil {
 				return nil, err
 			}
-			if obj, ok := unpack(repo.packs, oid); ok {
+			if obj, ok := parse.Unpack(repo.packs, oid); ok {
 				return obj, nil
 			}
 		}
@@ -73,7 +74,7 @@ func (repo *DiskRepository) ObjectFromOid(oid *objects.ObjectId) (obj objects.Ob
 	}
 	defer rz.Close()
 	file := bufio.NewReader(rz)
-	p := newObjectParser(file, oid)
+	p := parse.NewObjectParser(file, oid)
 	return p.ParsePayload()
 }
 
@@ -113,7 +114,7 @@ func (repo *DiskRepository) ObjectFromShortOid(short string) (objects.Object, er
 	if e != nil {
 		if os.IsNotExist(e) {
 			loadPacks(repo)
-			if obj, ok := unpackFromShortOid(repo.packs, short); ok {
+			if obj, ok := parse.UnpackFromShortOid(repo.packs, short); ok {
 				return obj, nil
 			}
 		}
@@ -161,14 +162,14 @@ func (repo *DiskRepository) PackedObjectIds() ([]*objects.ObjectId, error) {
 	if err := loadPacks(repo); err != nil {
 		return nil, err
 	}
-	return objectIdsFromPacks(repo.packs), nil
+	return parse.ObjectIdsFromPacks(repo.packs), nil
 }
 
-func (repo *DiskRepository) PackedObjects() ([]*PackedObject, error) {
+func (repo *DiskRepository) PackedObjects() ([]*parse.PackedObject, error) {
 	if err := loadPacks(repo); err != nil {
 		return nil, err
 	}
-	return objectsFromPacks(repo.packs), nil
+	return parse.ObjectsFromPacks(repo.packs), nil
 }
 
 func (repo *DiskRepository) LooseObjectIds() (oids []*objects.ObjectId, err error) {
@@ -343,13 +344,13 @@ func loadPacks(repo *DiskRepository) (err error) {
 	if err = filepath.Walk(packRoot, func(path string, info os.FileInfo, ignored error) error {
 		if strings.HasSuffix(path, "idx") {
 			name := info.Name()
-			packNames = append(packNames, packName(name))
+			packNames = append(packNames, parse.PackName(name))
 		}
 		return nil
 	}); err != nil {
 		return
 	}
-	packs := make([]*Pack, len(packNames), len(packNames))
+	packs := make([]*parse.Pack, len(packNames), len(packNames))
 	for i, name := range packNames {
 		if idxFile, e := os.Open(path.Join(packRoot, "pack-"+name+".idx")); e != nil {
 			return e
@@ -359,8 +360,8 @@ func loadPacks(repo *DiskRepository) (err error) {
 			open := func() (*os.File, error) {
 				return os.Open(path.Join(packRoot, packFile))
 			}
-			pp := newPackIdxParser(bufio.NewReader(idxFile), opener(open), name)
-			packs[i] = pp.parsePack()
+			pp := parse.NewPackIdxParser(bufio.NewReader(idxFile), parse.Opener(open), name)
+			packs[i] = pp.ParsePack()
 		}
 	}
 	repo.packs = packs

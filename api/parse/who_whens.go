@@ -9,7 +9,7 @@
 /*
 who_whens.go implements user credentials and timestamps.
 */
-package api
+package parse
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
@@ -18,11 +18,16 @@ import (
 	"strings"
 )
 
+var signs []string = []string{
+	token.PLUS,
+	token.MINUS,
+}
+
 // ================================================================= //
 // PARSING
 // ================================================================= //
 
-func (p *objectParser) parseWhoWhen(marker string) *objects.WhoWhen {
+func (p *ObjectParser) parseWhoWhen(marker string) *objects.WhoWhen {
 	p.ConsumeString(marker)
 	p.ConsumeByte(token.SP)
 	user := strings.Trim(p.ReadString(token.LT), string(token.SP))

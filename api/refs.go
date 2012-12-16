@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/parse"
 	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 	"strings"
@@ -91,7 +92,7 @@ func matchRefs(full, partial string) bool {
 
 // refParser implements functions for parsing refs and packed refs.
 type refParser struct {
-	objectIdParser
+	parse.ObjectIdParser
 	name string // the name of the ref file
 }
 
@@ -99,10 +100,8 @@ type refParser struct {
 // given name.
 func newRefParser(buf *bufio.Reader, name string) *refParser {
 	return &refParser{
-		objectIdParser: objectIdParser{
-			*util.NewDataParser(buf),
-		},
-		name: name,
+		*parse.NewObjectIdParser(buf),
+		name,
 	}
 }
 

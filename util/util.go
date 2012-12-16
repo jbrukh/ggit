@@ -12,6 +12,8 @@ util.go implements miscellaneous common functions.
 package util
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/rand"
 	"fmt"
 	"io"
@@ -93,4 +95,8 @@ func TrimPrefix(str, prefix string) string {
 		}
 	}
 	return str
+}
+
+func ReaderForString(str string) *bufio.Reader {
+	return bufio.NewReader(bytes.NewBufferString(str))
 }
