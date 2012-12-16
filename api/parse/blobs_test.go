@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package api
+package parse
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ var testCasesBlobs = []string{
 func Test_parseValidBlob(t *testing.T) {
 	for _, v := range testCasesBlobs {
 		tb := makeTestBlob(v)
-		p := objectParserForString(tb)
+		p := ObjectParserForString(tb)
 		hdr, err := p.ParseHeader()
 		util.AssertNoErr(t, err)
 		util.Assert(t, hdr.Type() == objects.ObjectBlob)
@@ -56,7 +56,7 @@ func Test_parseValidBlob(t *testing.T) {
 
 func Test_parseInvalidBlobHeader(t *testing.T) {
 	test := func(badBlob string) {
-		p := objectParserForString(badBlob)
+		p := ObjectParserForString(badBlob)
 		hdr, e := p.ParseHeader()
 		util.Assert(t, e != nil)
 		util.Assert(t, hdr == nil)
@@ -73,7 +73,7 @@ func Test_parseBlobBadSize(t *testing.T) {
 		l := len(contents)
 		size := rand.Intn(l+1) - 1 + 2*rand.Intn(2)*l // never equal to l
 		tb := makeTestBlobWithSize(size, contents)
-		p := objectParserForString(tb)
+		p := ObjectParserForString(tb)
 		hdr, e := p.ParseHeader()
 		util.AssertNoErr(t, e)
 		util.Assert(t, hdr.Type() == objects.ObjectBlob)

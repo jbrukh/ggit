@@ -5,12 +5,11 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package api
+package parse
 
 import (
 	"bufio"
 	"github.com/jbrukh/ggit/api/objects"
-	"github.com/jbrukh/ggit/api/parse"
 	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 )
@@ -19,24 +18,24 @@ import (
 // GGIT OBJECT PARSER
 // ================================================================= //
 
-type objectParser struct {
-	parse.ObjectIdParser
+type ObjectParser struct {
+	ObjectIdParser
 	oid *objects.ObjectId
 	hdr *objects.ObjectHeader
 }
 
-func newObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *objectParser {
-	op := &objectParser{
-		*parse.NewObjectIdParser(buf),
+func NewObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *ObjectParser {
+	op := &ObjectParser{
+		*NewObjectIdParser(buf),
 		oid,
 		nil,
 	}
 	return op
 }
 
-func (p *objectParser) ParseHeader() (*objects.ObjectHeader, error) {
+func (p *ObjectParser) ParseHeader() (*objects.ObjectHeader, error) {
 	err := util.SafeParse(func() {
-		ot := objects.ObjectType(p.ConsumeStrings(objectTypes))
+		ot := objects.ObjectType(p.ConsumeStrings(token.ObjectTypes))
 		p.ConsumeByte(token.SP)
 		size := p.ParseAtoi(token.NUL)
 		p.hdr = objects.NewObjectHeader(ot, size)
@@ -47,7 +46,7 @@ func (p *objectParser) ParseHeader() (*objects.ObjectHeader, error) {
 	return p.hdr, nil
 }
 
-func (p *objectParser) ParsePayload() (objects.Object, error) {
+func (p *ObjectParser) ParsePayload() (objects.Object, error) {
 	// parse header if it wasn't parsed already
 	if p.hdr == nil {
 		if _, e := p.ParseHeader(); e != nil {

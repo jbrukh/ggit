@@ -10,6 +10,7 @@ package api
 import (
 	"errors"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 	"regexp"
 	"strconv"
@@ -48,7 +49,7 @@ type revParser struct {
 
 func newRevParser(repo Repository, rev string) *revParser {
 	return &revParser{
-		util.DataParser: *util.NewDataParser(readerForString(rev)),
+		util.DataParser: *util.NewDataParser(util.ReaderForString(rev)),
 		repo:            repo,
 		rev:             rev,
 	}
@@ -123,7 +124,7 @@ func (p *revParser) Parse() error {
 			if b == '^' {
 				if !p.EOF() && p.PeekByte() == '{' {
 					p.ConsumeByte('{')
-					otype := objects.ObjectType(p.ConsumeStrings(objectTypes))
+					otype := objects.ObjectType(p.ConsumeStrings(token.ObjectTypes))
 					err = applyDereference(p, otype)
 					if err != nil {
 

@@ -10,7 +10,7 @@
 trees.go implements ggit Tree objects, TreeEntries, their parsing and
 formatting.
 */
-package api
+package parse
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
@@ -26,7 +26,7 @@ import (
 // object, or panics with panicErr if there is a problem parsing.
 // For this reason, it should be called as a parameter to
 // safeParse().
-func (p *objectParser) parseTree() *objects.Tree {
+func (p *ObjectParser) parseTree() *objects.Tree {
 	entries := make([]*objects.TreeEntry, 0)
 	p.ResetCount()
 	for !p.EOF() {

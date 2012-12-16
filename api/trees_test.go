@@ -12,8 +12,8 @@ trees_test.go implements git-comparison tests for ggit tree parsing.
 package api
 
 import (
-	//"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/parse"
 	"github.com/jbrukh/ggit/api/token"
 	"github.com/jbrukh/ggit/util"
 	"testing"
@@ -101,7 +101,7 @@ func Test_parseAndCompareTest(t *testing.T) {
 // 100644 blob 0c01aeb4856324d8487a252e32e04961bf603fad	version.go
 // `
 func parseAndCompareTree(t *testing.T, repo Repository, treeRepr string) {
-	p := objectParserForString(treeRepr)
+	p := parse.ObjectParserForString(treeRepr)
 
 	oid := p.ParseOid()
 	p.ConsumeByte(token.LF)
@@ -119,7 +119,7 @@ func parseAndCompareTree(t *testing.T, repo Repository, treeRepr string) {
 
 	for !p.EOF() {
 		mode := p.ParseFileMode(token.SP)
-		otype := objects.ObjectType(p.ConsumeStrings(objectTypes))
+		otype := objects.ObjectType(p.ConsumeStrings(token.ObjectTypes))
 		p.ConsumeByte(token.SP)
 		oidStr := p.ParseOid().String()
 		p.ConsumeByte(token.TAB)

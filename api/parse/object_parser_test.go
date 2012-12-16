@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package api
+package parse
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
@@ -16,7 +16,7 @@ import (
 func Test_ParseObjectId(t *testing.T) {
 	var oid *objects.ObjectId
 	oidStr := "ff6ccb68859fd52216ec8dadf98d2a00859f5369"
-	t1 := objectParserForString(oidStr)
+	t1 := ObjectParserForString(oidStr)
 	oid = t1.ParseOid()
 	util.Assert(t, oid.String() == oidStr)
 }

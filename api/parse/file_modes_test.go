@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package api
+package parse
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
@@ -37,7 +37,7 @@ func Test_assertFileMode(t *testing.T) {
 }
 
 func Test_parseValidFileMode(t *testing.T) {
-	p := objectParserForString("0000000\n0040000\n0100644\n0100755\n0120000\n0160000\n")
+	p := ObjectParserForString("0000000\n0040000\n0100644\n0100755\n0120000\n0160000\n")
 	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeNew)
 	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeTree)
 	util.Assert(t, p.ParseFileMode(token.LF) == objects.ModeBlob)
@@ -49,7 +49,7 @@ func Test_parseValidFileMode(t *testing.T) {
 
 func Test_parseInvalidFileMode(t *testing.T) {
 	// test non-file modes
-	p := objectParserForString("000200\n002000\n000644\n000755\n0120200\n01600990\n")
+	p := ObjectParserForString("000200\n002000\n000644\n000755\n0120200\n01600990\n")
 	for !p.EOF() {
 		util.AssertPanic(t, func() {
 			m := p.ParseFileMode(token.LF)

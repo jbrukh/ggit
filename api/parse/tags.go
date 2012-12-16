@@ -5,7 +5,7 @@
 //
 // Copyright (c) 2012 The ggit Authors
 //
-package api
+package parse
 
 import (
 	"github.com/jbrukh/ggit/api/objects"
@@ -24,7 +24,7 @@ const (
 // PARSING
 // ================================================================= //
 
-func (p *objectParser) parseTag() *objects.Tag {
+func (p *ObjectParser) parseTag() *objects.Tag {
 	p.ResetCount()
 
 	// read the object id
@@ -36,7 +36,7 @@ func (p *objectParser) parseTag() *objects.Tag {
 	// read object type
 	p.ConsumeString(markerType)
 	p.ConsumeByte(token.SP)
-	t := objects.ObjectType(p.ConsumeStrings(objectTypes))
+	t := objects.ObjectType(p.ConsumeStrings(token.ObjectTypes))
 	p.ConsumeByte(token.LF)
 
 	// read the tag name

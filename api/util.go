@@ -8,28 +8,13 @@
 package api
 
 import (
-	"bufio"
-	"bytes"
 	"crypto/sha1"
 	"fmt"
 	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/api/objects"
-	"github.com/jbrukh/ggit/api/parse"
 	"github.com/jbrukh/ggit/api/token"
 	"hash"
 )
-
-var signs []string = []string{
-	token.PLUS,
-	token.MINUS,
-}
-
-var objectTypes []string = []string{
-	string(objects.ObjectBlob),
-	string(objects.ObjectTree),
-	string(objects.ObjectCommit),
-	string(objects.ObjectTag),
-}
 
 // the hash object used to build
 // hashes of our objects
@@ -63,20 +48,4 @@ func abs(x int) int {
 		return -x
 	}
 	return x
-}
-
-// ================================================================= //
-// METHODS FOR TESTING
-// ================================================================= //
-
-// TODO: move to util
-
-func objectParserForString(str string) *objectParser {
-	return &objectParser{
-		*parse.NewObjectIdParser(readerForString(str)), nil, nil,
-	}
-}
-
-func readerForString(str string) *bufio.Reader {
-	return bufio.NewReader(bytes.NewBufferString(str))
 }
