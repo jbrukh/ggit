@@ -14,6 +14,7 @@ import (
 	"compress/zlib"
 	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/parse"
 	"github.com/jbrukh/ggit/util"
 	"io"
 	"os"
@@ -274,15 +275,13 @@ func objectsFromPacks(packs []*Pack) (objects []*PackedObject) {
 // ================================================================= //
 
 type packIdxParser struct {
-	idxParser  *objectIdParser
+	idxParser  *parse.ObjectIdParser
 	name       string
 	packOpener opener
 }
 
 func newPackIdxParser(idx *bufio.Reader, packOpener opener, name string) *packIdxParser {
-	oidParser := &objectIdParser{
-		*util.NewDataParser(idx),
-	}
+	oidParser := parse.NewObjectIdParser(idx)
 	return &packIdxParser{
 		idxParser:  oidParser,
 		name:       name,

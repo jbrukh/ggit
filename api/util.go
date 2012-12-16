@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/jbrukh/ggit/api/format"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/jbrukh/ggit/api/parse"
 	"github.com/jbrukh/ggit/api/token"
 	"hash"
 )
@@ -72,7 +73,7 @@ func abs(x int) int {
 
 func objectParserForString(str string) *objectParser {
 	return &objectParser{
-		objectIdParser: *newObjectIdParser(readerForString(str)),
+		*parse.NewObjectIdParser(readerForString(str)), nil, nil,
 	}
 }
 
