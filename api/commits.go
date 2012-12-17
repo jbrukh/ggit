@@ -62,7 +62,7 @@ func CommitFromObject(repo Repository, o objects.Object) (*objects.Commit, error
 	case *objects.Commit:
 		return t, nil
 	case *objects.Tag:
-		obj, err := ObjectFromOid(repo, t.Object())
+		obj, err := repo.ObjectFromOid(t.Object())
 		if err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func CommitFromObject(repo Repository, o objects.Object) (*objects.Commit, error
 // points at an annotated tag, then the target commit is returned. If
 // the oid points to another type of object, an error is returned.
 func CommitFromOid(repo Repository, oid *objects.ObjectId) (*objects.Commit, error) {
-	o, err := ObjectFromOid(repo, oid)
+	o, err := repo.ObjectFromOid(oid)
 	if err != nil {
 		return nil, err
 	}

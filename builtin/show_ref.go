@@ -139,7 +139,7 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 				fmtr.Lf()
 			} else {
 				_, oid := r.Target() // better not be symbolic
-				o, err := api.ObjectFromOid(p.Repo, oid.(*objects.ObjectId))
+				o, err := p.Repo.ObjectFromOid(oid.(*objects.ObjectId))
 				if err == nil {
 					if o.Header().Type() == objects.ObjectTag {
 						tag := o.(*objects.Tag)

@@ -205,7 +205,7 @@ func (p *revParser) findObject(spec string) (err error) {
 		if err != nil {
 			return err
 		}
-		o, err = ObjectFromOid(p.repo, ref.ObjectId())
+		o, err = p.repo.ObjectFromOid(ref.ObjectId())
 		if err != nil {
 			return err
 		}

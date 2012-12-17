@@ -140,8 +140,8 @@ func (repo *DiskRepository) Ref(spec string) (objects.Ref, error) {
 	file, e := relativeFile(repo, spec)
 	if e == nil {
 		defer file.Close()
-		p := newRefParser(bufio.NewReader(file), spec)
-		return p.parseRef()
+		p := parse.NewRefParser(bufio.NewReader(file), spec)
+		return p.ParseRef()
 	}
 	if os.IsNotExist(e) {
 		refs, err := repo.PackedRefs()
@@ -208,7 +208,7 @@ func (repo *DiskRepository) PackedRefs() ([]objects.Ref, error) {
 			return nil, e
 		}
 		defer file.Close()
-		p := newRefParser(bufio.NewReader(file), "")
+		p := parse.NewRefParser(bufio.NewReader(file), "")
 		var refs []objects.Ref
 		if refs, e = p.ParsePackedRefs(); e != nil {
 			return nil, e

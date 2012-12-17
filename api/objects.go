@@ -13,12 +13,6 @@ import "github.com/jbrukh/ggit/api/objects"
 // OPERATIONS
 // ================================================================= //
 
-// ObjectFromOid turns an ObjectId into an Object given the parent
-// repository of the object.
-func ObjectFromOid(repo Repository, oid *objects.ObjectId) (objects.Object, error) {
-	return repo.ObjectFromOid(oid)
-}
-
 // ObjectFromRef is similar to OidFromRef, except it derefernces the
 // target ObjectId into an actual Object.
 func ObjectFromRef(repo Repository, spec string) (objects.Object, error) {

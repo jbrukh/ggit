@@ -30,7 +30,7 @@ func Test_readTree(t *testing.T) {
 	var (
 		oid = objects.OidNow(info.TreeOid)
 	)
-	o, err := ObjectFromOid(repo, oid)
+	o, err := repo.ObjectFromOid(oid)
 	util.AssertNoErr(t, err)
 
 	// check the id
