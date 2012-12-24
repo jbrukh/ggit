@@ -15,7 +15,7 @@ import (
 // FORMATTING
 // ================================================================= //
 
-func (f *Format) Tag(t *objects.Tag) (int, error) {
+func (f *formatter) Tag(t *objects.Tag) (int, error) {
 	fmt.Fprintf(f.Writer, "object %s\n", t.Object())
 	fmt.Fprintf(f.Writer, "type %s\n", t.ObjectType())
 	fmt.Fprintf(f.Writer, "tag %s\n", t.Name())
@@ -26,7 +26,7 @@ func (f *Format) Tag(t *objects.Tag) (int, error) {
 	return 0, nil // TODO
 }
 
-func (f *Format) TagPretty(t *objects.Tag) (int, error) {
+func (f *formatter) TagPretty(t *objects.Tag) (int, error) {
 	fmt.Fprintf(f.Writer, "object %s\n", t.Object())
 	fmt.Fprintf(f.Writer, "type %s\n", t.ObjectType())
 	fmt.Fprintf(f.Writer, "tag %s\n", t.Name())

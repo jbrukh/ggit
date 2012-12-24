@@ -124,7 +124,7 @@ func (b *ShowRefBuiltin) filterRefs(p *Params, filters []api.Filter) {
 		}
 	}
 	// formatter
-	fmtr := format.Format{p.Wout}
+	fmtr := format.NewFormat(p.Wout)
 
 	if b.flagQuiet {
 		return
@@ -161,7 +161,7 @@ TODO: remove this method, it is mainly for debugging
 */
 func (b *ShowRefBuiltin) Which(p *Params) {
 	repo := p.Repo.(*api.DiskRepository)
-	fmtr := format.Format{p.Wout}
+	fmtr := format.NewFormat(p.Wout)
 
 	fmt.Fprintln(p.Wout, "Loose refs:")
 	refs, e := repo.LooseRefs()

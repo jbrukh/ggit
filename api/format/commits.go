@@ -16,7 +16,7 @@ import (
 // ================================================================= //
 
 // TODO: the return values of this method are broken
-func (f *Format) Commit(c *objects.Commit) (int, error) {
+func (f *formatter) Commit(c *objects.Commit) (int, error) {
 	// tree
 	fmt.Fprintf(f.Writer, "tree %s\n", c.Tree())
 

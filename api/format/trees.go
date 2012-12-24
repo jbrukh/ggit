@@ -18,7 +18,7 @@ import (
 
 // Tree formats this tree object into an API-friendly string that is
 // the same as the output of git-cat-file tree <tree>.
-func (f *Format) Tree(t *objects.Tree) (int, error) {
+func (f *formatter) Tree(t *objects.Tree) (int, error) {
 	N := 0
 	for _, e := range t.Entries() {
 		n, err := fmt.Fprintf(f.Writer, "%o %s%s%s", e.Mode(), e.Name(), string(token.NUL), string(e.ObjectId().Bytes()))
@@ -32,7 +32,7 @@ func (f *Format) Tree(t *objects.Tree) (int, error) {
 
 // TreePretty formats this tree object into a human-friendly table
 // that is the same as the output of git-cat-file -p <tree>.
-func (f *Format) TreePretty(t *objects.Tree) (int, error) {
+func (f *formatter) TreePretty(t *objects.Tree) (int, error) {
 	N := 0
 	for _, e := range t.Entries() {
 		n, err := fmt.Fprintf(f.Writer, "%.6o %s %s\t%s\n", e.Mode(), e.ObjectType(), e.ObjectId(), e.Name())

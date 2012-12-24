@@ -16,11 +16,11 @@ import (
 // FORMATTING
 // ================================================================= //
 
-func (f *Format) WhoWhenDate(ww *objects.WhoWhen) (int, error) {
+func (f *formatter) WhoWhenDate(ww *objects.WhoWhen) (int, error) {
 	return fmt.Fprintf(f.Writer, "%s <%s> %s %s", ww.Name(), ww.Email(), ww.Date(), zone(ww.Offset()))
 }
 
-func (f *Format) WhoWhen(ww *objects.WhoWhen) (int, error) {
+func (f *formatter) WhoWhen(ww *objects.WhoWhen) (int, error) {
 	return fmt.Fprintf(f.Writer, "%s <%s> %d %s", ww.Name(), ww.Email(), ww.Seconds(), zone(ww.Offset()))
 }
 

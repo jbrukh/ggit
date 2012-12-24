@@ -60,7 +60,7 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 
 	switch {
 	case b.flagPrettyPrint:
-		f := format.Format{p.Wout}
+		f := format.NewPrettyFormat(p.Wout)
 		f.ObjectPretty(o)
 	case b.flagShowType:
 		fmt.Fprintln(p.Wout, o.Header().Type())
@@ -72,7 +72,7 @@ func (b *CatFileBuiltin) Execute(p *Params, args []string) {
 			b.HelpInfo.WriteUsage(p.Werr)
 			return
 		}
-		f := format.Format{p.Wout}
+		f := format.NewFormat(p.Wout)
 		f.Object(o)
 	}
 }

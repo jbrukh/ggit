@@ -14,7 +14,7 @@ import "github.com/jbrukh/ggit/api/objects"
 
 // The "plumbing" string output of an Object. This output can be used
 // to reproduce the contents or SHA1 hash of an Object.
-func (f *Format) Object(o objects.Object) (int, error) {
+func (f *formatter) Object(o objects.Object) (int, error) {
 	/* TODO: consider that this isn't extensible.
 	 * Outside of the format package, new Object types cannot add their
 	 * own formatting here. */
@@ -33,7 +33,7 @@ func (f *Format) Object(o objects.Object) (int, error) {
 
 // The pretty string output of an Object. This format is not necessarily
 // of use as an api call; it is for humans.
-func (f *Format) ObjectPretty(o objects.Object) (int, error) {
+func (f *formatter) ObjectPretty(o objects.Object) (int, error) {
 	switch t := o.(type) {
 	case *objects.Blob:
 		return f.Blob(t)

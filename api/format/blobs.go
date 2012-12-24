@@ -17,6 +17,6 @@ import (
 
 // Blob formats the contents of the blog as a string
 // for output to the screen.
-func (f *Format) Blob(b *objects.Blob) (int, error) {
+func (f *formatter) Blob(b *objects.Blob) (int, error) {
 	return fmt.Fprintf(f.Writer, "%s", string(b.Data()))
 }

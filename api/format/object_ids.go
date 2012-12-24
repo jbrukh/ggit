@@ -15,6 +15,6 @@ import (
 // FORMATTING
 // ================================================================= //
 
-func (f *Format) ObjectId(oid *objects.ObjectId) (int, error) {
+func (f *formatter) ObjectId(oid *objects.ObjectId) (int, error) {
 	return fmt.Fprint(f.Writer, oid.String())
 }
