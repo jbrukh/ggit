@@ -36,13 +36,14 @@ func (p *objectParser) parseWhoWhen(marker string) *objects.WhoWhen {
 	seconds := p.ParseInt(token.SP, 10, 64)
 
 	// time zone
-	signStr := p.ConsumeStrings(signs)
 	var sign int64
-	if signStr == token.PLUS {
+	signStr := p.ConsumeStrings(signs)
+	switch signStr {
+	case token.PLUS:
 		sign = 1
-	} else if signStr == token.MINUS {
+	case token.MINUS:
 		sign = -1
-	} else {
+	default:
 		util.PanicErrf("expecting: +/- sign")
 	}
 
