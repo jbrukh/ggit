@@ -276,7 +276,7 @@ func ObjectsFromPacks(packs []*Pack) (objects []*PackedObject) {
 // ================================================================= //
 
 type packIdxParser struct {
-	idxParser  *ObjectIdParser
+	idxParser  *objectIdParser
 	name       string
 	packOpener Opener
 }
@@ -372,7 +372,7 @@ func (p *packIdxParser) parseIdx() *Idx {
 // ================================================================= //
 
 type packedObjectParser struct {
-	*ObjectParser
+	*objectParser
 	bytes []byte
 }
 
@@ -508,7 +508,7 @@ func parseNonDeltaEntry(bytes []byte, pot PackedObjectType, oid *objects.ObjectI
 
 func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 	dp.hdr = objects.NewObjectHeader(objects.ObjectCommit, size)
-	commit := dp.ObjectParser.parseCommit()
+	commit := dp.objectParser.parseCommit()
 
 	return &PackedObject{
 		object: commit,
@@ -517,7 +517,7 @@ func (dp *packedObjectParser) parseCommit(size int64) *PackedObject {
 }
 func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 	dp.hdr = objects.NewObjectHeader(objects.ObjectTag, size)
-	tag := dp.ObjectParser.parseTag()
+	tag := dp.objectParser.parseTag()
 	return &PackedObject{
 		object: tag,
 		bytes:  dp.bytes,
@@ -526,7 +526,7 @@ func (dp *packedObjectParser) parseTag(size int64) *PackedObject {
 
 func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 	data := dp.Bytes()
-	oid := dp.ObjectParser.oid
+	oid := dp.objectParser.oid
 	hdr := objects.NewObjectHeader(objects.ObjectBlob, size)
 	blob := objects.NewBlob(oid, hdr, data)
 	return &PackedObject{
@@ -537,7 +537,7 @@ func (dp *packedObjectParser) parseBlob(size int64) *PackedObject {
 
 func (dp *packedObjectParser) parseTree(size int64) *PackedObject {
 	dp.hdr = objects.NewObjectHeader(objects.ObjectTree, size)
-	tree := dp.ObjectParser.parseTree()
+	tree := dp.objectParser.parseTree()
 	return &PackedObject{
 		object: tree,
 		bytes:  dp.bytes,
@@ -637,12 +637,12 @@ func (p *Pack) findObjectByOffset(offset int64) *PackedObject {
 	return p.content[i]
 }
 
-func (p *ObjectParser) readByteAsInt() int64 {
+func (p *objectParser) readByteAsInt() int64 {
 	return int64(p.ReadByte())
 }
 
 func (dp *packedObjectParser) applyDelta(base *PackedObject, id *objects.ObjectId) (object *PackedObject) {
-	p := dp.ObjectParser
+	p := dp.objectParser
 
 	baseSize := p.parseIntWhileMSB()
 	outputSize := p.parseIntWhileMSB()
@@ -717,7 +717,7 @@ func (dp *packedObjectParser) applyDelta(base *PackedObject, id *objects.ObjectI
 // the next seven bytes may be read, as determined by the seven least significant
 // bits of the copy command.
 func (dp *packedObjectParser) parseCopyCmd(cmd byte) (offset int64, len int64) {
-	p := dp.ObjectParser
+	p := dp.objectParser
 	offset, len = 0, 0
 	if cmd&0x01 != 0 {
 		offset = p.readByteAsInt()
@@ -750,7 +750,7 @@ func (dp *packedObjectParser) parseCopyCmd(cmd byte) (offset int64, len int64) {
 // size and output size. The function is named after the decoding mechanism:
 // bytes are read and computed until a byte is found whose most significant
 // bit is not set.
-func (p *ObjectParser) parseIntWhileMSB() (i int64) {
+func (p *objectParser) parseIntWhileMSB() (i int64) {
 	n := 0
 	for {
 		v := p.ReadByte()

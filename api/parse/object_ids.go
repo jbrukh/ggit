@@ -17,20 +17,25 @@ import (
 // PARSING
 // ================================================================= //
 
-// ObjectIdParser is a dataparser that supports parsing of oids.
-type ObjectIdParser struct {
+type ObjectIdParser interface {
+	ParseOid() *objects.ObjectId
+	ParseOidBytes() *objects.ObjectId
+}
+
+// objectIdParser is a dataparser that supports parsing of oids.
+type objectIdParser struct {
 	util.DataParser
 }
 
-func NewObjectIdParser(rd *bufio.Reader) *ObjectIdParser {
-	return &ObjectIdParser{
+func NewObjectIdParser(rd *bufio.Reader) *objectIdParser {
+	return &objectIdParser{
 		*util.NewDataParser(rd),
 	}
 }
 
 // ParseOid reads the next objects.OidHexSize bytes from the
 // Reader and places the resulting object id in oid.
-func (p *ObjectIdParser) ParseOid() *objects.ObjectId {
+func (p *objectIdParser) ParseOid() *objects.ObjectId {
 	hex := string(p.Consume(objects.OidHexSize))
 	oid, e := objects.OidFromString(hex)
 	if e != nil {
@@ -41,7 +46,7 @@ func (p *ObjectIdParser) ParseOid() *objects.ObjectId {
 
 // ParseOidBytes reads the next objects.OidSize bytes from
 // the Reader and generates an ObjectId.
-func (p *ObjectIdParser) ParseOidBytes() *objects.ObjectId {
+func (p *objectIdParser) ParseOidBytes() *objects.ObjectId {
 	b := p.Consume(objects.OidSize)
 	oid, e := objects.OidFromBytes(b)
 	if e != nil {

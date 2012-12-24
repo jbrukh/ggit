@@ -24,7 +24,7 @@ const (
 
 // refParser implements functions for parsing refs and packed refs.
 type refParser struct {
-	ObjectIdParser
+	objectIdParser
 	name string // the name of the ref file
 }
 

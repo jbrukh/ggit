@@ -29,7 +29,7 @@ const (
 // OBJECT PARSER COMMIT PARSING METHODS
 // ================================================================= //
 
-func (p *ObjectParser) parseCommit() *objects.Commit {
+func (p *objectParser) parseCommit() *objects.Commit {
 	parents := make([]*objects.ObjectId, 0)
 
 	p.ResetCount()

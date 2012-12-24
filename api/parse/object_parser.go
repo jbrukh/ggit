@@ -18,14 +18,19 @@ import (
 // GGIT OBJECT PARSER
 // ================================================================= //
 
-type ObjectParser struct {
-	ObjectIdParser
+type ObjectParser interface {
+	ParsePayload() (objects.Object, error)
+	ParseHeader() (*objects.ObjectHeader, error)
+}
+
+type objectParser struct {
+	objectIdParser
 	oid *objects.ObjectId
 	hdr *objects.ObjectHeader
 }
 
-func NewObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *ObjectParser {
-	op := &ObjectParser{
+func NewObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *objectParser {
+	op := &objectParser{
 		*NewObjectIdParser(buf),
 		oid,
 		nil,
@@ -33,7 +38,7 @@ func NewObjectParser(buf *bufio.Reader, oid *objects.ObjectId) *ObjectParser {
 	return op
 }
 
-func (p *ObjectParser) ParseHeader() (*objects.ObjectHeader, error) {
+func (p *objectParser) ParseHeader() (*objects.ObjectHeader, error) {
 	err := util.SafeParse(func() {
 		ot := objects.ObjectType(p.ConsumeStrings(token.ObjectTypes))
 		p.ConsumeByte(token.SP)
@@ -46,7 +51,7 @@ func (p *ObjectParser) ParseHeader() (*objects.ObjectHeader, error) {
 	return p.hdr, nil
 }
 
-func (p *ObjectParser) ParsePayload() (objects.Object, error) {
+func (p *objectParser) ParsePayload() (objects.Object, error) {
 	// parse header if it wasn't parsed already
 	if p.hdr == nil {
 		if _, e := p.ParseHeader(); e != nil {

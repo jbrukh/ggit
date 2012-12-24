@@ -24,7 +24,7 @@ import (
 // and converts it to Blob. If there are parsing errors,
 // it panics with parseErr, so this method should be
 // called as a parameter a safeParse().
-func (p *ObjectParser) parseBlob() *objects.Blob {
+func (p *objectParser) parseBlob() *objects.Blob {
 
 	p.ResetCount()
 	data := p.Bytes()

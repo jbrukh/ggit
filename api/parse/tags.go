@@ -24,7 +24,7 @@ const (
 // PARSING
 // ================================================================= //
 
-func (p *ObjectParser) parseTag() *objects.Tag {
+func (p *objectParser) parseTag() *objects.Tag {
 	p.ResetCount()
 
 	// read the object id

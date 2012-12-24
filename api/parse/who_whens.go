@@ -27,7 +27,7 @@ var signs []string = []string{
 // PARSING
 // ================================================================= //
 
-func (p *ObjectParser) parseWhoWhen(marker string) *objects.WhoWhen {
+func (p *objectParser) parseWhoWhen(marker string) *objects.WhoWhen {
 	p.ConsumeString(marker)
 	p.ConsumeByte(token.SP)
 	user := strings.Trim(p.ReadString(token.LT), string(token.SP))

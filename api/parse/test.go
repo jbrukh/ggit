@@ -16,8 +16,8 @@ import "github.com/jbrukh/ggit/util"
 // METHODS FOR TESTING
 // ================================================================= //
 
-func ObjectParserForString(str string) *ObjectParser {
-	return &ObjectParser{
+func ObjectParserForString(str string) *objectParser {
+	return &objectParser{
 		*NewObjectIdParser(util.ReaderForString(str)), nil, nil,
 	}
 }
