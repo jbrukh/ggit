@@ -49,9 +49,11 @@ type revParser struct {
 
 func newRevParser(repo Repository, rev string) *revParser {
 	return &revParser{
-		util.DataParser: *util.NewDataParser(util.ReaderForString(rev)),
-		repo:            repo,
-		rev:             rev,
+		*util.NewDataParser(util.ReaderForString(rev)),
+		repo,
+		0,
+		rev,
+		nil,
 	}
 }
 
