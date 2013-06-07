@@ -7,7 +7,7 @@
 //
 
 /*
-commits.go implements ggit Commit objects, their parsing and formatting,
+trees.go implements ggit Commit objects, their parsing and formatting,
 and useful operations that allow users to resolve and navigate commits.
 */
 package api
@@ -34,7 +34,7 @@ func CommitNthParent(repo Repository, c *objects.Commit, n int) (rc *objects.Com
 	return nil, fmt.Errorf("cannot find parent n=%d", n)
 }
 
-// CommitNthAncestor will look up a chain of n objects by 
+// CommitNthAncestor will look up a chain of n objects by
 // following the first parent. If n == 0, then the parameterized
 // commit is returned. If along the way, a commit is found
 // to not have a first parent, an error is returned.
@@ -72,7 +72,7 @@ func CommitFromObject(repo Repository, o objects.Object) (*objects.Commit, error
 }
 
 // CommitFromOid takes an oid and turns it into a commit object. If the
-// oid points at a commit, the Commit object is returned. If the oid 
+// oid points at a commit, the Commit object is returned. If the oid
 // points at an annotated tag, then the target commit is returned. If
 // the oid points to another type of object, an error is returned.
 func CommitFromOid(repo Repository, oid *objects.ObjectId) (*objects.Commit, error) {
