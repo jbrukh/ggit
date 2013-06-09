@@ -10,7 +10,7 @@ package builtin
 import (
 	"fmt"
 	"github.com/jbrukh/ggit/api"
-	"github.com/jbrukh/ggit/api/format"
+	"github.com/jbrukh/ggit/api/diff"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/mikebosw/gdiff"
 	"os"
@@ -28,7 +28,7 @@ type DiffBuiltin struct {
 var Diff = &DiffBuiltin{
 	HelpInfo: HelpInfo{
 		Name:        "diff",
-		Description: "Describe the difference between two files", //TODO: between commits
+		Description: "Describe the difference between two files or trees", //TODO: between commits
 		UsageLine:   "",
 		ManPage:     "TODO",
 	},
@@ -49,13 +49,25 @@ func (db *DiffBuiltin) Execute(p *Params, args []string) {
 		fmt.Printf(e.Error())
 		return
 	}
-	fa := format.NewStrFormat()
-	fa.Object(oa)
-	a := fa.String()
-	fb := format.NewStrFormat()
-	fb.Object(ob)
-	b := fb.String()
-	differ := gdiff.MyersDiffer()
-	d := differ.Diff(a, b, gdiff.LINE_SPLIT)
-	d.Unified(os.Stdout)
+	var ot objects.ObjectType
+	if oah, obh := oa.Header().Type(), ob.Header().Type(); oah != obh {
+		fmt.Printf("objects are not the same type: \n%s [%s]\n%s [%s]\n", args[0], oah.String(), args[1], obh.String())
+		return
+	} else {
+		ot = oah
+	}
+	switch ot {
+	case objects.ObjectBlob:
+		oab, _ := oa.(*objects.Blob)
+		obb, _ := ob.(*objects.Blob)
+		d := diff.BlobDiff(oab, obb)
+		gdiff.Unified().Print(d, os.Stdout)
+	case objects.ObjectTree:
+		/*oat, _ := oa.(*objects.Tree)
+		obt, _ := oa.(*objects.Tree)
+		td := diff.TreeDiff(oat, obt)*/
+		//TODO
+	default:
+		fmt.Printf("objects are of type %s; only blobs (files) and trees are currently supported", ot)
+	}
 }
