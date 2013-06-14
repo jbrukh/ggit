@@ -1,7 +1,9 @@
 package diff
 
 import (
+	"fmt"
 	"github.com/jbrukh/ggit/api/objects"
+	"github.com/mikebosw/gdiff"
 	"sort"
 )
 
@@ -11,6 +13,30 @@ type TreeDiffer interface {
 
 type TreeDiff struct {
 	edits []*treeEdit
+}
+
+func (td *TreeDiff) String() string {
+	result := ""
+	for _, v := range td.edits {
+		result += v.String() + "\n"
+	}
+	return result
+}
+
+func treeFormat(prefix string, te *objects.TreeEntry) string {
+	return fmt.Sprintf("%s %s %s", prefix, te.ObjectType().String(), te.ObjectId().String())
+}
+
+func (te *treeEdit) String() string {
+	switch te.action {
+	case Insert:
+		return treeFormat("+", te.after)
+	case Delete:
+		return treeFormat("-", te.before)
+	case Rename:
+		return treeFormat(treeFormat("<>", te.before), te.after)
+	}
+	return ""
 }
 
 type treeEdit struct {
@@ -84,41 +110,36 @@ func (d *treeDiffer) Diff(ta, tb *objects.Tree) *TreeDiff {
 	entriesA, entriesB := ta.Entries(), tb.Entries()
 	sort.Sort(byOid(entriesA))
 	sort.Sort(byOid(entriesB))
+	idsA := ""
+	for _, v := range entriesA {
+		idsA += fmt.Sprintln(v.ObjectId().String())
+	}
+	idsB := ""
+	for _, v := range entriesB {
+		idsB += fmt.Sprintln(v.ObjectId().String())
+	}
 	result := new(TreeDiff)
-	var entryA, entryB *objects.TreeEntry
-	for i, j := 0, 0; i < len(entriesA) || j < len(entriesB); {
-		if entryA == nil {
-			if len(entriesA) > i {
-				entryA = entriesA[i]
+
+	tDiff := gdiff.MyersDiffer().Diff(idsA, idsB, gdiff.LineSplit)
+	for _, edit := range tDiff.Edits() {
+		switch edit.Type {
+		case gdiff.Insert:
+			for i := edit.Start; i <= edit.End; i++ {
+				result.edits = append(result.edits, &treeEdit{
+					action: Insert,
+					before: nil,
+					after:  entriesB[i],
+				})
+			}
+		case gdiff.Delete:
+			for i := edit.Start; i <= edit.End; i++ {
+				result.edits = append(result.edits, &treeEdit{
+					action: Delete,
+					before: entriesA[i],
+					after:  nil,
+				})
 			}
 		}
-		if entryB == nil {
-			if len(entriesB) > i {
-				entryB = entriesB[i]
-			}
-		}
-		var op editType
-		switch diff := compare(entryA, entryB); diff {
-		case Less:
-			op = Delete
-			i++
-		case More:
-			op = Insert
-			j++
-		case Same:
-			i, j = i+1, j+1
-			if entryA.Name() != entryB.Name() {
-				op = Rename
-			} else {
-				continue
-			}
-		}
-		edit := &treeEdit{
-			op,
-			entryA,
-			entryB,
-		}
-		result.edits = append(result.edits, edit)
 	}
 	return result
 }
