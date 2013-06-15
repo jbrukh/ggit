@@ -106,8 +106,7 @@ func compare(a, b *objects.TreeEntry) order {
 	return Same
 }
 
-func (d *treeDiffer) Diff(ta, tb *objects.Tree) *TreeDiff {
-	entriesA, entriesB := ta.Entries(), tb.Entries()
+func diffEntries(entriesA, entriesB []*objects.TreeEntry) *TreeDiff {
 	sort.Sort(byOid(entriesA))
 	sort.Sort(byOid(entriesB))
 	idsA := ""
@@ -142,4 +141,9 @@ func (d *treeDiffer) Diff(ta, tb *objects.Tree) *TreeDiff {
 		}
 	}
 	return result
+}
+
+func (d *treeDiffer) Diff(ta, tb *objects.Tree) *TreeDiff {
+	entriesA, entriesB := ta.Entries(), tb.Entries()
+	return diffEntries(entriesA, entriesB)
 }
