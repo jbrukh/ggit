@@ -65,9 +65,12 @@ func (db *DiffBuiltin) Execute(p *Params, args []string) {
 	case objects.ObjectTree:
 		oat, _ := oa.(*objects.Tree)
 		obt, _ := ob.(*objects.Tree)
-		td := diff.NewTreeDiffer()
-		result := td.Diff(oat, obt)
-		fmt.Println(result.String())
+		td := diff.NewTreeDiffer(p.Repo)
+		if result, err := td.Diff(oat, obt); err != nil {
+			fmt.Printf(err.Error())
+		} else {
+			fmt.Println(result.String())
+		}
 		//TODO
 	default:
 		fmt.Printf("objects are of type %s; only blobs (files) and trees are currently supported", ot)

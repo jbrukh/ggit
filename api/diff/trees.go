@@ -2,13 +2,14 @@ package diff
 
 import (
 	"fmt"
+	"github.com/jbrukh/ggit/api"
 	"github.com/jbrukh/ggit/api/objects"
 	"github.com/mikebosw/gdiff"
 	"sort"
 )
 
 type TreeDiffer interface {
-	Diff(ta, tb *objects.Tree) *TreeDiff
+	Diff(ta, tb *objects.Tree) (*TreeDiff, error)
 }
 
 type TreeDiff struct {
@@ -55,10 +56,12 @@ const (
 	Rename editType = 'm'
 )
 
-type treeDiffer struct{}
+type treeDiffer struct {
+	repository api.Repository
+}
 
-func NewTreeDiffer() TreeDiffer {
-	return &treeDiffer{}
+func NewTreeDiffer(r api.Repository) TreeDiffer {
+	return &treeDiffer{r}
 }
 
 type byOid []*objects.TreeEntry
@@ -143,7 +146,34 @@ func diffEntries(entriesA, entriesB []*objects.TreeEntry) *TreeDiff {
 	return result
 }
 
-func (d *treeDiffer) Diff(ta, tb *objects.Tree) *TreeDiff {
+func (d *treeDiffer) Diff(ta, tb *objects.Tree) (result *TreeDiff, err error) {
 	entriesA, entriesB := ta.Entries(), tb.Entries()
-	return diffEntries(entriesA, entriesB)
+	if entriesA, err = flatten(d.repository, entriesA); err != nil {
+		return nil, err
+	}
+	if entriesB, err = flatten(d.repository, entriesB); err != nil {
+		return nil, err
+	}
+	return diffEntries(entriesA, entriesB), nil
+}
+
+func flatten(r api.Repository, entries []*objects.TreeEntry) (result []*objects.TreeEntry, err error) {
+	result = make([]*objects.TreeEntry, 0)
+	for _, entry := range entries {
+		switch entry.ObjectType() {
+		case objects.ObjectBlob:
+			result = append(result, entry)
+		case objects.ObjectTree:
+			var object objects.Object
+			object, err = r.ObjectFromOid(entry.ObjectId())
+			if err != nil {
+				return nil, err
+			}
+			tree, _ := object.(*objects.Tree)
+			var blobs []*objects.TreeEntry
+			blobs, err = flatten(r, tree.Entries())
+			result = append(result, blobs...)
+		}
+	}
+	return result, nil
 }
