@@ -25,7 +25,7 @@ func (td *TreeDiff) String() string {
 }
 
 func treeFormat(prefix string, te *objects.TreeEntry) string {
-	return fmt.Sprintf("%s %s %s", prefix, te.ObjectType().String(), te.ObjectId().String())
+	return fmt.Sprintf("%s %s", prefix, te.Name())
 }
 
 func (te *treeEdit) String() string {
@@ -34,8 +34,10 @@ func (te *treeEdit) String() string {
 		return treeFormat("+", te.after)
 	case Delete:
 		return treeFormat("-", te.before)
+	case Modify:
+		return treeFormat("M", te.before)
 	case Rename:
-		return treeFormat(treeFormat("<>", te.before), te.after)
+		return treeFormat(treeFormat("R", te.before), te.after)
 	}
 	return ""
 }
@@ -53,7 +55,8 @@ type editType rune
 const (
 	Insert editType = 'i'
 	Delete editType = 'd'
-	Rename editType = 'm'
+	Modify editType = 'm'
+	Rename editType = 'r'
 )
 
 type treeDiffer struct {
@@ -143,26 +146,56 @@ func diffEntries(entriesA, entriesB []*objects.TreeEntry) *TreeDiff {
 			}
 		}
 	}
+	result.checkForModified()
 	return result
+}
+
+func (td *TreeDiff) checkForModified() {
+	var conflated []*treeEdit
+	paths := make(map[string]*treeEdit)
+	for _, edit := range td.edits {
+		var blob *objects.TreeEntry
+		switch edit.action {
+		case Insert:
+			blob = edit.after
+		case Delete:
+			blob = edit.before
+		default:
+			return
+		}
+		if existing := paths[blob.Name()]; existing == nil {
+			conflated = append(conflated, edit)
+			paths[blob.Name()] = edit
+		} else {
+			switch existing.action {
+			case Insert:
+				existing.before = blob
+			case Delete:
+				existing.after = blob
+			}
+			existing.action = Modify
+		}
+	}
+	td.edits = conflated
 }
 
 func (d *treeDiffer) Diff(ta, tb *objects.Tree) (result *TreeDiff, err error) {
 	entriesA, entriesB := ta.Entries(), tb.Entries()
-	if entriesA, err = flatten(d.repository, entriesA); err != nil {
+	if entriesA, err = flatten(d.repository, "", entriesA); err != nil {
 		return nil, err
 	}
-	if entriesB, err = flatten(d.repository, entriesB); err != nil {
+	if entriesB, err = flatten(d.repository, "", entriesB); err != nil {
 		return nil, err
 	}
 	return diffEntries(entriesA, entriesB), nil
 }
 
-func flatten(r api.Repository, entries []*objects.TreeEntry) (result []*objects.TreeEntry, err error) {
+func flatten(r api.Repository, base string, entries []*objects.TreeEntry) (result []*objects.TreeEntry, err error) {
 	result = make([]*objects.TreeEntry, 0)
 	for _, entry := range entries {
 		switch entry.ObjectType() {
 		case objects.ObjectBlob:
-			result = append(result, entry)
+			result = append(result, objects.NewTreeEntry(entry.Mode(), entry.ObjectType(), base+entry.Name(), entry.ObjectId()))
 		case objects.ObjectTree:
 			var object objects.Object
 			object, err = r.ObjectFromOid(entry.ObjectId())
@@ -171,7 +204,7 @@ func flatten(r api.Repository, entries []*objects.TreeEntry) (result []*objects.
 			}
 			tree, _ := object.(*objects.Tree)
 			var blobs []*objects.TreeEntry
-			blobs, err = flatten(r, tree.Entries())
+			blobs, err = flatten(r, base+entry.Name()+"/", tree.Entries())
 			result = append(result, blobs...)
 		}
 	}
