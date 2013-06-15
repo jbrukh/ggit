@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/jbrukh/ggit/api"
 	"github.com/jbrukh/ggit/api/objects"
-	"github.com/mikebosw/gdiff"
-	"sort"
 )
 
 type TreeDiffer interface {
@@ -31,9 +29,9 @@ func treeFormat(prefix string, te *objects.TreeEntry) string {
 func (te *treeEdit) String() string {
 	switch te.action {
 	case Insert:
-		return treeFormat("+", te.after)
+		return treeFormat("A", te.after)
 	case Delete:
-		return treeFormat("-", te.before)
+		return treeFormat("D", te.before)
 	case Modify:
 		return treeFormat("M", te.before)
 	case Rename:
@@ -112,48 +110,109 @@ func compare(a, b *objects.TreeEntry) order {
 	return Same
 }
 
-func diffEntries(entriesA, entriesB []*objects.TreeEntry) *TreeDiff {
-	sort.Sort(byOid(entriesA))
-	sort.Sort(byOid(entriesB))
-	idsA := ""
-	for _, v := range entriesA {
-		idsA += fmt.Sprintln(v.ObjectId().String())
-	}
-	idsB := ""
-	for _, v := range entriesB {
-		idsB += fmt.Sprintln(v.ObjectId().String())
-	}
+func (d *treeDiffer) Diff(ta, tb *objects.Tree) (*TreeDiff, error) {
 	result := new(TreeDiff)
+	entriesA, entriesB := ta.Entries(), tb.Entries()
+	if blobsA, blobsB, err := findBlobDiffs(d.repository, entriesA, entriesB); err != nil {
+		return nil, err
+	} else {
+		for _, blob := range blobsA {
+			result.makeDeletionEdit(blob)
+		}
+		for _, blob := range blobsB {
+			result.makeInsertionEdit(blob)
+		}
+	}
+	result.makeModifyEdits()
+	return result, nil
+}
 
-	tDiff := gdiff.MyersDiffer().Diff(idsA, idsB, gdiff.LineSplit)
-	for _, edit := range tDiff.Edits() {
-		switch edit.Type {
-		case gdiff.Insert:
-			for i := edit.Start; i <= edit.End; i++ {
-				result.edits = append(result.edits, &treeEdit{
-					action: Insert,
-					before: nil,
-					after:  entriesB[i],
-				})
-			}
-		case gdiff.Delete:
-			for i := edit.Start; i <= edit.End; i++ {
-				result.edits = append(result.edits, &treeEdit{
-					action: Delete,
-					before: entriesA[i],
-					after:  nil,
-				})
+func findBlobDiffs(r api.Repository, a, b []*objects.TreeEntry) (blobsA, blobsB []*objects.TreeEntry, err error) {
+	var mixedA, mixedB []*objects.TreeEntry
+
+	onlyInA := make(map[string]*objects.TreeEntry)
+
+	for _, entry := range a {
+		onlyInA[entry.ObjectId().String()] = entry
+	}
+
+	for _, entry := range b {
+		id := entry.ObjectId().String()
+		if onlyInA[id] != nil {
+			delete(onlyInA, id)
+		} else {
+			switch entry.ObjectType() {
+			case objects.ObjectBlob:
+				blobsB = append(blobsB, entry)
+			case objects.ObjectTree:
+				if exploded, err := flatten(r, entry.Name()+"/", entry); err != nil {
+					return nil, nil, err
+				} else {
+					mixedB = append(mixedB, exploded...)
+				}
 			}
 		}
 	}
-	result.checkForModified()
-	return result
+
+	for _, entry := range onlyInA {
+		switch entry.ObjectType() {
+		case objects.ObjectBlob:
+			blobsA = append(blobsA, entry)
+		case objects.ObjectTree:
+			if exploded, err := flatten(r, entry.Name()+"/", entry); err != nil {
+				return nil, nil, err
+			} else {
+				mixedA = append(mixedA, exploded...)
+			}
+		}
+	}
+
+	if len(mixedA) == 0 && len(mixedB) == 0 {
+		return
+	}
+	if moreBlobsA, moreBlobsB, err := findBlobDiffs(r, mixedA, mixedB); err != nil {
+		return nil, nil, err
+	} else {
+		blobsA = append(blobsA, moreBlobsA...)
+		blobsB = append(blobsB, moreBlobsB...)
+	}
+	return
 }
 
-func (td *TreeDiff) checkForModified() {
+func (result *TreeDiff) makeInsertionEdit(entry *objects.TreeEntry) {
+	result.edits = append(result.edits, &treeEdit{
+		action: Insert,
+		before: nil,
+		after:  entry,
+	})
+}
+
+func (result *TreeDiff) makeDeletionEdit(entry *objects.TreeEntry) {
+	result.edits = append(result.edits, &treeEdit{
+		action: Delete,
+		before: entry,
+		after:  nil,
+	})
+}
+
+func flatten(r api.Repository, base string, treeEntry *objects.TreeEntry) (result []*objects.TreeEntry, err error) {
+	result = make([]*objects.TreeEntry, 0)
+	var object objects.Object
+	object, err = r.ObjectFromOid(treeEntry.ObjectId())
+	if err != nil {
+		return nil, err
+	}
+	tree, _ := object.(*objects.Tree)
+	for _, entry := range tree.Entries() {
+		result = append(result, objects.NewTreeEntry(entry.Mode(), entry.ObjectType(), base+entry.Name(), entry.ObjectId()))
+	}
+	return result, nil
+}
+
+func (result *TreeDiff) makeModifyEdits() {
 	var conflated []*treeEdit
 	paths := make(map[string]*treeEdit)
-	for _, edit := range td.edits {
+	for _, edit := range result.edits {
 		var blob *objects.TreeEntry
 		switch edit.action {
 		case Insert:
@@ -176,37 +235,5 @@ func (td *TreeDiff) checkForModified() {
 			existing.action = Modify
 		}
 	}
-	td.edits = conflated
-}
-
-func (d *treeDiffer) Diff(ta, tb *objects.Tree) (result *TreeDiff, err error) {
-	entriesA, entriesB := ta.Entries(), tb.Entries()
-	if entriesA, err = flatten(d.repository, "", entriesA); err != nil {
-		return nil, err
-	}
-	if entriesB, err = flatten(d.repository, "", entriesB); err != nil {
-		return nil, err
-	}
-	return diffEntries(entriesA, entriesB), nil
-}
-
-func flatten(r api.Repository, base string, entries []*objects.TreeEntry) (result []*objects.TreeEntry, err error) {
-	result = make([]*objects.TreeEntry, 0)
-	for _, entry := range entries {
-		switch entry.ObjectType() {
-		case objects.ObjectBlob:
-			result = append(result, objects.NewTreeEntry(entry.Mode(), entry.ObjectType(), base+entry.Name(), entry.ObjectId()))
-		case objects.ObjectTree:
-			var object objects.Object
-			object, err = r.ObjectFromOid(entry.ObjectId())
-			if err != nil {
-				return nil, err
-			}
-			tree, _ := object.(*objects.Tree)
-			var blobs []*objects.TreeEntry
-			blobs, err = flatten(r, base+entry.Name()+"/", tree.Entries())
-			result = append(result, blobs...)
-		}
-	}
-	return result, nil
+	result.edits = conflated
 }
