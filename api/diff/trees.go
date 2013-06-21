@@ -142,10 +142,11 @@ func (d *treeDiffer) Diff(ta, tb *objects.Tree) (*TreeDiff, error) {
 	return result, nil
 }
 
+//find the blobs that differ between two TreeEntry slices
 func findBlobDiffs(r api.Repository, a, b []*objects.TreeEntry) (blobsA, blobsB []*objects.TreeEntry, err error) {
-	var mixedA, mixedB []*objects.TreeEntry
+	onlyInA, onlyInB := make(map[string]*objects.TreeEntry), make(map[string]*objects.TreeEntry)
 
-	onlyInA := make(map[string]*objects.TreeEntry)
+	//determine the entries that only exist on side a or only exist on side b
 
 	for _, entry := range a {
 		onlyInA[entry.ObjectId().String()] = entry
@@ -156,18 +157,13 @@ func findBlobDiffs(r api.Repository, a, b []*objects.TreeEntry) (blobsA, blobsB 
 		if onlyInA[id] != nil {
 			delete(onlyInA, id)
 		} else {
-			switch entry.ObjectType() {
-			case objects.ObjectBlob:
-				blobsB = append(blobsB, entry)
-			case objects.ObjectTree:
-				if exploded, err := flatten(r, entry.Name()+"/", entry); err != nil {
-					return nil, nil, err
-				} else {
-					mixedB = append(mixedB, exploded...)
-				}
-			}
+			onlyInB[entry.ObjectId().String()] = entry
 		}
 	}
+
+	//separate out the blobs, and explode any trees
+
+	var explodedA, explodedB []*objects.TreeEntry
 
 	for _, entry := range onlyInA {
 		switch entry.ObjectType() {
@@ -177,15 +173,28 @@ func findBlobDiffs(r api.Repository, a, b []*objects.TreeEntry) (blobsA, blobsB 
 			if exploded, err := flatten(r, entry.Name()+"/", entry); err != nil {
 				return nil, nil, err
 			} else {
-				mixedA = append(mixedA, exploded...)
+				explodedA = append(explodedA, exploded...)
+			}
+		}
+	}
+	for _, entry := range onlyInB {
+		switch entry.ObjectType() {
+		case objects.ObjectBlob:
+			blobsB = append(blobsB, entry)
+		case objects.ObjectTree:
+			if exploded, err := flatten(r, entry.Name()+"/", entry); err != nil {
+				return nil, nil, err
+			} else {
+				explodedB = append(explodedB, exploded...)
 			}
 		}
 	}
 
-	if len(mixedA) == 0 && len(mixedB) == 0 {
+	//when there are no more exploded tree entries to explore, we are at the deepest level and can terminate the search
+	if len(explodedA) == 0 && len(explodedB) == 0 {
 		return
 	}
-	if moreBlobsA, moreBlobsB, err := findBlobDiffs(r, mixedA, mixedB); err != nil {
+	if moreBlobsA, moreBlobsB, err := findBlobDiffs(r, explodedA, explodedB); err != nil {
 		return nil, nil, err
 	} else {
 		blobsA = append(blobsA, moreBlobsA...)

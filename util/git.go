@@ -34,7 +34,7 @@ func init() {
 	}
 }
 
-// TempRepo returns a temporary location where we 
+// TempRepo returns a temporary location where we
 // can store the test repo.
 func TempRepo(subdir string) string {
 	return path.Join(os.TempDir(), subdir)
@@ -74,7 +74,7 @@ func GitExec(workDir string, args ...string) (string, error) {
 	return out.String(), nil
 }
 
-// GitExecMany executes multiple git commands in the 
+// GitExecMany executes multiple git commands in the
 // given repo (simular to GitExec) but swallows the
 // output and returns on any error. This is meant for
 // setting up test scenarios.
@@ -100,6 +100,16 @@ func TestFile(repo string, name string, contents string) error {
 	}
 
 	err := ioutil.WriteFile(pth, []byte(contents), 0644)
+	if err != nil {
+		return fmt.Errorf("could not create test file '%s' for repo: %s", name, err)
+	}
+	return nil
+}
+
+func DeleteFile(repo string, name string) error {
+	pth := path.Join(repo, name)
+
+	err := os.Remove(pth)
 	if err != nil {
 		return fmt.Errorf("could not create test file '%s' for repo: %s", name, err)
 	}
