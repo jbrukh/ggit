@@ -11,7 +11,22 @@ type TreeDiffer interface {
 }
 
 type TreeDiff struct {
-	edits []*treeEdit
+	edits    []*TreeEdit
+	modified []*TreeEdit
+	inserted []*objects.TreeEntry
+	deleted  []*objects.TreeEntry
+}
+
+func (td *TreeDiff) Modified() []*TreeEdit {
+	return td.modified
+}
+
+func (td *TreeDiff) Inserted() []*objects.TreeEntry {
+	return td.inserted
+}
+
+func (td *TreeDiff) Deleted() []*objects.TreeEntry {
+	return td.deleted
 }
 
 func (td *TreeDiff) String() string {
@@ -26,26 +41,26 @@ func treeFormat(prefix string, te *objects.TreeEntry) string {
 	return fmt.Sprintf("%s %s", prefix, te.Name())
 }
 
-func (te *treeEdit) String() string {
+func (te *TreeEdit) String() string {
 	switch te.action {
 	case Insert:
-		return treeFormat("A", te.after)
+		return treeFormat("A", te.After)
 	case Delete:
-		return treeFormat("D", te.before)
+		return treeFormat("D", te.Before)
 	case Modify:
-		return treeFormat("M", te.before)
+		return treeFormat("M", te.Before)
 	case Rename:
-		return treeFormat(treeFormat("R", te.before), te.after)
+		return treeFormat(treeFormat("R", te.Before), te.After)
 	}
 	return ""
 }
 
-type treeEdit struct {
+type TreeEdit struct {
 	action editType
 	//non-nil for delete and rename
-	before *objects.TreeEntry
+	Before *objects.TreeEntry
 	//non-nil for insert and rename
-	after *objects.TreeEntry
+	After *objects.TreeEntry
 }
 
 type editType rune
@@ -123,7 +138,7 @@ func (d *treeDiffer) Diff(ta, tb *objects.Tree) (*TreeDiff, error) {
 			result.makeInsertionEdit(blob)
 		}
 	}
-	result.makeModifyEdits()
+	result.categorizeEdits()
 	return result, nil
 }
 
@@ -180,18 +195,18 @@ func findBlobDiffs(r api.Repository, a, b []*objects.TreeEntry) (blobsA, blobsB 
 }
 
 func (result *TreeDiff) makeInsertionEdit(entry *objects.TreeEntry) {
-	result.edits = append(result.edits, &treeEdit{
+	result.edits = append(result.edits, &TreeEdit{
 		action: Insert,
-		before: nil,
-		after:  entry,
+		Before: nil,
+		After:  entry,
 	})
 }
 
 func (result *TreeDiff) makeDeletionEdit(entry *objects.TreeEntry) {
-	result.edits = append(result.edits, &treeEdit{
+	result.edits = append(result.edits, &TreeEdit{
 		action: Delete,
-		before: entry,
-		after:  nil,
+		Before: entry,
+		After:  nil,
 	})
 }
 
@@ -209,30 +224,42 @@ func flatten(r api.Repository, base string, treeEntry *objects.TreeEntry) (resul
 	return result, nil
 }
 
-func (result *TreeDiff) makeModifyEdits() {
-	var conflated []*treeEdit
-	paths := make(map[string]*treeEdit)
+func (result *TreeDiff) categorizeEdits() {
+	var conflated []*TreeEdit
+	paths := make(map[string]*TreeEdit)
+	uniques := make(map[string]*TreeEdit)
 	for _, edit := range result.edits {
 		var blob *objects.TreeEntry
 		switch edit.action {
 		case Insert:
-			blob = edit.after
+			blob = edit.After
 		case Delete:
-			blob = edit.before
+			blob = edit.Before
 		default:
 			return
 		}
 		if existing := paths[blob.Name()]; existing == nil {
 			conflated = append(conflated, edit)
 			paths[blob.Name()] = edit
+			uniques[blob.Name()] = edit
 		} else {
+			delete(uniques, blob.Name())
 			switch existing.action {
 			case Insert:
-				existing.before = blob
+				existing.Before = blob
 			case Delete:
-				existing.after = blob
+				existing.After = blob
 			}
 			existing.action = Modify
+			result.modified = append(result.modified, existing)
+		}
+	}
+	for _, edit := range uniques {
+		switch edit.action {
+		case Insert:
+			result.inserted = append(result.inserted, edit.After)
+		case Delete:
+			result.deleted = append(result.deleted, edit.Before)
 		}
 	}
 	result.edits = conflated
