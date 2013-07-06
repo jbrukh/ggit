@@ -60,12 +60,12 @@ func (db *DiffBuiltin) Execute(p *Params, args []string) {
 	case objects.ObjectBlob:
 		oab, _ := oa.(*objects.Blob)
 		obb, _ := ob.(*objects.Blob)
-		d := diff.BlobDiff(oab, obb)
+		d := diff.NewBlobComparator().Diff(oab, obb, gdiff.LineSplit)
 		gdiff.Unified().Print(d, os.Stdout)
 	case objects.ObjectTree:
 		oat, _ := oa.(*objects.Tree)
 		obt, _ := ob.(*objects.Tree)
-		td := diff.NewTreeDiffer(p.Repo)
+		td := diff.NewTreeDiffer(p.Repo, diff.NewBlobComparator())
 		if result, err := td.Diff(oat, obt); err != nil {
 			fmt.Printf(err.Error())
 		} else {
