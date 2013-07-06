@@ -69,7 +69,7 @@ func (db *DiffBuiltin) Execute(p *Params, args []string) {
 		if result, err := td.Diff(oat, obt); err != nil {
 			fmt.Printf(err.Error())
 		} else {
-			fmt.Println(result.String())
+			fmt.Printf(result.String())
 		}
 		//TODO
 	default:

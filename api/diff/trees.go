@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jbrukh/ggit/api"
 	"github.com/jbrukh/ggit/api/objects"
+	"sort"
 )
 
 type TreeDiffer interface {
@@ -11,10 +12,13 @@ type TreeDiffer interface {
 }
 
 type TreeDiff struct {
-	edits    []*TreeEdit
-	modified []*TreeEdit
-	inserted []*objects.TreeEntry
-	deleted  []*objects.TreeEntry
+	edits       []*TreeEdit
+	modified    []*TreeEdit
+	renamed     []*TreeEdit
+	insertEdits []*TreeEdit
+	deleteEdits []*TreeEdit
+	inserted    []*objects.TreeEntry
+	deleted     []*objects.TreeEntry
 }
 
 func (td *TreeDiff) Modified() []*TreeEdit {
@@ -50,7 +54,7 @@ func (te *TreeEdit) String() string {
 	case Modify:
 		return treeFormat("M", te.Before)
 	case Rename:
-		return treeFormat(treeFormat("R", te.Before), te.After)
+		return treeFormat(treeFormat(fmt.Sprintf("R%d", int(te.score)), te.Before), te.After)
 	}
 	return ""
 }
@@ -61,6 +65,8 @@ type TreeEdit struct {
 	Before *objects.TreeEntry
 	//non-nil for insert and rename
 	After *objects.TreeEntry
+	//for renames
+	score float64
 }
 
 type editType rune
@@ -74,10 +80,11 @@ const (
 
 type treeDiffer struct {
 	repository api.Repository
+	blobDiffer BlobMatcher
 }
 
-func NewTreeDiffer(r api.Repository) TreeDiffer {
-	return &treeDiffer{r}
+func NewTreeDiffer(r api.Repository, blobDiffer BlobMatcher) TreeDiffer {
+	return &treeDiffer{r, blobDiffer}
 }
 
 type byOid []*objects.TreeEntry
@@ -138,8 +145,16 @@ func (d *treeDiffer) Diff(ta, tb *objects.Tree) (*TreeDiff, error) {
 			result.makeInsertionEdit(blob)
 		}
 	}
-	result.categorizeEdits()
+	result.categorizeEdits(d.repository, d.blobDiffer)
 	return result, nil
+}
+
+func entryKey(entry *objects.TreeEntry, usingMode bool) string {
+	key := entry.ObjectId().String() + entry.Name()
+	if usingMode {
+		key = fmt.Sprintf("%s%d", key, uint16(entry.Mode()))
+	}
+	return key
 }
 
 //find the blobs that differ between two TreeEntry slices
@@ -149,15 +164,15 @@ func findBlobDiffs(r api.Repository, a, b []*objects.TreeEntry) (blobsA, blobsB 
 	//determine the entries that only exist on side a or only exist on side b
 
 	for _, entry := range a {
-		onlyInA[entry.ObjectId().String()] = entry
+		onlyInA[entryKey(entry, true)] = entry
 	}
 
 	for _, entry := range b {
-		id := entry.ObjectId().String()
-		if onlyInA[id] != nil {
-			delete(onlyInA, id)
+		key := entryKey(entry, true)
+		if onlyInA[key] != nil {
+			delete(onlyInA, key)
 		} else {
-			onlyInB[entry.ObjectId().String()] = entry
+			onlyInB[key] = entry
 		}
 	}
 
@@ -233,7 +248,15 @@ func flatten(r api.Repository, base string, treeEntry *objects.TreeEntry) (resul
 	return result, nil
 }
 
-func (result *TreeDiff) categorizeEdits() {
+func (result *TreeDiff) categorizeEdits(r api.Repository, blobMatcher BlobMatcher) error {
+	result.detectModified()
+	if err := result.detectRenamed(r, blobMatcher); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (result *TreeDiff) detectModified() {
 	var conflated []*TreeEdit
 	paths := make(map[string]*TreeEdit)
 	uniques := make(map[string]*TreeEdit)
@@ -266,10 +289,111 @@ func (result *TreeDiff) categorizeEdits() {
 	for _, edit := range uniques {
 		switch edit.action {
 		case Insert:
-			result.inserted = append(result.inserted, edit.After)
+			result.insertEdits = append(result.insertEdits, edit)
 		case Delete:
-			result.deleted = append(result.deleted, edit.Before)
+			result.deleteEdits = append(result.deleteEdits, edit)
 		}
 	}
 	result.edits = conflated
+}
+
+func (result *TreeDiff) detectRenamed(r api.Repository, blobMatcher BlobMatcher) (err error) {
+	//build a matrix of similarity scores
+	deletes, inserts := result.deleteEdits, result.insertEdits
+	scores := make([]*float64, len(deletes)*len(inserts))
+	//copy the matrix to a slice that we will sort in order of score
+	sorted := make([]*float64, len(deletes)*len(inserts))
+	for di, delete := range deletes {
+		for ii, insert := range inserts {
+			var objA, objB objects.Object
+			if objA, err = r.ObjectFromOid(delete.Before.ObjectId()); err != nil {
+				return
+			}
+			if objB, err = r.ObjectFromOid(insert.After.ObjectId()); err != nil {
+				return err
+			}
+			a, _ := objA.(*objects.Blob)
+			b, _ := objB.(*objects.Blob)
+			score := blobMatcher.Match(a, b)
+			index := di*len(deletes) + ii
+			scores[index] = &score
+			sorted[index] = scores[index]
+		}
+	}
+	bv := byValue(sorted)
+	sort.Sort(&bv)
+	//we are going to create a "map" from sort-order index to original index:
+	//1. back up the score values, in sorted order
+	//2. set the values of each score pointer to the sorted index
+	//3. iterate through the original slice, setting the value of the index in the sorted array to the original
+	//   slice's index
+	//4. don't get confused
+	//5. TODO: less constant overhead
+	values := make([]float64, len(deletes)*len(inserts))
+	for i, v := range sorted {
+		values[i] = *v
+		*v = float64(i)
+	}
+	for i, v := range scores {
+		*(sorted[int(*v)]) = float64(i)
+	}
+	deletesDone, insertsDone := make([]bool, len(deletes)), make([]bool, len(inserts))
+	renameCount := 0
+	for i, score := range values {
+		index := *(sorted[i])
+		di := int(index) / len(deletes)
+		ii := int(index) - (di * len(deletes))
+		if score < 60 {
+			break
+		}
+		if deletesDone[di] || insertsDone[ii] {
+			continue
+		}
+		renameCount++
+		delete, insert := result.deleteEdits[di], result.insertEdits[ii]
+		result.insertEdits[ii], result.deleteEdits[di] = nil, nil
+		delete.After = insert.After
+		delete.action = Rename
+		delete.score = score
+		result.renamed = append(result.renamed, delete)
+	}
+	//prune the removed (nil) edits and populate the \deleted\ []*objects.TreeEntry and \inserted\ []*objects.TreeEntry
+	deleteEdits, insertEdits := result.deleteEdits, result.insertEdits
+	result.edits, result.deleteEdits, result.insertEdits = nil, nil, nil
+	for _, v := range insertEdits {
+		if v == nil {
+			continue
+		}
+		result.edits = append(result.edits, v)
+		result.insertEdits = append(result.insertEdits, v)
+		result.inserted = append(result.inserted, v.After)
+	}
+	for _, v := range deleteEdits {
+		if v == nil {
+			continue
+		}
+		result.edits = append(result.edits, v)
+		result.deleteEdits = append(result.deleteEdits, v)
+		result.deleted = append(result.deleted, v.Before)
+	}
+	result.edits = append(result.edits, result.modified...)
+	result.edits = append(result.edits, result.renamed...)
+	return
+}
+
+type byValue []*float64
+
+func (bv *byValue) Len() int {
+	slice := []*float64(*bv)
+	return len(slice)
+}
+
+func (bv *byValue) Swap(i, j int) {
+	slice := []*float64(*bv)
+	slice[i], slice[j] = slice[j], slice[i]
+}
+
+func (bv *byValue) Less(i, j int) bool {
+	slice := []*float64(*bv)
+	return *slice[i] < *slice[j]
 }

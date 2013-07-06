@@ -39,7 +39,7 @@ func Test_readTree(t *testing.T) {
 	// get the tree
 	tree2, _ := o.(*objects.Tree)
 
-	diff, err := NewTreeDiffer(repo).Diff(tree1, tree2)
+	diff, err := NewTreeDiffer(repo, NewBlobComparator()).Diff(tree1, tree2)
 	modified := diff.Modified()
 
 	if len(modified) != 1 {
