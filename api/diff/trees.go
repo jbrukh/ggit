@@ -300,9 +300,7 @@ func (result *TreeDiff) detectModified() {
 func (result *TreeDiff) detectRenamed(r api.Repository, blobMatcher BlobMatcher) (err error) {
 	//build a matrix of similarity scores
 	deletes, inserts := result.deleteEdits, result.insertEdits
-	scores := make([]*float64, len(deletes)*len(inserts))
-	//copy the matrix to a slice that we will sort in order of score
-	sorted := make([]*float64, len(deletes)*len(inserts))
+	scores := make([]float64, len(deletes)*len(inserts))
 	for di, delete := range deletes {
 		for ii, insert := range inserts {
 			var objA, objB objects.Object
@@ -314,48 +312,31 @@ func (result *TreeDiff) detectRenamed(r api.Repository, blobMatcher BlobMatcher)
 			}
 			a, _ := objA.(*objects.Blob)
 			b, _ := objB.(*objects.Blob)
-			score := blobMatcher.Match(a, b)
 			index := di*(len(deletes)-1) + ii
-			scores[index] = &score
-			sorted[index] = scores[index]
+			scores[index] = blobMatcher.Match(a, b)
 		}
 	}
-	bv := byValueInReverse(sorted)
-	sort.Sort(&bv)
-	//we are going to create a "map" from sort-order index to original index:
-	//1. back up the score values, in sorted order
-	//2. set the values of each score pointer to the sorted index
-	//3. iterate through the original slice, setting the value of the index in the sorted array to the original
-	//   slice's index
-	//4. don't get confused
-	//5. TODO: less constant overhead
-	values := make([]float64, len(deletes)*len(inserts))
-	for i, v := range sorted {
-		values[i] = *v
-		*v = float64(i)
-	}
-	for i, v := range scores {
-		*(sorted[int(*v)]) = float64(i)
-	}
+	//get the indices of the score matrix in sorted order (i.e., from greatest score to least)
+	sorted := indexedInOrder(scores)
 	deletesDone, insertsDone := make([]bool, len(deletes)), make([]bool, len(inserts))
 	renameCount := 0
-	for i, score := range values {
+	for _, index := range sorted {
+		score := scores[index]
 		if score < 60 {
 			break
 		}
-		index := *(sorted[i])
 		di := int(index) / (len(deletes) - 1)
 		ii := int(index) - (di * (len(deletes) - 1))
 		if deletesDone[di] || insertsDone[ii] {
 			continue
 		}
 		renameCount++
-		delete, insert := result.deleteEdits[di], result.insertEdits[ii]
+		rename, insert := result.deleteEdits[di], result.insertEdits[ii]
 		result.insertEdits[ii], result.deleteEdits[di] = nil, nil
-		delete.After = insert.After
-		delete.action = Rename
-		delete.score = score
-		result.renamed = append(result.renamed, delete)
+		rename.After = insert.After
+		rename.action = Rename
+		rename.score = score
+		result.renamed = append(result.renamed, rename)
 		deletesDone[di], insertsDone[ii] = true, true
 	}
 	//prune the removed (nil) edits and populate the \deleted\ []*objects.TreeEntry and \inserted\ []*objects.TreeEntry
@@ -382,19 +363,31 @@ func (result *TreeDiff) detectRenamed(r api.Repository, blobMatcher BlobMatcher)
 	return
 }
 
-type byValueInReverse []*float64
+type byValueInReverse struct {
+	values  []float64
+	indices []int
+}
+
+func indexedInOrder(scores []float64) []int {
+	//1. create a slice of score indices with initial values from 0 to len(scores) - 1
+	//2. sort that slice as though its values were the scores
+	bv := &byValueInReverse{scores, make([]int, len(scores))}
+	for i := 0; i < len(bv.values); i++ {
+		bv.indices[i] = i
+	}
+	sort.Sort(bv)
+	return bv.indices
+}
 
 func (bv *byValueInReverse) Len() int {
-	slice := []*float64(*bv)
-	return len(slice)
+	return len(bv.values)
 }
 
 func (bv *byValueInReverse) Swap(i, j int) {
-	slice := []*float64(*bv)
-	slice[i], slice[j] = slice[j], slice[i]
+	bv.indices[i], bv.indices[j] = bv.indices[j], bv.indices[i]
 }
 
 func (bv *byValueInReverse) Less(i, j int) bool {
-	slice := []*float64(*bv)
-	return *slice[i] > *slice[j]
+	a, b := bv.values[bv.indices[i]], bv.values[bv.indices[j]]
+	return int(a) > int(b)
 }
