@@ -315,12 +315,12 @@ func (result *TreeDiff) detectRenamed(r api.Repository, blobMatcher BlobMatcher)
 			a, _ := objA.(*objects.Blob)
 			b, _ := objB.(*objects.Blob)
 			score := blobMatcher.Match(a, b)
-			index := di*len(deletes) + ii
+			index := di*(len(deletes)-1) + ii
 			scores[index] = &score
 			sorted[index] = scores[index]
 		}
 	}
-	bv := byValue(sorted)
+	bv := byValueInReverse(sorted)
 	sort.Sort(&bv)
 	//we are going to create a "map" from sort-order index to original index:
 	//1. back up the score values, in sorted order
@@ -340,12 +340,12 @@ func (result *TreeDiff) detectRenamed(r api.Repository, blobMatcher BlobMatcher)
 	deletesDone, insertsDone := make([]bool, len(deletes)), make([]bool, len(inserts))
 	renameCount := 0
 	for i, score := range values {
-		index := *(sorted[i])
-		di := int(index) / len(deletes)
-		ii := int(index) - (di * len(deletes))
 		if score < 60 {
 			break
 		}
+		index := *(sorted[i])
+		di := int(index) / (len(deletes) - 1)
+		ii := int(index) - (di * (len(deletes) - 1))
 		if deletesDone[di] || insertsDone[ii] {
 			continue
 		}
@@ -356,6 +356,7 @@ func (result *TreeDiff) detectRenamed(r api.Repository, blobMatcher BlobMatcher)
 		delete.action = Rename
 		delete.score = score
 		result.renamed = append(result.renamed, delete)
+		deletesDone[di], insertsDone[ii] = true, true
 	}
 	//prune the removed (nil) edits and populate the \deleted\ []*objects.TreeEntry and \inserted\ []*objects.TreeEntry
 	deleteEdits, insertEdits := result.deleteEdits, result.insertEdits
@@ -381,19 +382,19 @@ func (result *TreeDiff) detectRenamed(r api.Repository, blobMatcher BlobMatcher)
 	return
 }
 
-type byValue []*float64
+type byValueInReverse []*float64
 
-func (bv *byValue) Len() int {
+func (bv *byValueInReverse) Len() int {
 	slice := []*float64(*bv)
 	return len(slice)
 }
 
-func (bv *byValue) Swap(i, j int) {
+func (bv *byValueInReverse) Swap(i, j int) {
 	slice := []*float64(*bv)
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
-func (bv *byValue) Less(i, j int) bool {
+func (bv *byValueInReverse) Less(i, j int) bool {
 	slice := []*float64(*bv)
-	return *slice[i] < *slice[j]
+	return *slice[i] > *slice[j]
 }
