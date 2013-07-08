@@ -23,7 +23,7 @@ func NewBlobComparator() *blobComparator {
 
 func (differ *blobComparator) Match(a, b *objects.Blob) float64 {
 	diff := differ.Diff(a, b, gdiff.CharSplit)
-	return gdiff.SimpleComparator().Score(diff)
+	return gdiff.SimpleMatcher().Score(diff)
 }
 
 func (*blobComparator) Diff(a, b *objects.Blob, seq gdiff.Sequencer) gdiff.Diff {
